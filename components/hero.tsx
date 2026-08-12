@@ -11,7 +11,7 @@ export function Hero() {
         <div className="relative z-10">
           <div className="mb-7 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-gold">
             <span className="h-px w-8 bg-gold" />
-            Beleggingsvereniging · sinds 2014
+            Beleggingsvereniging · sinds 2010
           </div>
 
           <h1 className="mb-8 font-serif text-[clamp(48px,7vw,92px)] font-normal leading-[0.98] tracking-tight text-navy">

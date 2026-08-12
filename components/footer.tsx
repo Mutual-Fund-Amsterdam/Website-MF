@@ -35,7 +35,7 @@ export function Footer() {
               Mutual <span className="italic text-gold">Fund</span>
             </Link>
             <p className="max-w-[320px] text-[15px] leading-relaxed text-cream/60">
-              Beleggingsvereniging voor financieel georiënteerde studenten in Amsterdam. Sinds 2014.
+              Beleggingsvereniging voor financieel georiënteerde studenten in Amsterdam. Sinds 2010.
             </p>
           </div>
 
