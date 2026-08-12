@@ -11,7 +11,7 @@ export function Hero() {
         <div className="relative z-10">
           <div className="mb-7 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-gold">
             <span className="h-px w-8 bg-gold" />
-            Beleggingsvereniging · sinds 2014
+            Beleggingsvereniging · sinds 2010
           </div>
 
           <h1 className="mb-8 font-serif text-[clamp(48px,7vw,92px)] font-normal leading-[0.98] tracking-tight text-navy">
@@ -46,16 +46,19 @@ export function Hero() {
           </div>
         </div>
 
-        {/* YouTube Video */}
-        <aside className="relative z-10">
-          <div className="aspect-video w-full border border-cream-dark">
+        {/* Stille, doorlopende sfeerimpressie */}
+        <aside className="relative z-10 lg:pl-4">
+          <div className="pointer-events-none absolute -inset-3 border border-gold/20" />
+          <div className="pointer-events-none relative aspect-video w-full overflow-hidden border border-gold/30 bg-navy shadow-[0_28px_70px_rgba(14,32,57,0.16)]">
             <iframe
-              className="h-full w-full"
-              src="https://www.youtube.com/embed/5cAZ-VM_MpQ"
-              title="Mutual Fund introductie"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
+              className="h-full w-full scale-[1.03]"
+              src="https://www.youtube.com/embed/5cAZ-VM_MpQ?autoplay=1&mute=1&controls=0&loop=1&playlist=5cAZ-VM_MpQ&playsinline=1&rel=0&disablekb=1"
+              title="Sfeerimpressie van Mutual Fund"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              tabIndex={-1}
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-navy/25 via-transparent to-cream/5" />
+            <div className="absolute bottom-0 left-0 h-px w-24 bg-gold" />
           </div>
         </aside>
       </div>
