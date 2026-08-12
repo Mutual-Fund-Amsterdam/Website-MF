@@ -2,13 +2,17 @@ import Image from 'next/image'
 
 const partnerLogos = [
   { name: 'JPMorgan', src: '/partners/logos/jpmorgan.svg', url: 'https://www.jpmorgan.com' },
-  { name: 'Amundi', src: '/partners/logos/amundi.svg', url: 'https://www.amundi.nl' },
   { name: 'Egeria', src: '/partners/logos/egeria.svg', url: 'https://egeriagroup.com' },
   { name: 'FSA', src: '/partners/logos/fsa.svg', url: 'https://fsa.nl' },
   { name: 'IBS Capital', src: '/partners/logos/isb-capital.svg', url: 'https://www.isbcapital.nl' },
   { name: 'Lynx', src: '/partners/logos/lynx.svg', url: 'https://www.lynx.nl' },
   { name: 'Teslin', src: '/partners/logos/teslin.svg', url: 'https://www.teslin.nl' },
-  { name: 'Value Machines Fund', src: '/partners/logos/valuemachinesfund.svg', url: 'https://www.valuemachinesfund.nl' },
+  { name: 'FactSet', src: '/partners/logos/factset.webp', url: 'https://www.factset.com' },
+  { name: 'Photon Capital', src: '/partners/logos/photon-capital.webp', url: 'https://photoncapital.com' },
+  { name: 'SilverCross Investment Management', src: '/partners/logos/silvercross.webp', url: 'https://silvercross-im.com' },
+  { name: 'DUFAS', src: '/partners/logos/dufas.webp', url: 'https://dufas.nl' },
+  { name: 'Add Value Fund', src: '/partners/logos/add-value-fund.webp', url: 'https://addvaluefund.nl' },
+  { name: 'B&R Beurs', src: '/partners/logos/bnr-beurs.webp', url: 'https://bnrbeurs.nl' },
 ]
 
 export function Partners() {
