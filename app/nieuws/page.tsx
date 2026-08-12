@@ -1,45 +1,92 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowUpRight } from 'lucide-react'
-import { PageHero } from '../../components/page-hero'
-import { newsItems } from '../../lib/content'
+import { Navigation } from '../../components/navigation'
+import { Footer } from '../../components/footer'
 
-export const metadata: Metadata = {
-  title: 'Nieuws',
-  description: 'Nieuws, mijlpalen en verhalen van Mutual Fund Amsterdam.',
+export const metadata = {
+  title: 'Nieuws & Updates - Mutual Fund',
+  description: 'Blijf op de hoogte van de laatste nieuwtjes en reizen van Mutual Fund.',
 }
+
+// 📰 Twee beknopte items zoals gevraagd!
+const newsItems = [
+  {
+    category: 'Mijlpaal',
+    title: 'MF opent beurs 16 juni',
+    excerpt: 'Een historisch moment voor de vereniging: we openen de beursdag bij Euronext Amsterdam.',
+    date: '16 Juni 2026',
+    slug: '#', // Linkt voor nu nergens heen
+    featured: true,
+  },
+  {
+    category: 'Reis',
+    title: 'MF reis Milaan',
+    excerpt: 'Alles over onze aanstaande studiereis naar het financiële hart van Italië.',
+    date: 'Binnenkort',
+    slug: '#', // Linkt voor nu nergens heen
+    featured: false,
+  },
+]
 
 export default function NieuwsPage() {
   return (
-    <main id="main-content">
-      <PageHero
-        index="05 / 07"
-        eyebrow="Nieuws & verhalen"
-        title={<>Momenten die onze <em>koers</em> bepalen.</>}
-        description="Van bijzondere mijlpalen tot internationale reizen: volg de ontwikkelingen binnen Mutual Fund en de community eromheen."
-      />
+    <>
+      <Navigation />
+      <main className="min-h-screen bg-cream pt-32 pb-24">
+        <div className="mx-auto max-w-5xl px-6 md:px-12">
+          
+          <div className="mb-16">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gold">
+              Updates
+            </p>
+            <h1 className="mb-6 font-serif text-4xl font-medium tracking-tight text-navy md:text-5xl">
+              Nieuws & Verhalen
+            </h1>
+            <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
+              Een kijkje achter de schermen bij Mutual Fund. Van bijzondere mijlpalen tot onze internationale studiereizen.
+            </p>
+          </div>
 
-      <section className="news-section">
-        <div className="site-container">
-          <div className="news-section__label"><span>Laatste updates</span><i /></div>
-          <div className="news-grid">
+          <div className="grid gap-8 md:grid-cols-2">
             {newsItems.map((item, index) => (
-              <Link key={item.title} href={item.href} className={item.featured ? 'news-card news-card--featured' : 'news-card'}>
-                <div className="news-card__meta"><span>{item.category}</span><time>{item.date}</time></div>
-                <div className="news-card__signal" aria-hidden="true">
-                  <svg viewBox="0 0 500 150">
-                    <path d={index === 0 ? 'M0 120C60 110 85 128 135 92C185 55 220 85 275 55C330 25 390 65 500 15' : 'M0 100C70 115 105 55 160 75C220 98 270 20 340 55C395 82 430 45 500 30'} />
+              <Link 
+                key={index} 
+                href={item.slug}
+                className={`group flex flex-col justify-between border border-line bg-cream-light p-8 transition-all hover:-translate-y-1 hover:shadow-lg ${
+                  item.featured ? 'md:col-span-2 md:flex-row md:items-center md:gap-12' : ''
+                }`}
+              >
+                <div className="flex-1">
+                  <div className="mb-4 flex items-center gap-3">
+                    <span className="bg-gold/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-gold">
+                      {item.category}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {item.date}
+                    </span>
+                  </div>
+                  
+                  <h2 className="mb-4 font-serif text-2xl font-medium text-navy transition-colors group-hover:text-gold md:text-3xl">
+                    {item.title}
+                  </h2>
+                  
+                  <p className="mb-6 leading-relaxed text-muted-foreground">
+                    {item.excerpt}
+                  </p>
+                </div>
+
+                <div className="mt-auto flex items-center font-medium text-navy group-hover:text-gold transition-colors md:mt-0">
+                  <span className="mr-2">Lees verder</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 transition-transform group-hover:translate-x-1">
+                    <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <h2>{item.title}</h2>
-                <p>{item.excerpt}</p>
-                <span className="news-card__link">Lees verder <ArrowUpRight size={16} aria-hidden="true" /></span>
               </Link>
             ))}
           </div>
-          <div className="news-archive-state"><span>Archief wordt aangevuld</span><p>Nieuwe publicaties en verenigingsupdates verschijnen hier zodra ze beschikbaar zijn.</p></div>
+
         </div>
-      </section>
-    </main>
+      </main>
+      <Footer />
+    </>
   )
 }

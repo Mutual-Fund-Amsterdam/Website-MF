@@ -1,46 +1,51 @@
-import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
-import { SectionHeading } from './section-heading'
-
 const steps = [
   {
-    number: '01',
+    num: '01',
     title: 'Verken de vereniging',
-    description: 'Leer onze werkwijze, fondsen en maandelijkse meetings kennen.',
+    description:
+      'Lees op deze site over onze werkwijze, het bestuur en onze partners. Bekijk hoe wij beleggen en wat de vereniging onderscheidt.',
   },
   {
-    number: '02',
+    num: '02',
     title: 'Solliciteer in september of februari',
-    description: 'Stuur tijdens een van onze twee jaarlijkse rondes je motivatiebrief en cv.',
+    description:
+      'Onze sollicitatierondes vinden tweemaal per jaar plaats. Stuur in een van deze maanden je motivatiebrief en CV naar het secretariaat.',
   },
   {
-    number: '03',
+    num: '03',
     title: 'Sluit aan bij een meeting',
-    description: 'Maak kennis met de leden, de portefeuille en onze manier van analyseren en stemmen.',
+    description:
+      'Tijdens een proefmeeting maak je kennis met de leden, de portefeuille en onze manier van analyseren en stemmen.',
   },
 ]
 
 export function Steps() {
   return (
-    <section className="section membership-section market-grid-light">
-      <div className="site-container relative z-10">
-        <SectionHeading
-          eyebrow="Lid worden"
-          title={<>Van nieuwsgierig naar <em>investeerder.</em></>}
-          description="We zoeken studenten die hun ideeën durven te onderbouwen, kritisch willen leren denken en verantwoordelijkheid willen dragen voor echt kapitaal."
-        />
-        <ol className="membership-steps">
-          {steps.map((step) => (
-            <li key={step.number}>
-              <span>{step.number}</span>
-              <h3>{step.title}</h3>
-              <p>{step.description}</p>
-            </li>
-          ))}
-        </ol>
-        <Link href="/contact" className="button button--navy">
-          Neem contact op <ArrowRight size={17} aria-hidden="true" />
-        </Link>
+    <section className="bg-cream-light px-6 py-[120px] md:px-12">
+      {/* Section Header */}
+      <div className="mx-auto mb-[72px] grid max-w-7xl items-end gap-6 md:grid-cols-[1fr_2fr] md:gap-16">
+        <h2 className="font-serif text-[clamp(36px,4.5vw,56px)] font-normal leading-[1.05] tracking-tight text-navy">
+          Lid <em className="font-light italic text-gold">worden.</em>
+        </h2>
+        <p className="max-w-[540px] text-base leading-relaxed text-muted-foreground">
+          Geïnteresseerd in deelname? Drie stappen scheiden je van een plek aan tafel bij de
+          eerstvolgende meeting.
+        </p>
+      </div>
+
+      {/* Steps Grid */}
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 md:grid-cols-3">
+        {steps.map((step) => (
+          <div key={step.num}>
+            <div className="mb-6 font-serif text-[80px] font-light leading-none tracking-tighter text-gold">
+              {step.num}
+            </div>
+            <h3 className="mb-3 font-serif text-2xl font-medium tracking-tight text-navy">
+              {step.title}
+            </h3>
+            <p className="text-[15px] leading-relaxed text-muted-foreground">{step.description}</p>
+          </div>
+        ))}
       </div>
     </section>
   )
