@@ -1,108 +1,69 @@
 import Link from 'next/link'
+import { ArrowUpRight } from 'lucide-react'
+import { BrandMark } from './brand-mark'
 
-const footerLinks = {
-  vereniging: [
-    { label: 'Over ons', href: '/over-ons' },
-    { label: 'Bestuur', href: '/#bestuur' },
-    { label: 'Partners', href: '/#partners' },
-    { label: 'Events', href: '/events' },
-  ],
-  pers: [
-    { label: 'Alle publicaties', href: '/pers' },
-    { label: 'de Volkskrant', href: 'https://www.volkskrant.nl/economie/deze-jonge-investeerders-oefenen-voor-later-hoe-eerder-je-begint-hoe-meer-vermogen-je-opbouwt~b0127cd9/' },
-    { label: 'Beleggers Belangen', href: '/pers' },
-    { label: 'Het Financieele Dagblad', href: '/pers' },
-  ],
-  contact: [
-    { label: 'secretaris@mutualfund.nl', href: 'mailto:secretaris@mutualfund.nl' },
-    { label: 'LinkedIn', href: '#' },
-    { label: 'Facebook', href: '#' },
-  ],
-}
+const footerLinks = [
+  { label: 'Over ons', href: '/over-ons' },
+  { label: 'Bestuur', href: '/bestuur' },
+  { label: 'Partners', href: '/partners' },
+  { label: 'Evenementen', href: '/events' },
+  { label: 'Nieuws', href: '/nieuws' },
+  { label: 'Pers', href: '/pers' },
+]
 
 export function Footer() {
   return (
-    <footer className="bg-navy-deep px-6 pb-8 pt-20 text-cream md:px-12">
-      <div className="mx-auto max-w-7xl">
-        {/* Top section */}
-        <div className="grid grid-cols-1 gap-10 border-b border-cream/10 pb-14 md:grid-cols-[2fr_1fr_1fr_1fr] md:gap-12">
-          {/* Brand */}
+    <footer className="site-footer market-grid">
+      <div className="site-container relative z-10">
+        <div className="site-footer__lead">
           <div>
-            <Link
-              href="/"
-              className="mb-4 inline-block font-serif text-[28px] font-medium tracking-tight"
-            >
-              Mutual <span className="italic text-gold">Fund</span>
-            </Link>
-            <p className="max-w-[320px] text-[15px] leading-relaxed text-cream/60">
-              Beleggingsvereniging voor financieel georiënteerde studenten in Amsterdam. Sinds 2010.
+            <p className="eyebrow">Amsterdam · 52.3676° N</p>
+            <h2>
+              Analyseer scherp.<br />
+              <em>Investeer samen.</em>
+            </h2>
+          </div>
+          <Link href="/contact" className="button button--gold">
+            Neem contact op <ArrowUpRight size={17} aria-hidden="true" />
+          </Link>
+        </div>
+
+        <div className="site-footer__grid">
+          <div className="site-footer__brand">
+            <BrandMark inverted />
+            <p>
+              De Amsterdamse beleggingsvereniging waar studenten met echt kapitaal investeren,
+              markten analyseren en een professioneel netwerk opbouwen.
             </p>
           </div>
 
-          {/* Vereniging */}
           <div>
-            <h4 className="mb-5 text-xs font-semibold uppercase tracking-[0.1em] text-gold-soft">
-              Vereniging
-            </h4>
-            <ul className="space-y-2.5">
-              {footerLinks.vereniging.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-cream/70 transition-colors hover:text-gold-soft"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
+            <h3>Navigatie</h3>
+            <ul>
+              {footerLinks.map((link) => (
+                <li key={link.href}><Link href={link.href}>{link.label}</Link></li>
               ))}
             </ul>
           </div>
 
-          {/* Pers */}
           <div>
-            <h4 className="mb-5 text-xs font-semibold uppercase tracking-[0.1em] text-gold-soft">
-              Pers
-            </h4>
-            <ul className="space-y-2.5">
-              {footerLinks.pers.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-cream/70 transition-colors hover:text-gold-soft"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+            <h3>Contact</h3>
+            <ul>
+              <li><a href="mailto:secretaris@mutualfund.nl">secretaris@mutualfund.nl</a></li>
+              <li><span>Amsterdam, Nederland</span></li>
             </ul>
           </div>
 
-          {/* Contact */}
-          <div>
-            <h4 className="mb-5 text-xs font-semibold uppercase tracking-[0.1em] text-gold-soft">
-              Contact
-            </h4>
-            <ul className="space-y-2.5">
-              {footerLinks.contact.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-cream/70 transition-colors hover:text-gold-soft"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          <div className="site-footer__signal" aria-label="Verenigingsgegevens">
+            <span><i /> Actief sinds 2010</span>
+            <strong>80+</strong>
+            <p>actieve studenten</p>
           </div>
         </div>
 
-        {/* Bottom section */}
-        <div className="mt-8 flex flex-col gap-3 text-sm text-cream/50 md:flex-row md:items-center md:justify-between">
-          <span>© 2026 Beleggersvereniging Mutual Fund</span>
-          <Link href="#" className="transition-colors hover:text-cream/70">
-            Privacy &amp; Cookies
-          </Link>
+        <div className="site-footer__bottom">
+          <span>© {new Date().getFullYear()} Beleggersvereniging Mutual Fund</span>
+          <span>Amsterdam · Nederland</span>
         </div>
       </div>
     </footer>
