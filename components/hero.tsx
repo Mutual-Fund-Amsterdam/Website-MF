@@ -1,68 +1,67 @@
 import Link from 'next/link'
-import { ArrowDown, ArrowRight } from 'lucide-react'
 
 export function Hero() {
   return (
-    <section className="home-hero market-grid">
-      <div className="site-container home-hero__inner">
-        <div className="home-hero__meta">
-          <span>Student investment society</span>
-          <span>Amsterdam · NL</span>
-          <span>Est. 2010</span>
-        </div>
+    <header className="relative min-h-screen overflow-hidden px-6 pt-[180px] pb-[120px] md:px-12">
+      {/* Background gradient */}
+      <div className="pointer-events-none absolute top-1/2 -right-[200px] h-[700px] w-[700px] bg-[radial-gradient(circle,rgba(184,146,74,0.08)_0%,transparent_70%)]" />
 
-        <div className="home-hero__grid">
-          <div className="home-hero__copy">
-            <p className="eyebrow">Echt kapitaal · echte besluiten</p>
-            <h1>
-              Analyse wordt<br />
-              <em>overtuiging.</em>
-            </h1>
-            <p className="home-hero__intro">
-              Mutual Fund is de Amsterdamse beleggingsvereniging waar ambitieuze studenten
-              financiële markten doorgronden, met echt kapitaal beleggen en een professioneel
-              netwerk opbouwen.
-            </p>
-            <div className="home-hero__actions">
-              <Link href="/over-ons" className="button button--gold">
-                Ontdek Mutual Fund <ArrowRight size={17} aria-hidden="true" />
-              </Link>
-              <Link href="/contact" className="button button--ghost-light">Word lid</Link>
-            </div>
+      <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
+        {/* Content */}
+        <div className="relative z-10">
+          <div className="mb-7 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-gold">
+            <span className="h-px w-8 bg-gold" />
+            Beleggingsvereniging · sinds 2010
           </div>
 
-          <div className="investment-system" aria-label="Het beleggingsproces van Mutual Fund">
-            <div className="investment-system__head">
-              <span>Investment process</span>
-              <i>MF / 03 Funds</i>
-            </div>
-            <div className="investment-system__film">
-              <iframe
-                src="https://www.youtube-nocookie.com/embed/5cAZ-VM_MpQ?autoplay=1&mute=1&controls=0&loop=1&playlist=5cAZ-VM_MpQ&playsinline=1&rel=0&disablekb=1&modestbranding=1&iv_load_policy=3"
-                title="Sfeerimpressie van Mutual Fund"
-                allow="autoplay; encrypted-media; picture-in-picture"
-                referrerPolicy="strict-origin-when-cross-origin"
-                tabIndex={-1}
-              />
-              <div className="investment-system__film-shade" aria-hidden="true" />
-              <div className="investment-system__film-label" aria-hidden="true">
-                <span>Inside Mutual Fund</span>
-                <i>Amsterdam / NL</i>
-              </div>
-            </div>
-            <ol className="investment-system__steps">
-              <li><span>01</span><strong>Research</strong><small>Markt & onderneming</small></li>
-              <li><span>02</span><strong>Pitch</strong><small>Thesis & waardering</small></li>
-              <li><span>03</span><strong>Vote</strong><small>Kritisch debat</small></li>
-              <li><span>04</span><strong>Allocate</strong><small>Echt kapitaal</small></li>
-            </ol>
+          <h1 className="mb-8 font-serif text-[clamp(48px,7vw,92px)] font-normal leading-[0.98] tracking-tight text-navy">
+            Beleggen
+            <br />
+            met <em className="font-light italic text-gold">passie.</em>
+          </h1>
+
+          <p className="mb-4 max-w-[480px] text-lg leading-relaxed text-muted-foreground">
+            Mutual Fund is dé beleggingsvereniging voor financieel georiënteerde studenten in
+            Amsterdam — een educatief platform waar analytisch denken en gezamenlijke besluitvorming
+            samenkomen.
+          </p>
+          <p className="mb-12 font-serif text-sm italic text-gold">
+            Wij komen bijeen op iedere tweede woensdag van de maand.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              href="#about"
+              className="group inline-flex items-center gap-2.5 rounded-sm bg-navy px-8 py-4 text-sm font-semibold tracking-wide text-cream transition-all hover:-translate-y-0.5 hover:bg-navy-deep"
+            >
+              Ontdek Mutual Fund
+              <span className="transition-transform group-hover:translate-x-0.5">→</span>
+            </Link>
+            <Link
+              href="#contact"
+              className="inline-flex items-center gap-2.5 rounded-sm border border-navy bg-transparent px-8 py-4 text-sm font-semibold tracking-wide text-navy transition-colors hover:bg-navy hover:text-cream"
+            >
+              Word lid
+            </Link>
           </div>
         </div>
 
-        <a href="#home-intro" className="home-hero__scroll">
-          <ArrowDown size={16} aria-hidden="true" /> Scroll om te ontdekken
-        </a>
+        {/* Stille, doorlopende sfeerimpressie */}
+        <aside className="relative z-10 lg:pl-4">
+          <div className="pointer-events-none absolute -inset-3 border border-gold/20" />
+          <div className="pointer-events-none relative aspect-video w-full overflow-hidden border border-gold/30 bg-navy shadow-[0_28px_70px_rgba(14,32,57,0.16)]">
+            <iframe
+              className="h-full w-full scale-[1.03]"
+              src="https://www.youtube.com/embed/5cAZ-VM_MpQ?autoplay=1&mute=1&controls=0&loop=1&playlist=5cAZ-VM_MpQ&playsinline=1&rel=0&disablekb=1"
+              title="Sfeerimpressie van Mutual Fund"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              tabIndex={-1}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-navy/25 via-transparent to-cream/5" />
+            <div className="absolute bottom-0 left-0 h-px w-24 bg-gold" />
+          </div>
+        </aside>
       </div>
-    </section>
+    </header>
   )
 }

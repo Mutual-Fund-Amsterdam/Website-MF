@@ -1,9 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Analytics } from '@vercel/analytics/next'
 import { Fraunces, Manrope } from 'next/font/google'
-import { Navigation } from '../components/navigation'
-import { Footer } from '../components/footer'
-import { MarketGate } from '../components/market-gate'
+import { Toaster } from '../components/ui/toaster' // 👈 1. Importeer de toaster hier
 import './globals.css'
 
 const fraunces = Fraunces({
@@ -18,51 +16,68 @@ const manrope = Manrope({
   display: 'swap',
 })
 
+// 🎨 Mobiele browserbalk kleur
 export const viewport: Viewport = {
-  themeColor: '#061429',
-  colorScheme: 'dark light',
+  themeColor: '#FAF9F6', 
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://website-mf.vercel.app'),
-  title: {
-    default: 'Mutual Fund — Beleggen met overtuiging',
-    template: '%s — Mutual Fund',
-  },
-  description:
-    'Mutual Fund is de Amsterdamse beleggingsvereniging waar studenten met echt kapitaal beleggen, financiële markten analyseren en een professioneel netwerk opbouwen.',
+  title: 'Mutual Fund — Beleggen met passie',
+  description: 'Mutual Fund is dé beleggingsvereniging voor financieel georiënteerde studenten in Amsterdam — een educatief platform waar analytisch denken, gezamenlijke besluitvorming en een gedeelde fascinatie voor de markten samenkomen.',
+  generator: 'v0.app',
   icons: {
     icon: [
-      { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },
-      { url: '/icon-dark-32x32.png', media: '(prefers-color-scheme: dark)' },
-      { url: '/icon.svg', type: 'image/svg+xml' },
+      {
+        url: '/icon-light-32x32.png',
+        media: '(prefers-color-scheme: light)',
+      },
+      {
+        url: '/icon-dark-32x32.png',
+        media: '(prefers-color-scheme: dark)',
+      },
+      {
+        url: '/icon.svg',
+        type: 'image/svg+xml',
+      },
     ],
     apple: '/apple-icon.png',
   },
+  // 📱 Zorgt voor mooie kaartjes bij het delen
   openGraph: {
-    title: 'Mutual Fund — Beleggen met overtuiging',
-    description: 'Beleggingsvereniging voor financieel georiënteerde studenten in Amsterdam.',
-    url: '/',
+    title: 'Mutual Fund — Beleggen met passie',
+    description: 'Dé beleggingsvereniging voor financieel georiënteerde studenten in Amsterdam.',
+    url: 'https://mutualfund.nl',
     siteName: 'Mutual Fund',
     locale: 'nl_NL',
     type: 'website',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Mutual Fund Amsterdam',
+      },
+    ],
   },
   twitter: {
-    card: 'summary',
-    title: 'Mutual Fund — Beleggen met overtuiging',
-    description: 'Beleggingsvereniging voor financieel georiënteerde studenten in Amsterdam.',
+    card: 'summary_large_image',
+    title: 'Mutual Fund — Beleggen met passie',
   },
 }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
   return (
-    <html lang="nl" className={`${fraunces.variable} ${manrope.variable}`}>
-      <body>
-        <a className="skip-link" href="#main-content">Ga naar de inhoud</a>
-        <MarketGate />
-        <Navigation />
+    // 🪄 scroll-smooth toegevoegd voor vloeiende navigatie
+    <html lang="nl" className={`${fraunces.variable} ${manrope.variable} bg-cream scroll-smooth`}>
+      <body className="font-sans antialiased leading-relaxed text-ink">
         {children}
-        <Footer />
+        {/* 🍞 2. Zet de Toaster hier neer, net boven Analytics! */}
+        <Toaster /> 
+        {/* 🧠 Vercel Analytics netjes en clean gehouden */}
         <Analytics />
       </body>
     </html>
