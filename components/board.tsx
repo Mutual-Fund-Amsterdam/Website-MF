@@ -5,7 +5,7 @@ const members = [
     name: 'Bryan Berlijn',
     role: 'Voorzitter',
     email: 'voorzitter@mutualfund.nl',
-    image: '/board/bryan-berlijn.webp',
+    image: '/board/lucas-ham.webp',
     linkedin: 'https://www.linkedin.com/in/bryan-berlijn/',
   },
   {
@@ -19,7 +19,7 @@ const members = [
     name: 'Lucas Ham',
     role: 'Penningmeester',
     email: 'penningmeester@mutualfund.nl',
-    image: '/board/lucas-ham.webp',
+    image: '/board/bryan-berlijn.webp',
     linkedin: 'https://www.linkedin.com/in/lucasham/',
   },
   {

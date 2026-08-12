@@ -18,10 +18,10 @@ export default function Home() {
         <Stats />
         <Pillars />
         <Board />
+        <Contact />
         <Testimonial />
         <Partners />
         <Steps />
-        <Contact />
       </main>
       <Footer />
     </>
