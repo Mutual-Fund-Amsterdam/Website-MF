@@ -2,71 +2,75 @@ import Image from 'next/image'
 
 const members = [
   {
-    name: 'Bas Morelissen',
+    name: 'Bryan Berlijn',
     role: 'Voorzitter',
     email: 'voorzitter@mutualfund.nl',
-    image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/bas-500x500-XzwwYiFKKDfNEBJg52sQ53WoxZWLkw.png',
+    image: '/board/bryan-berlijn.webp',
+    linkedin: 'https://www.linkedin.com/in/bryan-berlijn/',
   },
   {
-    name: 'Pieter van der Zijden',
+    name: 'Annemijn Hekelaar Gombert',
     role: 'Secretaris',
     email: 'secretaris@mutualfund.nl',
-    image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/pieter-500x500-U1J4492U8dR33HaSt7aayP2Tep8YBJ.png',
+    image: '/board/annemijn-hekelaar-gombert.webp',
+    linkedin: 'https://www.linkedin.com/in/annemijn-hekelaar-gombert-29a075211/',
   },
   {
-    name: 'Tom Arends',
+    name: 'Lucas Ham',
     role: 'Penningmeester',
     email: 'penningmeester@mutualfund.nl',
-    image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/tom-500x500-UTB4kMzTIJwovNrdlsO3M2owLkY7TN.png',
+    image: '/board/lucas-ham.webp',
+    linkedin: 'https://www.linkedin.com/in/lucasham/',
   },
   {
-    name: 'Sander van Dijk',
+    name: 'Florian van Heest',
     role: 'Algemeen bestuurslid',
     email: 'commissaris@mutualfund.nl',
-    image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/sander-500x500-TadSmLxuZU7PHfRtuOJRMnllenPl9Y.png',
+    image: '/board/florian-van-heest.webp',
+    linkedin: 'https://www.linkedin.com/in/florian-van-heest/',
   },
 ]
 
 export function Board() {
   return (
     <section id="bestuur" className="bg-cream-light px-6 py-[120px] md:px-12">
-      {/* Section Header */}
       <div className="mx-auto mb-[72px] grid max-w-7xl items-end gap-6 md:grid-cols-[1fr_2fr] md:gap-16">
-        <h2 className="font-serif text-[clamp(36px,4.5vw,56px)] font-normal leading-[1.05] tracking-tight text-navy">
-          Het <em className="font-light italic text-gold">bestuur.</em>
+        <h2 className="font-serif text-5xl leading-[1.05] tracking-tight text-navy md:text-7xl">
+          Het <em className="font-normal text-gold">bestuur.</em>
         </h2>
-        <p className="max-w-[540px] text-base leading-relaxed text-muted-foreground">
+        <p className="max-w-3xl text-lg leading-relaxed text-navy/70 md:text-xl">
           Vier studenten dragen de organisatorische verantwoordelijkheid. Bereikbaar, betrokken en
           aanspreekbaar voor leden en geïnteresseerden.
         </p>
       </div>
 
-      {/* Board Grid */}
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {members.map((member) => (
-          <div key={member.name} className="flex flex-col">
-            {/* Member Photo */}
-            <div className="relative mb-6 aspect-square overflow-hidden rounded-full">
+          <div key={member.name}>
+            <div className="relative mb-6 aspect-square overflow-hidden rounded-full bg-cream-light">
               <Image
                 src={member.image}
                 alt={member.name}
                 fill
-                className="object-cover"
+                sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                className="object-cover grayscale"
               />
             </div>
-
-            <h3 className="mb-1 font-serif text-[22px] font-medium text-navy">{member.name}</h3>
-            <div className="mb-4 text-xs font-semibold uppercase tracking-[0.06em] text-gold">
-              {member.role}
-            </div>
+            <h3 className="mb-2 font-serif text-2xl font-medium text-navy">{member.name}</h3>
+            <div className="mb-5 text-sm font-medium uppercase tracking-wide text-gold">{member.role}</div>
             <div className="flex gap-3 text-sm">
               <a
                 href={`mailto:${member.email}`}
-                className="text-muted-foreground transition-colors hover:text-navy"
+                className="text-navy/70 transition-colors hover:text-navy"
               >
                 E-mail
               </a>
-              <a href="#" className="text-muted-foreground transition-colors hover:text-navy">
+              <a
+                href={member.linkedin}
+                target="_blank"
+                rel="noreferrer"
+                className="text-navy/70 transition-colors hover:text-navy"
+              >
                 LinkedIn
               </a>
             </div>
