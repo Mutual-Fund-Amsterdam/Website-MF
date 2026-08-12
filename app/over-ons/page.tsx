@@ -1,106 +1,112 @@
-import { Navigation } from '../../components/navigation'
-import { Footer } from '../../components/footer'
 import type { Metadata } from 'next'
+import Link from 'next/link'
+import { ArrowRight, Check } from 'lucide-react'
+import { PageHero } from '../../components/page-hero'
+import { SectionHeading } from '../../components/section-heading'
+import { programItems } from '../../lib/content'
 
 export const metadata: Metadata = {
-  title: 'Over ons - Mutual Fund',
-  description: 'Leer meer over Mutual Fund, de beleggingsvereniging voor studenten in Amsterdam.',
+  title: 'Over ons',
+  description: 'Ontdek Mutual Fund, de Amsterdamse beleggingsvereniging waar studenten met echt kapitaal investeren.',
 }
 
-const programItems = [
-  { time: '19:00', description: 'Start maandelijkse meeting' },
-  { time: '19:15', description: 'Macro-economische update door de Macro-commissie' },
-  { time: '19:30', description: "Tell Me Something I Don't Know" },
-  { time: '20:15', description: 'Pauze' },
-  { time: '20:45', description: 'Afzonderlijke fondsbesprekingen (fonds 1, 2 & 3)' },
-  { time: '22:00', description: 'Afsluitende borrel op externe locatie' },
+const funds = [
+  { name: 'Fonds 01', members: '±25 leden', focus: 'Research · pitches · allocatie' },
+  { name: 'Fonds 02', members: '±25 leden', focus: 'Research · pitches · allocatie' },
+  { name: 'Fonds 03', members: '±25 leden', focus: 'Research · pitches · allocatie' },
 ]
 
 export default function OverOnsPage() {
   return (
-    <>
-      <Navigation />
-      <main className="min-h-screen bg-cream pt-32">
-        <section className="px-6 pb-20 md:px-12">
-          <div className="mx-auto max-w-4xl">
-            <h1 className="mb-8 font-serif text-[clamp(40px,5vw,64px)] font-normal leading-[1.05] tracking-tight text-navy">
-              Over het <em className="font-light italic text-gold">Mutual Fund.</em>
-            </h1>
-            <p className="text-lg leading-relaxed text-muted-foreground">
-              Mutual Fund is een vereniging voor studenten met een affiniteit voor beleggen en
-              financiele markten. Mutual Fund heeft zowel een educatief en sociaal doeleinde.
-            </p>
+    <main id="main-content">
+      <PageHero
+        index="01 / 07"
+        eyebrow="Over Mutual Fund"
+        title={<>Geen papieren portefeuille.<br /><em>Wel echte verantwoordelijkheid.</em></>}
+        description="Mutual Fund is in 2010 opgericht voor studenten met een fascinatie voor beleggen en financiële markten. Vandaag vormen meer dan 80 actieve studenten een educatieve én sociale investment community."
+        aside={<Link href="/contact" className="text-link-light">Lid worden <ArrowRight size={16} aria-hidden="true" /></Link>}
+      />
+
+      <section className="section section--cream">
+        <div className="site-container editorial-grid">
+          <div className="editorial-grid__aside">
+            <span>Onze overtuiging</span>
+            <p>Education through allocation</p>
           </div>
-        </section>
-        <section className="bg-navy px-6 py-20 md:px-12">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="mb-12 font-serif text-[clamp(32px,4vw,48px)] font-normal leading-tight text-cream">
-              Programma
-            </h2>
-            <p className="mb-10 text-base leading-relaxed text-cream/70">
-              Het programma van een Mutual Fund-meeting ziet er normaal gesproken als volgt uit:
+          <div className="editorial-grid__body">
+            <p className="editorial-lead">
+              Beleggen leer je niet alleen uit een boek. Je leert het door een thesis te bouwen,
+              die tegenover kritische medestudenten te verdedigen en vervolgens samen een besluit
+              te nemen over <em>echt kapitaal.</em>
             </p>
-            <div className="space-y-0">
-              {programItems.map((item, index) => (
-                <div key={index} className="flex border-b border-cream/10 py-4 first:border-t">
-                  <span className="w-20 shrink-0 font-serif text-lg text-gold">{item.time}</span>
-                  <span className="text-base text-cream/90">{item.description}</span>
-                </div>
-              ))}
+            <div className="editorial-columns">
+              <p>
+                Mutual Fund combineert analytische verdieping met gezamenlijke besluitvorming.
+                Ieder lid volgt een onderneming binnen de portefeuille en houdt het fonds op de
+                hoogte van relevante ontwikkelingen.
+              </p>
+              <p>
+                Partners, alumni en gastsprekers brengen de praktijk dichtbij. Daardoor groeit
+                niet alleen marktkennis, maar ook het netwerk dat studenten voorbereidt op een
+                loopbaan binnen finance.
+              </p>
             </div>
           </div>
-        </section>
-        <section className="bg-cream-light px-6 py-20 md:px-12">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="mb-6 font-serif text-[clamp(28px,3.5vw,40px)] font-normal leading-tight text-navy">
-              Macro-Economische Update
-            </h2>
-            <p className="text-base leading-relaxed text-muted-foreground">
-              Maandelijks geeft onze macro-commissie een update over belangrijke macro-economische
-              gebeurtenissen van de afgelopen maand.
-            </p>
+        </div>
+      </section>
+
+      <section className="funds-section market-grid">
+        <div className="site-container relative z-10">
+          <SectionHeading
+            eyebrow="Portfolio architecture"
+            title={<>Drie fondsen.<br /><em>Één scherpe standaard.</em></>}
+            description="Elk fonds bestaat uit ongeveer 25 leden. Ieder lid legt €500 in, volgt een aandeel en draagt bij aan de gezamenlijke portefeuille."
+            inverted
+          />
+          <div className="funds-grid">
+            {funds.map((fund, index) => (
+              <article key={fund.name}>
+                <div className="funds-grid__head"><span>{fund.name}</span><i>0{index + 1}</i></div>
+                <strong>{fund.members}</strong>
+                <p>{fund.focus}</p>
+                <div className="funds-grid__line"><span style={{ width: `${72 + index * 8}%` }} /></div>
+              </article>
+            ))}
           </div>
-        </section>
-        <section className="bg-cream px-6 py-20 md:px-12">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="mb-6 font-serif text-[clamp(28px,3.5vw,40px)] font-normal leading-tight text-navy">
-              Tell Me Something I Don&apos;t Know
-            </h2>
-            <p className="text-base leading-relaxed text-muted-foreground">
-              Op de maandelijkse meeting wordt er een Tell Me Something I Don&apos;t Know (TMSIDK)
-              gegeven door een bedrijf uit ons partnernetwerk. Het doel is om de
-              beleggingsinhoudelijke kennis van onze leden te verbreden en te verdiepen.
-              Zo is recentelijk bijvoorbeeld IBS Capital Allies langsgekomen om te vertellen over
-              waardebeleggen.
-            </p>
+          <ul className="fund-principles">
+            <li><Check size={16} aria-hidden="true" /> Maandelijkse evaluatie</li>
+            <li><Check size={16} aria-hidden="true" /> Democratische besluitvorming</li>
+            <li><Check size={16} aria-hidden="true" /> Onderlinge rendementscompetitie</li>
+          </ul>
+        </div>
+      </section>
+
+      <section className="section meeting-section">
+        <div className="site-container">
+          <SectionHeading
+            eyebrow="Iedere tweede woensdag"
+            title={<>Een avond met <em>ritme.</em></>}
+            description="De maandelijkse meeting volgt een vaste structuur: van macrobeeld en nieuwe inzichten naar de concrete beslissingen binnen ieder fonds."
+          />
+          <div className="meeting-table" role="table" aria-label="Programma van een Mutual Fund-meeting">
+            {programItems.map((item, index) => (
+              <div key={item.time} role="row">
+                <span role="cell">0{index + 1}</span>
+                <time role="cell">{item.time}</time>
+                <p role="cell">{item.description}</p>
+              </div>
+            ))}
           </div>
-        </section>
-        <section className="bg-cream-light px-6 py-20 md:px-12">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="mb-6 font-serif text-[clamp(28px,3.5vw,40px)] font-normal leading-tight text-navy">
-              Fondsbespreking
-            </h2>
-            <p className="text-base leading-relaxed text-muted-foreground">
-              Binnen Mutual Fund zijn er drie fondsen (Fonds 1, Fonds 2 en Fonds 3). Elk fonds
-              bestaat uit ongeveer 25 leden, die allen een bedrag van 500 euro inleggen, en ieder
-              een specifiek aandeel volgen binnen de fondsportefeuille.
-            </p>
-          </div>
-        </section>
-        <section className="bg-cream px-6 py-20 md:px-12">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="mb-6 font-serif text-[clamp(28px,3.5vw,40px)] font-normal leading-tight text-navy">
-              Andere Evenementen
-            </h2>
-            <p className="text-base leading-relaxed text-muted-foreground">
-              Naast de maandelijkse meetings worden er ook andere evenementen georganiseerd,
-              zoals workshops, inhousedagen en sociale activiteiten. Elk jaar organiseren we
-              ook een reis.
-            </p>
-          </div>
-        </section>
-      </main>
-      <Footer />
-    </>
+        </div>
+      </section>
+
+      <section className="knowledge-strip">
+        <div className="site-container knowledge-strip__grid">
+          <article><span>01</span><h2>Macro-economische update</h2><p>De Macro-commissie duidt maandelijks de belangrijkste economische gebeurtenissen en hun impact op de portefeuille.</p></article>
+          <article><span>02</span><h2>Tell Me Something I Don’t Know</h2><p>Een expert uit ons partnernetwerk verbreedt de beleggingsinhoudelijke kennis van de leden met een nieuw perspectief.</p></article>
+          <article><span>03</span><h2>Meer dan meetings</h2><p>Workshops, inhousedagen, sociale activiteiten en de jaarlijkse reis verbinden verdieping met een hechte community.</p></article>
+        </div>
+      </section>
+    </main>
   )
 }

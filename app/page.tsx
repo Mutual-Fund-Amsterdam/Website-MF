@@ -1,4 +1,3 @@
-import { Navigation } from '../components/navigation'
 import { Hero } from '../components/hero'
 import { Stats } from '../components/stats'
 import { Pillars } from '../components/pillars'
@@ -7,23 +6,18 @@ import { Testimonial } from '../components/testimonial'
 import { Partners } from '../components/partners'
 import { Steps } from '../components/steps'
 import { Contact } from '../components/contact'
-import { Footer } from '../components/footer'
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <>
-      <Navigation />
-      <main>
-        <Hero />
-        <Stats />
-        <Pillars />
-        <Board />
-        <Contact />
-        <Testimonial />
-        <Partners />
-        <Steps />
-      </main>
-      <Footer />
-    </>
+    <main id="main-content">
+      <Hero />
+      <Stats />
+      <Pillars />
+      <Board />
+      <Testimonial />
+      <Partners limit={8} />
+      <Steps />
+      <Contact compact />
+    </main>
   )
 }
