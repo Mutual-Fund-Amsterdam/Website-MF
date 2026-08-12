@@ -34,19 +34,22 @@ const members = [
 export function Board() {
   return (
     <section id="bestuur" className="bg-cream-light px-6 py-[120px] md:px-12">
+      {/* Section Header */}
       <div className="mx-auto mb-[72px] grid max-w-7xl items-end gap-6 md:grid-cols-[1fr_2fr] md:gap-16">
-        <h2 className="font-serif text-5xl leading-[1.05] tracking-tight text-navy md:text-7xl">
-          Het <em className="font-normal text-gold">bestuur.</em>
+        <h2 className="font-serif text-[clamp(36px,4.5vw,56px)] font-normal leading-[1.05] tracking-tight text-navy">
+          Het <em className="font-light italic text-gold">bestuur.</em>
         </h2>
-        <p className="max-w-3xl text-lg leading-relaxed text-navy/70 md:text-xl">
+        <p className="max-w-[540px] text-base leading-relaxed text-muted-foreground">
           Vier studenten dragen de organisatorische verantwoordelijkheid. Bereikbaar, betrokken en
           aanspreekbaar voor leden en geïnteresseerden.
         </p>
       </div>
 
+      {/* Board Grid */}
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {members.map((member) => (
-          <div key={member.name}>
+          <div key={member.name} className="flex flex-col">
+            {/* Member Photo */}
             <div className="relative mb-6 aspect-square overflow-hidden rounded-full bg-cream-light">
               <Image
                 src={member.image}
@@ -56,12 +59,15 @@ export function Board() {
                 className="object-cover grayscale"
               />
             </div>
-            <h3 className="mb-2 font-serif text-2xl font-medium text-navy">{member.name}</h3>
-            <div className="mb-5 text-sm font-medium uppercase tracking-wide text-gold">{member.role}</div>
+
+            <h3 className="mb-1 font-serif text-[22px] font-medium text-navy">{member.name}</h3>
+            <div className="mb-4 text-xs font-semibold uppercase tracking-[0.06em] text-gold">
+              {member.role}
+            </div>
             <div className="flex gap-3 text-sm">
               <a
                 href={`mailto:${member.email}`}
-                className="text-navy/70 transition-colors hover:text-navy"
+                className="text-muted-foreground transition-colors hover:text-navy"
               >
                 E-mail
               </a>
@@ -69,7 +75,7 @@ export function Board() {
                 href={member.linkedin}
                 target="_blank"
                 rel="noreferrer"
-                className="text-navy/70 transition-colors hover:text-navy"
+                className="text-muted-foreground transition-colors hover:text-navy"
               >
                 LinkedIn
               </a>
