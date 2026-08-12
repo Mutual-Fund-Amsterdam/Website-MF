@@ -1,0 +1,111 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Brand Colors */
+  --navy: #0B1F3A;
+  --navy-deep: #061429;
+  --cream: #F7F3EC;
+  --cream-light: #FBF8F2;
+  --gold: #B8924A;
+  --gold-soft: #C9A961;
+  --ink: #1A2238;
+  --muted: #5A6478;
+  --line: #E4DDD0;
+  
+  /* Semantic tokens */
+  --background: var(--cream);
+  --foreground: var(--ink);
+  --card: var(--cream-light);
+  --card-foreground: var(--ink);
+  --popover: var(--cream-light);
+  --popover-foreground: var(--ink);
+  --primary: var(--navy);
+  --primary-foreground: var(--cream);
+  --secondary: var(--cream-light);
+  --secondary-foreground: var(--navy);
+  --muted-color: var(--muted);
+  --muted-foreground: var(--muted);
+  --accent: var(--gold);
+  --accent-foreground: var(--navy);
+  --destructive: #c25450;
+  --destructive-foreground: var(--cream);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--gold);
+  --radius: 2px;
+}
+
+@theme inline {
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), Georgia, serif;
+  --font-mono: 'Geist Mono', monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted-color);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 1px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+  
+  /* Custom brand colors */
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  --color-cream: var(--cream);
+  --color-cream-light: var(--cream-light);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-ink: var(--ink);
+  --color-line: var(--line);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+}
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  /* Omdat we 1 lange balk hebben met de logo's er 2x in, schuiven we hem precies tot de helft op! */
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee-container {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content; /* Deze is cruciaal: maakt de balk eindeloos breed */
+  animation: marquee 30s linear infinite;
+}
+
+.animate-marquee-container:hover .animate-marquee {
+  animation-play-state: paused;
+}
