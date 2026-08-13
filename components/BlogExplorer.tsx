@@ -11,6 +11,7 @@ const categories: Array<"Alles" | BlogCategory> = [
   "Reis",
   "Event",
   "Pitch",
+  "Pers",
 ];
 
 export default function BlogExplorer({ posts }: { posts: BlogPost[] }) {

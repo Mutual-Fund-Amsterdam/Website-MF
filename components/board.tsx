@@ -37,7 +37,7 @@ export function Board() {
       {/* Section Header */}
       <div className="mx-auto mb-[72px] grid max-w-7xl items-end gap-6 md:grid-cols-[1fr_2fr] md:gap-16">
         <h2 className="font-serif text-[clamp(36px,4.5vw,56px)] font-normal leading-[1.05] tracking-tight text-navy">
-          Het <em className="font-light italic text-gold">bestuur.</em>
+          Het <em className="board-gold font-light italic">bestuur.</em>
         </h2>
         <p className="max-w-[540px] text-base leading-relaxed text-muted-foreground">
           Vier studenten dragen de organisatorische verantwoordelijkheid. Bereikbaar, betrokken en
@@ -61,7 +61,7 @@ export function Board() {
             </div>
 
             <h3 className="mb-1 font-serif text-[22px] font-medium text-navy">{member.name}</h3>
-            <div className="mb-4 text-xs font-semibold uppercase tracking-[0.06em] text-gold">
+            <div className="board-gold mb-4 text-xs font-semibold uppercase tracking-[0.06em]">
               {member.role}
             </div>
             <div className="flex gap-3 text-sm">

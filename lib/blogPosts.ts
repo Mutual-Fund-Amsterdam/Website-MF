@@ -1,4 +1,4 @@
-export type BlogCategory = "Meeting" | "Reis" | "Event" | "Pitch";
+export type BlogCategory = "Meeting" | "Reis" | "Event" | "Pitch" | "Pers";
 
 export type BlogPost = {
   title: string;
@@ -9,18 +9,21 @@ export type BlogPost = {
   cover: string;
   excerpt: string;
   body: string[];
+  source?: {
+    outlet: string;
+    href: string;
+    label: string;
+  };
 };
 
-// Voeg een nieuw object aan deze array toe om een blogpost te publiceren.
-export const blogPosts: BlogPost[] = [
+const posts: BlogPost[] = [
   {
     title: "Recap: maandelijkse meeting oktober",
     slug: "recap-maandelijkse-meeting-oktober",
     date: "2026-10-15",
     displayDate: "15 oktober 2026",
     category: "Meeting",
-    cover:
-      "https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1600&q=85",
+    cover: "/images/mf-meeting-audience.jpg",
     excerpt:
       "Van macro-update tot fondsbespreking: dit waren de ideeën en inzichten die onze oktobermeeting bepaalden.",
     body: [
@@ -35,8 +38,7 @@ export const blogPosts: BlogPost[] = [
     date: "2026-08-12",
     displayDate: "12 augustus 2026",
     category: "Reis",
-    cover:
-      "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1600&q=85",
+    cover: "/images/mf-meeting-barclays.png",
     excerpt:
       "Een inhoudelijke reis langs de City, met gesprekken over markten, private banking en carrières in finance.",
     body: [
@@ -51,8 +53,7 @@ export const blogPosts: BlogPost[] = [
     date: "2026-06-18",
     displayDate: "18 juni 2026",
     category: "Pitch",
-    cover:
-      "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1600&q=85",
+    cover: "/images/mf-meeting-discussion.png",
     excerpt:
       "Drie teams verdedigden hun investment case. Dit is hoe analyse, discussie en stemming tot nieuwe posities leidden.",
     body: [
@@ -61,7 +62,88 @@ export const blogPosts: BlogPost[] = [
       "Na discussie stemden de fondsen over omvang en timing. Daarmee werden drie nieuwe posities aan de gezamenlijke portefeuilles toegevoegd.",
     ],
   },
+  {
+    title: "Mutual Fund luidt de gong op Beursplein 5",
+    slug: "mutual-fund-luidt-gong-euronext",
+    date: "2026-06-16",
+    displayDate: "16 juni 2026",
+    category: "Event",
+    cover: "/images/mf-gong-euronext.jpg",
+    excerpt:
+      "Ter ere van het 15-jarig bestaan opende Mutual Fund de handelsdag bij Euronext Amsterdam.",
+    body: [
+      "Mutual Fund vierde haar 15-jarig bestaan op een bijzondere plek: Beursplein 5. Penningmeester Tom Arends had de eer om met de gong de handelsdag bij Euronext Amsterdam officieel te openen.",
+      "De ceremonie werd bijgewoond door leden van Fonds 3, het best presterende beleggingsfonds binnen de vereniging. Daarmee kwamen vijftien jaar financiële educatie, debat en beleggen met echt kapitaal samen op de Amsterdamse beursvloer.",
+      "Het bezoek onderstreepte waar Mutual Fund voor staat: studenten vroeg in aanraking brengen met de werking van financiële markten en met professionals uit de sector.",
+    ],
+    source: {
+      outlet: "De Telegraaf",
+      href: "https://www.telegraaf.nl/financieel/live-adyen-en-banken-vallen-in-de-smaak-aperam-kijkt-aan-tegen-stevig-verlies/157266051.html",
+      label: "Bekijk het artikel in De Telegraaf",
+    },
+  },
+  {
+    title: "Mutual Fund bij Nieuwsuur over de AEX richting 1.000 punten",
+    slug: "mutual-fund-bij-nieuwsuur-aex-1000",
+    date: "2026-01-13",
+    displayDate: "13 januari 2026",
+    category: "Pers",
+    cover: "/images/mf-meeting-audience.jpg",
+    excerpt:
+      "Nieuwsuur onderzocht waarom de beurs bleef stijgen ondanks geopolitieke spanningen en sprak over de AEX die de grens van 1.000 punten naderde.",
+    body: [
+      "In een uitzending over de sterke beurskoersen onderzocht Nieuwsuur waarom aandelenmarkten bleven oplopen terwijl geopolitieke spanningen het nieuws domineerden.",
+      "De AEX naderde op dat moment de grens van 1.000 punten. De uitzending laat zien hoe beleggers naar het verschil kijken tussen het dagelijkse nieuws, verwachtingen over bedrijfswinsten en de ontwikkeling van aandelenkoersen.",
+    ],
+    source: {
+      outlet: "Nieuwsuur",
+      href: "https://nos.nl/nieuwsuur/video/2598071-hoge-beurskoersen-terwijl-de-wereld-in-brand-staat",
+      label: "Bekijk de uitzending van Nieuwsuur",
+    },
+  },
+  {
+    title: "Crisis? Voor Mutual Fund waren het juist interessante tijden",
+    slug: "mutual-fund-in-het-parool-crisis",
+    date: "2025-04-18",
+    displayDate: "18 april 2025",
+    category: "Pers",
+    cover: "/images/mf-meeting-discussion.png",
+    excerpt:
+      "Het Parool sprak met studenten van Mutual Fund over kalm blijven, analyseren en beleggen tijdens onrustige markten.",
+    body: [
+      "Het Parool volgde de studenten van Mutual Fund tijdens een periode waarin onzekerheid de financiële markten beheerste.",
+      "Centraal stond de manier waarop leden marktnieuws vertalen naar analyse: niet impulsief reageren op iedere koersbeweging, maar de oorspronkelijke investment case blijven toetsen en besluiten gezamenlijk onderbouwen.",
+    ],
+    source: {
+      outlet: "Het Parool",
+      href: "https://www.parool.nl/amsterdam/crisis-voor-de-studenten-van-deze-beleggingsclub-zijn-het-mooie-tijden-gewoon-rustig-blijven~b885bbd7/",
+      label: "Lees het artikel in Het Parool",
+    },
+  },
+  {
+    title: "Eerst beleggen en daarna door naar de kroeg",
+    slug: "mutual-fund-in-het-parool-beleggingsclubjes",
+    date: "2020-02-13",
+    displayDate: "13 februari 2020",
+    category: "Pers",
+    cover: "/images/mf-borrel.png",
+    excerpt:
+      "Het Parool bezocht Amsterdamse beleggingsclubs en beschreef hoe inhoud, echt kapitaal en het sociale verenigingsleven samenkomen.",
+    body: [
+      "Het Parool schreef over de combinatie die Mutual Fund al jaren kenmerkt: studenten bespreken financiële markten en portefeuilleposities serieus, maar bouwen tegelijkertijd aan een hechte vereniging.",
+      "Na de analyses, pitches en stemmingen is er ruimte om informeel na te praten. Juist die combinatie maakt dat leden niet alleen kennis opbouwen, maar ook een netwerk binnen de financiële sector.",
+    ],
+    source: {
+      outlet: "Het Parool",
+      href: "https://www.parool.nl/ps/beleggingsclubjes-eerst-beleggen-en-dan-door-naar-de-kroeg~bd92a06c/",
+      label: "Lees het artikel in Het Parool",
+    },
+  },
 ];
+
+export const blogPosts = [...posts].sort((first, second) =>
+  second.date.localeCompare(first.date),
+);
 
 export function getBlogPost(slug: string) {
   return blogPosts.find((post) => post.slug === slug);
