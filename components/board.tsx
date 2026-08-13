@@ -37,11 +37,11 @@ export function Board() {
       {/* Section Header */}
       <div className="mx-auto mb-[72px] grid max-w-7xl items-end gap-6 md:grid-cols-[1fr_2fr] md:gap-16">
         <h2 className="font-serif text-[clamp(36px,4.5vw,56px)] font-normal leading-[1.05] tracking-tight text-navy">
-          Het <em className="board-gold font-light italic">bestuur.</em>
+          Het <em className="board-gold font-light italic">16e bestuur.</em>
         </h2>
         <p className="max-w-[540px] text-base leading-relaxed text-muted-foreground">
-          Vier studenten dragen de organisatorische verantwoordelijkheid. Bereikbaar, betrokken en
-          aanspreekbaar voor leden en geïnteresseerden.
+          Met z’n vieren organiseren we de meetings, onderhouden we het partnernetwerk en zijn we
+          het eerste aanspreekpunt voor leden en geïnteresseerden.
         </p>
       </div>
 

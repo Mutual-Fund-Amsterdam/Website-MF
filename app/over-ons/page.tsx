@@ -5,7 +5,7 @@ import { eventImages } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Over ons",
-  description: "Ontdek hoe Mutual Fund kennis, beleggen en een sterk netwerk samenbrengt.",
+  description: "Lees hoe de maandelijkse meetings en drie fondsen van Mutual Fund werken.",
 };
 
 const schedule = [
@@ -24,9 +24,9 @@ export default function AboutPage() {
         <p className="eyebrow">Over Mutual Fund</p>
         <h1>Van theorie naar overtuiging.</h1>
         <p>
-          Mutual Fund is een vereniging voor studenten met affiniteit voor beleggen en
-          financiële markten. We combineren educatie, echt kapitaal en een sociaal
-          netwerk waarin leden elkaar inhoudelijk uitdagen.
+          Mutual Fund is er voor Amsterdamse studenten die verder willen gaan dan
+          koersnieuws volgen. We beheren echt kapitaal, bespreken aandelen en zijn
+          niet bang om elkaars aannames onderuit te halen.
         </p>
       </header>
 
@@ -90,10 +90,11 @@ export default function AboutPage() {
           </article>
           <article>
             <p className="eyebrow">04 · Vereniging</p>
-            <h2>Andere evenementen.</h2>
+            <h2>Buiten de meeting.</h2>
             <p>
-              Naast de maandelijkse meetings organiseren we workshops, inhousedagen,
-              sociale activiteiten en ieder jaar een reis voor de leden.
+              Door het jaar heen staan er workshops en inhousedagen op de agenda.
+              Daar komen borrels, andere sociale activiteiten en de jaarlijkse
+              ledenreis nog bij.
             </p>
           </article>
         </div>

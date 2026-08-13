@@ -13,15 +13,15 @@ const newsItems = [
     excerpt:
       "Een historisch moment voor de vereniging: we openen de beursdag bij Euronext Amsterdam.",
     date: "16 juni 2026",
-    href: "#",
+    href: "/blog/mutual-fund-luidt-gong-euronext",
   },
   {
     category: "Reis",
     title: "MF reis Milaan",
     excerpt:
-      "Alles over onze aanstaande studiereis naar het financiële hart van Italië.",
-    date: "Binnenkort",
-    href: "#",
+      "Van de beurs naar de wijnproeverij en het nachtleven: een reis met opvallend positieve alpha.",
+    date: "2026",
+    href: "/events",
   },
 ];
 

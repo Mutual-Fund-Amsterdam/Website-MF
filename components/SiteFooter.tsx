@@ -5,8 +5,8 @@ export default function SiteFooter() {
     <footer className="site-footer">
       <div className="container footer-grid">
         <div className="footer-intro">
-          <Link className="brand" href="/">
-            Mutual Fund
+          <Link className="brand footer-logo-link" href="/" aria-label="Mutual Fund — home">
+            <span className="footer-logo-mark" aria-hidden="true" />
           </Link>
           <p>
             Beleggingsvereniging voor financieel georiënteerde studenten in
