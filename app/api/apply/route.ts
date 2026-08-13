@@ -31,7 +31,6 @@ export async function POST(request: Request) {
     "email",
     "study",
     "studyYear",
-    "motivation",
   ];
 
   for (const field of requiredFields) {
@@ -92,8 +91,6 @@ export async function POST(request: Request) {
     <p><strong>Telefoon:</strong> ${escapeHtml(String(data.get("phone") || "Niet opgegeven"))}</p>
     <p><strong>Universiteit & studie:</strong> ${escapeHtml(String(data.get("study")))}</p>
     <p><strong>Studiejaar:</strong> ${escapeHtml(String(data.get("studyYear")))}</p>
-    <p><strong>Korte motivatie:</strong></p>
-    <p>${escapeHtml(String(data.get("motivation"))).replaceAll("\n", "<br>")}</p>
   `;
 
   const response = await fetch("https://api.resend.com/emails", {

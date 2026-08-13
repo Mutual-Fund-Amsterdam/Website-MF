@@ -7,9 +7,15 @@ export const metadata: Metadata = {
 
 const publications = [
   {
+    outlet: "De Telegraaf",
+    subject: "Mutual Fund luidt de gong bij Euronext Amsterdam",
+    date: "8 jul 2026",
+    href: "https://www.telegraaf.nl/financieel/live-adyen-en-banken-vallen-in-de-smaak-aperam-kijkt-aan-tegen-stevig-verlies/157266051.html",
+  },
+  {
     outlet: "Nieuwsuur NOS",
     subject: "Hoge beurskoersen terwijl de wereld in brand staat",
-    date: "2026",
+    date: "13 jan 2026",
     href: "https://nos.nl/nieuwsuur/video/2598071-hoge-beurskoersen-terwijl-de-wereld-in-brand-staat",
     isVideo: true,
   },
@@ -22,19 +28,15 @@ const publications = [
   {
     outlet: "Het Parool",
     subject: "Crisis? Voor de studenten van deze beleggingsclub zijn het mooie tijden: ‘Gewoon rustig blijven’",
-    date: "2025",
+    date: "18 apr 2025",
     href: "https://www.parool.nl/amsterdam/crisis-voor-de-studenten-van-deze-beleggingsclub-zijn-het-mooie-tijden-gewoon-rustig-blijven~b885bbd7/?referrer=https%3A%2F%2Fwww.google.com%2F",
   },
-  { outlet: "Beleggers Belangen", subject: "Studentenbeleggers van Mutual Fund", date: "2023", href: "#" },
-  { outlet: "Het Financieele Dagblad", subject: "Amsterdamse studenten beheren eigen beleggingsfonds", date: "2022", href: "#" },
-  { outlet: "Het Parool", subject: "Mutual Fund: waar studenten leren beleggen met echt geld", date: "2021", href: "#" },
   {
     outlet: "Het Parool",
     subject: "Beleggingsclubjes: eerst beleggen en dan door naar de kroeg",
-    date: "2020",
+    date: "13 feb 2020",
     href: "https://www.parool.nl/ps/beleggingsclubjes-eerst-beleggen-en-dan-door-naar-de-kroeg~bd92a06c/",
   },
-  { outlet: "De Telegraaf", subject: "Jonge beleggers zien kansen ondanks turbulente markten", date: "2020", href: "#" },
 ];
 
 export default function PressPage() {

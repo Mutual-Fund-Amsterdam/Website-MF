@@ -16,7 +16,6 @@ type Values = {
   phone: string;
   study: string;
   studyYear: string;
-  motivation: string;
 };
 
 const initialValues: Values = {
@@ -26,7 +25,6 @@ const initialValues: Values = {
   phone: "",
   study: "",
   studyYear: "",
-  motivation: "",
 };
 
 function formatSize(size: number) {
@@ -58,8 +56,6 @@ export default function ApplicationForm() {
         emailValid &&
         values.study.trim() &&
         values.studyYear &&
-        values.motivation.trim() &&
-        values.motivation.length <= 600 &&
         files.motivation &&
         files.cv,
     );
@@ -259,17 +255,6 @@ export default function ApplicationForm() {
           <option>Master</option>
           <option>Anders</option>
         </select>
-      </label>
-      <label className="textarea-wrap">
-        <span>Korte motivatie *</span>
-        <textarea
-          rows={7}
-          maxLength={600}
-          required
-          value={values.motivation}
-          onChange={(event) => setValues({ ...values, motivation: event.target.value })}
-        />
-        <small className="char-count">{values.motivation.length}/600</small>
       </label>
       <div className="upload-grid">
         {uploadZone("motivation", "Motivatiebrief")}

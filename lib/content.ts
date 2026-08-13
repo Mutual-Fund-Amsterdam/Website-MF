@@ -70,12 +70,8 @@ export const membershipSteps = [
 ];
 
 export const eventImages = {
-  meeting:
-    "https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1400&q=85",
-  workshop:
-    "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1400&q=85",
-  social:
-    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=85",
-  london:
-    "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1400&q=85",
+  meeting: "/images/mf-meeting-audience.jpg",
+  workshop: "/images/mf-meeting-discussion.png",
+  social: "/images/mf-borrel.png",
+  london: "/images/mf-meeting-barclays.png",
 };

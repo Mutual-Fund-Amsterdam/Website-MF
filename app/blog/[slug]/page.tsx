@@ -38,6 +38,19 @@ export default async function BlogDetailPage({ params }: Props) {
         <div className="article-prose">
           {post.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
         </div>
+        {post.source && (
+          <div className="article-source">
+            <p className="eyebrow">Externe publicatie · {post.source.outlet}</p>
+            <a
+              className="button button-outline"
+              href={post.source.href}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {post.source.label} ↗
+            </a>
+          </div>
+        )}
         <Link className="text-link article-back" href="/blog">← Terug naar blog</Link>
       </article>
     </main>
