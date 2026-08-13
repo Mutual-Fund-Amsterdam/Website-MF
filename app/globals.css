@@ -342,24 +342,40 @@ img {
 .hero-statement {
   position: absolute;
   z-index: 20;
-  top: 50%;
-  right: var(--gutter);
-  left: var(--gutter);
-  max-width: 1320px;
+  inset: 0;
+  margin: 0;
   color: var(--ink);
-  font-size: clamp(3.7rem, 7vw, 7.9rem);
   font-weight: 800;
   letter-spacing: -0.062em;
-  line-height: 0.86;
-  transform: translateY(-47%);
+  pointer-events: none;
   animation: hero-left 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.hero-statement span {
+.hero-statement-part {
+  position: absolute;
+  display: block;
+  width: max-content;
+  line-height: 0.84;
+}
+
+.hero-statement-part > span {
   display: block;
 }
 
-.hero-statement span:last-child {
+.hero-statement-leading {
+  top: 29%;
+  left: var(--gutter);
+  font-size: clamp(2.55rem, 3.75vw, 4.9rem);
+}
+
+.hero-statement-trailing {
+  right: var(--gutter);
+  bottom: 19%;
+  font-size: clamp(2.25rem, 3.25vw, 4.15rem);
+  text-align: right;
+}
+
+.hero-statement .hero-statement-accent {
   color: var(--accent);
 }
 
@@ -2143,12 +2159,19 @@ select:focus {
   }
 
   .hero-statement {
-    top: 43%;
-    right: 20px;
+    inset: 0;
+  }
+
+  .hero-statement-leading {
+    top: 17%;
     left: 20px;
-    font-size: clamp(2.45rem, 10.8vw, 4.7rem);
-    line-height: 0.9;
-    transform: translateY(-50%);
+    font-size: clamp(2.25rem, 9.8vw, 4rem);
+  }
+
+  .hero-statement-trailing {
+    right: 20px;
+    bottom: 17%;
+    font-size: clamp(1.95rem, 8.2vw, 3.35rem);
   }
 
   .aex-backdrop {

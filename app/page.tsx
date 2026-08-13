@@ -30,10 +30,22 @@ export default function Home() {
     <main id="main-content">
       <section className="hero" aria-labelledby="hero-title">
         <AexBackdrop />
-        <h1 id="hero-title" className="hero-statement">
-          <span>De beleggingsvereniging</span>
-          <span>voor de financiële leiders</span>
-          <span>van morgen.</span>
+        <h1
+          id="hero-title"
+          className="hero-statement"
+          aria-label="De beleggingsvereniging voor de financiële leiders van morgen."
+        >
+          <span className="hero-statement-part hero-statement-leading" aria-hidden="true">
+            <span>De</span>
+            <span>beleggings-</span>
+            <span>vereniging</span>
+          </span>
+          <span className="hero-statement-part hero-statement-trailing" aria-hidden="true">
+            <span>voor de</span>
+            <span>financiële</span>
+            <span>leiders van</span>
+            <span className="hero-statement-accent">morgen.</span>
+          </span>
         </h1>
         <figure className="bull-stage" aria-hidden="true">
           <div className="bull-shadow" />
