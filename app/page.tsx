@@ -9,18 +9,18 @@ import { membershipSteps } from "@/lib/content";
 const workCards = [
   {
     number: "01",
-    title: "Maandelijkse evaluatie",
-    text: "We toetsen rendement, verwachtingen en nieuws van iedere positie. Zo blijft elk fonds scherp op risico en overtuiging.",
+    title: "Iedere positie op tafel",
+    text: "Tijdens de maandelijkse meeting lopen we de portefeuille langs: wat is er veranderd, klopt de oorspronkelijke thesis nog en moeten we bijkopen, afbouwen of uitstappen?",
   },
   {
     number: "02",
-    title: "Buy- en sell-pitches",
-    text: "Leden bouwen een investment case, verdedigen hun analyse en stemmen gezamenlijk over aan- en verkopen met echt kapitaal.",
+    title: "Pitchen, vragen, stemmen",
+    text: "Een lid presenteert de waardering, katalysatoren en risico’s. Daarna volgen kritische vragen en beslist het fonds met echt kapitaal.",
   },
   {
     number: "03",
-    title: "Drie fondsen, één competitie",
-    text: "Drie zelfstandige portefeuilles combineren leren en presteren. Verschillende visies worden direct zichtbaar in de resultaten.",
+    title: "Drie eigen portefeuilles",
+    text: "Elk fonds maakt zijn eigen keuzes en houdt een eigen rendement bij. Zo zie je direct welke thesis standhoudt — en welk fonds bovenaan eindigt.",
   },
 ];
 
@@ -63,19 +63,20 @@ export default function Home() {
         <div className="container intro-grid">
           <div className="video-frame">
             <iframe
-              src="https://www.youtube.com/embed/5cAZ-VM_MpQ?autoplay=1&mute=1&controls=0&loop=1&playlist=5cAZ-VM_MpQ&playsinline=1&rel=0&disablekb=1"
+              src="https://www.youtube-nocookie.com/embed/5cAZ-VM_MpQ?autoplay=1&mute=1&controls=0&loop=1&playlist=5cAZ-VM_MpQ&playsinline=1&rel=0&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0"
               title="Mutual Fund — beleggen met passie"
-              allow="autoplay; encrypted-media; picture-in-picture"
+              allow="autoplay; encrypted-media"
               loading="lazy"
+              tabIndex={-1}
             />
           </div>
           <div className="intro-copy">
             <p className="eyebrow">De vereniging</p>
             <h2>Beleggen met passie.</h2>
             <p>
-              Mutual Fund is dé beleggingsvereniging voor financieel
-              georiënteerde studenten in Amsterdam — een educatief platform waar
-              analytisch denken en gezamenlijke besluitvorming samenkomen.
+              Mutual Fund is de Amsterdamse beleggingsvereniging voor studenten
+              die zelf aandelen willen analyseren. In drie fondsen beheren leden
+              echt kapitaal, pitchen ze hun ideeën en stemmen ze over de portefeuille.
             </p>
             <p className="intro-schedule">
               Wij komen bijeen op iedere tweede woensdag van de maand.
@@ -99,8 +100,8 @@ export default function Home() {
               <h2>Wat we doen.</h2>
             </div>
             <p>
-              Theorie wordt overtuiging wanneer je haar durft te verdedigen.
-              Mutual Fund brengt analyse, debat en echt kapitaal samen.
+              Een pitch is pas het begin. Het fonds prikt door de aannames heen,
+              bespreekt de risico’s en stemt uiteindelijk met echt geld.
             </p>
           </div>
           <div className="work-grid">
@@ -159,9 +160,9 @@ export default function Home() {
             <h2>Onze partners.</h2>
           </div>
           <p>
-            Professionals uit investment banking, private equity, asset
-            management en financiële markten brengen praktijkkennis rechtstreeks
-            naar onze leden.
+            Onze partners schuiven tijdens meetings aan voor een case, marktvisie
+            of praktische sessie over het werk in investment banking, private
+            equity en asset management.
           </p>
         </div>
         <PartnerMarquee />

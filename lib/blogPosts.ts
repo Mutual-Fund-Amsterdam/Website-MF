@@ -33,18 +33,18 @@ const posts: BlogPost[] = [
     ],
   },
   {
-    title: "Mutual Fund reis naar Londen: op bezoek bij J.P. Morgan",
-    slug: "mutual-fund-reis-londen-jpmorgan",
+    title: "Mutual Fund-reis naar Milaan: beurs, wijn en positieve alpha",
+    slug: "mutual-fund-reis-milaan",
     date: "2026-08-12",
     displayDate: "12 augustus 2026",
     category: "Reis",
-    cover: "/images/mf-meeting-barclays.png",
+    cover: "/images/mf-meeting-audience.jpg",
     excerpt:
-      "Een inhoudelijke reis langs de City, met gesprekken over markten, private banking en carrières in finance.",
+      "Van Borsa Italiana naar een wijnproeverij en het nachtleven: Milaan door de ogen van beleggers.",
     body: [
-      "Londen blijft een van de belangrijkste financiële centra ter wereld. Tijdens onze jaarlijkse reis bezochten leden verschillende partijen in de City en maakten zij kennis met de mensen achter internationale kapitaalmarkten.",
-      "Bij J.P. Morgan stond de ontwikkeling van private banking in Nederland centraal. De sessie bood een zeldzame combinatie van marktinhoud, persoonlijke loopbaaninzichten en een open gesprek over de vaardigheden die jonge professionals nodig hebben.",
-      "Naast het inhoudelijke programma was er vanzelfsprekend ruimte om Londen te ontdekken en elkaar buiten de maandelijkse meetings beter te leren kennen.",
+      "Voor de jaarlijkse ledenreis vertrok Mutual Fund naar Milaan. Op het programma stond een bezoek aan Borsa Italiana, waar de groep de Italiaanse beurs en de markt eromheen van dichtbij zag.",
+      "Daarna verschoof de analyse van multiples naar wijn: tijdens een proeverij werd uitgebreid besproken welke fles de aantrekkelijkste risk-returnverhouding bood. De positieve alpha van de avond liet zich niet volledig in Excel vangen.",
+      "Ook het Milanese nachtleven kreeg een plek in de portefeuille. EBITDA stond tijdens deze reis dan ook vooral voor Earnings Before Interest, Taxes, Depreciation and Aperitivo.",
     ],
   },
   {

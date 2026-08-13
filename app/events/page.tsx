@@ -12,26 +12,26 @@ const events = [
   {
     number: "01",
     title: "Trainingen en workshops",
-    text: "Regelmatig organiseren we trainingen en workshops om de hard skills die belangrijk zijn binnen de financiële sector bij te brengen aan onze leden. Voorbeelden zijn het waarderen van bedrijven met financiële modellen zoals de DCF en het werken met veelgebruikte financiële software als FactSet. Zo breiden leden hun vaardigheden uit en worden zij voorbereid op een carrière binnen de financiële sector.",
+    text: "Een DCF leer je pas echt bouwen door zelf aan de knoppen te zitten. Daarom organiseren we praktische sessies over waardering, financiële modellen en tools als FactSet. Leden werken mee, stellen vragen en nemen een model mee dat ze later opnieuw kunnen gebruiken.",
     image: eventImages.workshop,
   },
   {
     number: "02",
     title: "Inhousedagen",
-    text: "In de afgelopen jaren organiseerden we meerdere inhousedagen bij partners, waaronder de Waterland Investment Services Caseday, de IEX Media Caseday en de IBS Capital Allies Inhousedag. Leden ervaren zo van dichtbij hoe teams werken, waar investeringsbeslissingen ontstaan en welke loopbaanmogelijkheden de sector biedt.",
-    image: eventImages.meeting,
+    text: "Bij PwC waardeerden onze leden Nike in een valuation case, waarbij we het opnamen tegen Bona Fide. Ook stonden de Waterland Investment Services Caseday, de IEX Media Caseday en de IBS Capital Allies Inhousedag op het programma. Je werkt aan een echte case, spreekt het team en krijgt een eerlijk beeld van het werk.",
+    image: eventImages.companyDay,
   },
   {
     number: "03",
     title: "Borrels en sociale activiteiten",
-    text: "Naast alle educatieve activiteiten vinden we het belangrijk om elkaar beter te leren kennen. Na ieder evenement praten we na met een drankje en door het jaar heen organiseren we meerdere borrels en sociale activiteiten om de hechte sfeer binnen de vereniging te behouden.",
+    text: "Na de fondsbesprekingen gaan de laptops dicht en begint de borrel. Daarnaast plannen we door het jaar heen losse activiteiten waarbij rendement even niet het belangrijkste gespreksonderwerp is — al lukt dat meestal maar kort.",
     image: eventImages.social,
   },
   {
     number: "04",
-    title: "MF Reis",
-    text: "Eens per jaar organiseren we een reis van enkele dagen voor onze leden, meestal naar een Europese stad. In de afgelopen jaren reisde Mutual Fund onder meer naar Lissabon en Budapest. Bedrijfsbezoeken en inhoudelijke sessies worden gecombineerd met tijd om de stad en elkaar te leren kennen.",
-    image: eventImages.london,
+    title: "MF Reis naar Milaan",
+    text: "De Mutual Fund-reis ging naar Milaan, met een bezoek aan Borsa Italiana, een wijnproeverij en natuurlijk het Milanese nachtleven. Volgens de leden leverde dat minstens zoveel positieve alpha op. EBITDA stond die week vooral voor Earnings Before Interest, Taxes, Depreciation and Aperitivo.",
+    image: eventImages.trip,
   },
 ];
 
@@ -42,8 +42,8 @@ export default function EventsPage() {
         <p className="eyebrow">Het hele jaar</p>
         <h1>Events.</h1>
         <p>
-          Naast de maandelijkse meetings organiseren we inhoudelijke en sociale
-          activiteiten die vaardigheden, netwerk en vereniging samenbrengen.
+          Van een valuation case op kantoor tot een wijnproeverij in Milaan:
+          dit gebeurt er buiten de vaste fondsbesprekingen.
         </p>
       </header>
       <section className="container event-list">
