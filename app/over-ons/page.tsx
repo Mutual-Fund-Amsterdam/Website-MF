@@ -17,6 +17,41 @@ const schedule = [
   ["22:00", "Afsluitende borrel"],
 ];
 
+const pillars = [
+  {
+    number: "01",
+    label: "Macro",
+    title: "Macro-economische update.",
+    text: "Maandelijks geeft onze macrocommissie een update over de belangrijkste macro-economische gebeurtenissen van de afgelopen maand en vertaalt zij rente, inflatie en geopolitiek naar gevolgen voor onze portefeuilles.",
+    image: eventImages.meeting,
+    alt: "Leden tijdens een inhoudelijke bijeenkomst van Mutual Fund",
+  },
+  {
+    number: "02",
+    label: "Praktijk",
+    title: "Tell Me Something I Don’t Know.",
+    text: "Tijdens iedere maandelijkse meeting neemt een bedrijf uit ons partnernetwerk de leden mee in een relevant onderwerp. Zo verbreden en verdiepen we onze beleggingskennis met inzichten die direct uit de praktijk komen.",
+    image: eventImages.companyDay,
+    alt: "Een partnerpresentatie tijdens een meeting van Mutual Fund",
+  },
+  {
+    number: "03",
+    label: "Kapitaal",
+    title: "Fondsbespreking.",
+    text: "Mutual Fund bestaat uit drie fondsen van ongeveer 25 leden. Ieder lid legt €500 in en volgt een aandeel in de portefeuille. Na analyse, vragen en discussie stemmen we gezamenlijk over iedere positie.",
+    image: eventImages.workshop,
+    alt: "Leden in gesprek tijdens een fondsbespreking",
+  },
+  {
+    number: "04",
+    label: "Vereniging",
+    title: "Buiten de meeting.",
+    text: "Door het jaar heen organiseren we workshops, inhousedagen en sociale activiteiten. Ook de afsluitende borrel en jaarlijkse ledenreis maken Mutual Fund tot meer dan alleen een maandelijkse meeting.",
+    image: eventImages.social,
+    alt: "Leden van Mutual Fund tijdens een informele borrel",
+  },
+];
+
 export default function AboutPage() {
   return (
     <main id="main-content" className="page-shell">
@@ -57,46 +92,25 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="section section-elevated">
-        <div className="container knowledge-grid">
-          <article>
-            <p className="eyebrow">01 · Macro</p>
-            <h2>Macro-economische update.</h2>
-            <p>
-              Maandelijks geeft onze macrocommissie een update over de belangrijkste
-              macro-economische gebeurtenissen van de afgelopen maand en vertaalt zij
-              rente, inflatie en geopolitiek naar gevolgen voor onze portefeuilles.
-            </p>
-          </article>
-          <article>
-            <p className="eyebrow">02 · Praktijk</p>
-            <h2>Tell Me Something I Don’t Know.</h2>
-            <p>
-              Tijdens iedere maandelijkse meeting neemt een bedrijf uit ons
-              partnernetwerk de leden mee in een relevant onderwerp. Het doel is de
-              beleggingsinhoudelijke kennis te verbreden en te verdiepen. Zo vertelde
-              IBS Capital Allies recent over waardebeleggen.
-            </p>
-          </article>
-          <article>
-            <p className="eyebrow">03 · Kapitaal</p>
-            <h2>Fondsbespreking.</h2>
-            <p>
-              Mutual Fund bestaat uit drie fondsen van ongeveer 25 leden. Ieder lid
-              legt €500 in en volgt een specifiek aandeel in de portefeuille. Na
-              analyse, vragen en discussie wordt gezamenlijk gestemd over aankopen,
-              verkopen en de omvang van posities.
-            </p>
-          </article>
-          <article>
-            <p className="eyebrow">04 · Vereniging</p>
-            <h2>Buiten de meeting.</h2>
-            <p>
-              Door het jaar heen staan er workshops en inhousedagen op de agenda.
-              Daar komen borrels, andere sociale activiteiten en de jaarlijkse
-              ledenreis nog bij.
-            </p>
-          </article>
+      <section className="about-feature-section">
+        <div className="container about-feature-list">
+          {pillars.map((pillar, index) => (
+            <article
+              className={`about-feature${index % 2 === 1 ? " is-reversed" : ""}`}
+              key={pillar.label}
+            >
+              <div className="about-feature-media">
+                <img src={pillar.image} alt={pillar.alt} />
+              </div>
+              <div className="about-feature-copy">
+                <p className="eyebrow">
+                  {pillar.number} · {pillar.label}
+                </p>
+                <h2>{pillar.title}</h2>
+                <p>{pillar.text}</p>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 

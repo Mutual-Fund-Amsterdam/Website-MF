@@ -35,11 +35,11 @@ export function Board() {
   return (
     <section id="bestuur" className="bg-cream-light px-6 py-[120px] md:px-12">
       {/* Section Header */}
-      <div className="mx-auto mb-[72px] grid max-w-7xl items-end gap-6 md:grid-cols-[1fr_2fr] md:gap-16">
+      <div className="mx-auto mb-[72px] grid max-w-7xl items-start gap-6 md:grid-cols-[1fr_2fr] md:gap-16">
         <h2 className="font-serif text-[clamp(36px,4.5vw,56px)] font-normal leading-[1.05] tracking-tight text-navy">
           Het <em className="board-gold font-light italic">16e bestuur.</em>
         </h2>
-        <p className="max-w-[540px] text-base leading-relaxed text-muted-foreground">
+        <p className="max-w-[540px] text-base leading-relaxed text-muted-foreground md:pt-1">
           Met z’n vieren organiseren we de meetings, onderhouden we het partnernetwerk en zijn we
           het eerste aanspreekpunt voor leden en geïnteresseerden.
         </p>

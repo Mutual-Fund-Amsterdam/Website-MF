@@ -35,7 +35,9 @@ export default function SiteHeader() {
   const elevated = scrolled || pathname !== "/";
 
   return (
-    <header className={`site-header${elevated ? " is-elevated" : ""}`}>
+    <header
+      className={`site-header${pathname === "/" ? " is-home" : ""}${elevated ? " is-elevated" : ""}`}
+    >
       <div className="nav-inner">
         <Link className="brand" href="/" aria-label="Mutual Fund homepage" onClick={() => setOpen(false)}>
           Mutual Fund
