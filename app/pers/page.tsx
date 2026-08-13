@@ -1,128 +1,81 @@
-import Link from 'next/link'
-import { Navigation } from '../../components/navigation'
-import { Footer } from '../../components/footer'
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: 'Pers & Publicaties - Mutual Fund',
-  description: 'Mutual Fund in de media.',
-}
+export const metadata: Metadata = {
+  title: "Pers",
+  description: "Publicaties en perscontact van Mutual Fund.",
+};
 
 const publications = [
   {
-    outlet: 'Nieuwsuur NOS',
-    title: "Hoge beurskoersen terwijl de wereld in brand staat",
-    date: '2026',
-    href: 'https://nos.nl/nieuwsuur/video/2598071-hoge-beurskoersen-terwijl-de-wereld-in-brand-staat',
-    isVideo: true, // Hier is het vlaggetje voor de video!
+    outlet: "Nieuwsuur NOS",
+    subject: "Hoge beurskoersen terwijl de wereld in brand staat",
+    date: "2026",
+    href: "https://nos.nl/nieuwsuur/video/2598071-hoge-beurskoersen-terwijl-de-wereld-in-brand-staat",
+    isVideo: true,
   },
   {
-    outlet: 'de Volkskrant',
-    title: "Deze jonge investeerders oefenen voor later",
-    date: '2025',
-    href: 'https://www.volkskrant.nl/economie/deze-jonge-investeerders-oefenen-voor-later-hoe-eerder-je-begint-hoe-meer-vermogen-je-opbouwt~b0127cd9/',
+    outlet: "de Volkskrant",
+    subject: "Deze jonge investeerders oefenen voor later",
+    date: "2025",
+    href: "https://www.volkskrant.nl/economie/deze-jonge-investeerders-oefenen-voor-later-hoe-eerder-je-begint-hoe-meer-vermogen-je-opbouwt~b0127cd9/",
   },
   {
-    outlet: 'Het Parool',
-    title: "Crisis? Voor de studenten van deze beleggingsclub zijn het mooie tijden: ‘Gewoon rustig blijven’",
-    date: '2025',
-    href: 'https://www.parool.nl/amsterdam/crisis-voor-de-studenten-van-deze-beleggingsclub-zijn-het-mooie-tijden-gewoon-rustig-blijven~b885bbd7/?referrer=https%3A%2F%2Fwww.google.com%2F',
+    outlet: "Het Parool",
+    subject: "Crisis? Voor de studenten van deze beleggingsclub zijn het mooie tijden: ‘Gewoon rustig blijven’",
+    date: "2025",
+    href: "https://www.parool.nl/amsterdam/crisis-voor-de-studenten-van-deze-beleggingsclub-zijn-het-mooie-tijden-gewoon-rustig-blijven~b885bbd7/?referrer=https%3A%2F%2Fwww.google.com%2F",
   },
+  { outlet: "Beleggers Belangen", subject: "Studentenbeleggers van Mutual Fund", date: "2023", href: "#" },
+  { outlet: "Het Financieele Dagblad", subject: "Amsterdamse studenten beheren eigen beleggingsfonds", date: "2022", href: "#" },
+  { outlet: "Het Parool", subject: "Mutual Fund: waar studenten leren beleggen met echt geld", date: "2021", href: "#" },
   {
-    outlet: 'Beleggers Belangen',
-    title: "Studentenbeleggers van Mutual Fund",
-    date: '2023',
-    href: '#',
+    outlet: "Het Parool",
+    subject: "Beleggingsclubjes: eerst beleggen en dan door naar de kroeg",
+    date: "2020",
+    href: "https://www.parool.nl/ps/beleggingsclubjes-eerst-beleggen-en-dan-door-naar-de-kroeg~bd92a06c/",
   },
-  {
-    outlet: 'Het Financieele Dagblad',
-    title: 'Amsterdamse studenten beheren eigen beleggingsfonds',
-    date: '2022',
-    href: '#',
-  },
-  {
-    outlet: 'Het Parool',
-    title: 'Mutual Fund: waar studenten leren beleggen met echt geld',
-    date: '2021',
-    href: '#',
-  },
-  {
-    outlet: 'Het Parool',
-    title: 'Beleggingsclubjes: eerst beleggen en dan door naar de kroeg',
-    date: '2020',
-    href: 'https://www.parool.nl/ps/beleggingsclubjes-eerst-beleggen-en-dan-door-naar-de-kroeg~bd92a06c/',
-  },
-  {
-    outlet: 'De Telegraaf',
-    title: 'Jonge beleggers zien kansen ondanks turbulente markten',
-    date: '2020',
-    href: '#',
-  },
-]
+  { outlet: "De Telegraaf", subject: "Jonge beleggers zien kansen ondanks turbulente markten", date: "2020", href: "#" },
+];
 
-export default function PersPage() {
+export default function PressPage() {
   return (
-    <>
-      <Navigation />
-      <main className="min-h-screen bg-cream pt-32 pb-24">
-        <div className="mx-auto max-w-4xl px-6 md:px-12">
-          <div className="mb-16">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gold">
-              Media
+    <main id="main-content" className="page-shell">
+      <header className="container page-header">
+        <p className="eyebrow">In de media</p>
+        <h1>Pers.</h1>
+        <p>
+          Mutual Fund en haar leden delen regelmatig inzichten over beleggen,
+          financiële educatie en de ontwikkeling van jong talent.
+        </p>
+      </header>
+      <section className="container press-list">
+        {publications.map((item, index) => (
+          <a
+            href={item.href}
+            target={item.href.startsWith("http") ? "_blank" : undefined}
+            rel={item.href.startsWith("http") ? "noreferrer" : undefined}
+            className="press-row"
+            key={`${item.outlet}-${item.subject}`}
+          >
+            <span className="eyebrow">{String(index + 1).padStart(2, "0")}</span>
+            <h2>{item.outlet}</h2>
+            <p>
+              {item.subject}
+              {item.isVideo ? " · Video" : ""}
             </p>
-            <h1 className="mb-6 font-serif text-4xl font-medium tracking-tight text-navy md:text-5xl">
-              Pers & Publicaties
-            </h1>
-            <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              Mutual Fund is regelmatig in het nieuws.
-            </p>
-          </div>
-          
-          <div className="space-y-0">
-            {publications.map((pub, index) => (
-              <Link
-                key={index}
-                href={pub.href}
-                target={pub.href.startsWith('http') ? '_blank' : undefined}
-                rel={pub.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                className="group block border-b border-line py-8 transition-colors first:border-t hover:bg-cream-light"
-              >
-                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                  <div className="flex-1">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-gold">
-                      {pub.outlet}
-                    </p>
-                    <h2 className="font-serif text-xl font-medium text-navy md:text-2xl flex items-center gap-2">
-                      {pub.title}
-                      {pub.isVideo && (
-                        <span title="Video" className="shrink-0 flex items-center justify-center bg-gold/10 text-gold rounded-full p-1.5 transition-colors group-hover:bg-gold/20">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                            <path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clipRule="evenodd" />
-                          </svg>
-                        </span>
-                      )}
-                    </h2>
-                  </div>
-                  <span className="text-sm text-muted-foreground">{pub.date}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-          
-          <div className="mt-16 border border-line bg-cream-light p-8">
-            <h3 className="mb-3 font-serif text-2xl font-medium text-navy">Perscontact</h3>
-            <p className="mb-6 text-muted-foreground">
-              Voor persvragen kunt u contact opnemen met onze secretaris.
-            </p>
-            <Link
-              href="mailto:secretaris@mutualfund.nl"
-              className="inline-flex items-center gap-2 bg-navy px-6 py-3 text-sm font-medium text-cream hover:bg-navy/90 transition-colors"
-            >
-              secretaris@mutualfund.nl
-            </Link>
-          </div>
+            <time>{item.date}</time>
+            <span aria-hidden="true">↗</span>
+          </a>
+        ))}
+      </section>
+      <section className="section section-elevated" id="perscontact">
+        <div className="container press-contact">
+          <p className="eyebrow">Perscontact</p>
+          <h2>Een vraag of interviewverzoek?</h2>
+          <p>Neem contact op met het bestuur via het secretariaat.</p>
+          <a className="contact-email" href="mailto:secretaris@mutualfund.nl">secretaris@mutualfund.nl</a>
         </div>
-      </main>
-      <Footer />
-    </>
-  )
+      </section>
+    </main>
+  );
 }

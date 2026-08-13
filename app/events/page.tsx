@@ -1,77 +1,72 @@
-import { Navigation } from '../../components/navigation'
-import { Footer } from '../../components/footer'
+/* eslint-disable @next/next/no-img-element */
+import type { Metadata } from "next";
+import Link from "next/link";
+import { eventImages } from "@/lib/content";
 
-const eventCategories = [
+export const metadata: Metadata = {
+  title: "Events",
+  description: "Trainingen, inhousedagen, sociale activiteiten en de jaarlijkse reis van Mutual Fund.",
+};
+
+const events = [
   {
-    title: 'Trainingen en workshops',
-    description:
-      'Regelmatig organiseren we trainingen en workshops, om ook de hard skills die belangrijk zijn binnen de financiële sector bij te brengen aan onze leden. Voorbeelden hiervan zijn bijvoorbeeld het leren valueren van bedrijven met financiële modellen als de DCF, of het leren werken met veelgebruikte financiële software als FactSet. Naast het feit dat leden hiermee hun vaardigheden uitbreiden, worden ze hiermee ook klaargestoomd voor een carrière binnen de financiële sector.',
+    number: "01",
+    title: "Trainingen en workshops",
+    text: "Regelmatig organiseren we trainingen en workshops om de hard skills die belangrijk zijn binnen de financiële sector bij te brengen aan onze leden. Voorbeelden zijn het waarderen van bedrijven met financiële modellen zoals de DCF en het werken met veelgebruikte financiële software als FactSet. Zo breiden leden hun vaardigheden uit en worden zij voorbereid op een carrière binnen de financiële sector.",
+    image: eventImages.workshop,
   },
   {
-    title: 'Inhousedagen',
-    description:
-      'In de afgelopen jaren zijn meerdere inhousedagen bij partners van het Mutual Fund georganiseerd. Voorbeelden hiervan zijn de Waterland Investment Services Caseday, de IEX Media Caseday, en de IBS Capital Allies Inhousedag. Ook dit jaar zullen we naar alle waarschijnlijkheid een inhousedag met onze partner IBS Capital Allies organiseren.',
+    number: "02",
+    title: "Inhousedagen",
+    text: "In de afgelopen jaren organiseerden we meerdere inhousedagen bij partners, waaronder de Waterland Investment Services Caseday, de IEX Media Caseday en de IBS Capital Allies Inhousedag. Leden ervaren zo van dichtbij hoe teams werken, waar investeringsbeslissingen ontstaan en welke loopbaanmogelijkheden de sector biedt.",
+    image: eventImages.meeting,
   },
   {
-    title: 'Borrels en sociale activiteiten',
-    description:
-      'Naast alle educatieve activiteiten, vinden we het ook belangrijk om elkaar beter te leren kennen. Na ieder evenement praten we altijd nog even na met een drankje, en door het jaar heen organiseren we meerdere borrels en andere sociale activiteiten om een gezellige sfeer binnen de vereniging te creëren en te behouden.',
+    number: "03",
+    title: "Borrels en sociale activiteiten",
+    text: "Naast alle educatieve activiteiten vinden we het belangrijk om elkaar beter te leren kennen. Na ieder evenement praten we na met een drankje en door het jaar heen organiseren we meerdere borrels en sociale activiteiten om de hechte sfeer binnen de vereniging te behouden.",
+    image: eventImages.social,
   },
   {
-    title: 'MF Reis',
-    description:
-      'Eens in het jaar organiseren we een reis van enkele dagen speciaal voor onze leden, meestal met een Europese stad als bestemming. In de afgelopen jaren zijn we bijvoorbeeld meerdere dagen naar Lissabon en Budapest geweest.',
+    number: "04",
+    title: "MF Reis",
+    text: "Eens per jaar organiseren we een reis van enkele dagen voor onze leden, meestal naar een Europese stad. In de afgelopen jaren reisde Mutual Fund onder meer naar Lissabon en Budapest. Bedrijfsbezoeken en inhoudelijke sessies worden gecombineerd met tijd om de stad en elkaar te leren kennen.",
+    image: eventImages.london,
   },
-]
+];
 
 export default function EventsPage() {
   return (
-    <>
-      <Navigation />
-      <main className="min-h-screen bg-cream pt-24">
-        <section className="px-6 py-20 lg:px-12">
-          <div className="mx-auto max-w-4xl">
-            <h1 className="mb-6 font-serif text-5xl font-medium tracking-tight text-navy lg:text-6xl">
-              Events
-            </h1>
-            <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              Naast de maandelijkse meetings worden er door het jaar heen diverse andere
-              activiteiten georganiseerd, zowel op educatief als sociaal vlak.
-            </p>
+    <main id="main-content" className="page-shell">
+      <header className="container page-header">
+        <p className="eyebrow">Het hele jaar</p>
+        <h1>Events.</h1>
+        <p>
+          Naast de maandelijkse meetings organiseren we inhoudelijke en sociale
+          activiteiten die vaardigheden, netwerk en vereniging samenbrengen.
+        </p>
+      </header>
+      <section className="container event-list">
+        {events.map((event, index) => (
+          <article className={`event-row${index % 2 ? " is-reversed" : ""}`} key={event.number}>
+            <div className="event-image"><img src={event.image} alt="" /></div>
+            <div className="event-copy">
+              <p className="eyebrow">{event.number}</p>
+              <h2>{event.title}.</h2>
+              <p>{event.text}</p>
+            </div>
+          </article>
+        ))}
+      </section>
+      <section className="section page-cta">
+        <div className="container page-cta-inner">
+          <div>
+            <p className="eyebrow">Doe mee</p>
+            <h2>Beleef de volgende meeting van binnenuit.</h2>
           </div>
-        </section>
-        <section className="px-6 pb-24 lg:px-12">
-          <div className="mx-auto max-w-4xl space-y-16">
-            {eventCategories.map((category, index) => (
-              <article key={index} className="border-t border-line pt-8">
-                <h2 className="mb-4 font-serif text-2xl font-medium text-navy lg:text-3xl">
-                  {category.title}
-                </h2>
-                <p className="text-base leading-relaxed text-muted-foreground">
-                  {category.description}
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
-        <section className="bg-navy px-6 py-20 lg:px-12">
-          <div className="mx-auto max-w-4xl text-center">
-            <h2 className="mb-4 font-serif text-3xl font-medium text-cream lg:text-4xl">
-              Interesse in onze events?
-            </h2>
-            <p className="mb-8 text-cream/70">
-              Word lid van Mutual Fund en krijg toegang tot al onze activiteiten.
-            </p>
-            <a
-              href="/#contact"
-              className="inline-block bg-gold px-8 py-3 text-sm font-semibold uppercase tracking-wider text-navy"
-            >
-              Word lid
-            </a>
-          </div>
-        </section>
-      </main>
-      <Footer />
-    </>
-  )
+          <Link className="button button-primary" href="/word-lid">Word lid</Link>
+        </div>
+      </section>
+    </main>
+  );
 }
