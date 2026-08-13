@@ -41,10 +41,18 @@ export default function Home() {
             </text>
           </svg>
         </div>
-        <div className="bull-stage" aria-hidden="true">
+        <figure className="bull-stage" aria-hidden="true">
           <div className="bull-shadow" />
-          <img className="bull-image" src="/bull.png" alt="" />
-        </div>
+          <img
+            className="bull-image"
+            src="/bull.png?v=charging-bull-20260813"
+            alt=""
+            width="1536"
+            height="1024"
+            fetchPriority="high"
+            decoding="sync"
+          />
+        </figure>
         <p className="eyebrow hero-label hero-label-left">
           Beleggingsvereniging · Amsterdam · sinds 2010
         </p>
