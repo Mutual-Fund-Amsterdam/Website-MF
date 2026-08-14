@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { getAexFallback, type AexSnapshot } from "@/lib/aexFallback";
 
 type AexData = AexSnapshot;
@@ -11,6 +17,7 @@ const chartPadding = 24;
 
 export default function AexBackdrop() {
   const [data, setData] = useState<AexData | null>(() => getAexFallback());
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -50,7 +57,7 @@ export default function AexBackdrop() {
       const y =
         chartPadding +
         ((max - point.close) / range) * (chartHeight - chartPadding * 2);
-      return { x, y };
+      return { x, y, point };
     });
 
     const path = coordinates
@@ -59,6 +66,7 @@ export default function AexBackdrop() {
 
     return {
       path,
+      coordinates,
       last: coordinates.at(-1),
       firstDate: new Date(data.points[0].timestamp * 1000),
       lastDate: new Date(data.points.at(-1)!.timestamp * 1000),
@@ -75,35 +83,131 @@ export default function AexBackdrop() {
     day: "numeric",
     month: "short",
   });
+  const tooltipDateFormat = new Intl.DateTimeFormat("nl-NL", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
   const startLabel = `${dayFormat.format(chart.firstDate)} ${chart.firstDate.getFullYear()}`;
   const endLabel = dayFormat.format(chart.lastDate);
+  const activePoint =
+    activeIndex === null ? null : chart.coordinates[activeIndex] ?? null;
+
+  function selectPointFromPointer(event: ReactPointerEvent<SVGPathElement>) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const position = Math.min(
+      1,
+      Math.max(0, (event.clientX - bounds.left) / Math.max(bounds.width, 1)),
+    );
+    setActiveIndex(Math.round(position * (data.points.length - 1)));
+  }
+
+  function moveSelection(event: ReactKeyboardEvent<SVGSVGElement>) {
+    if (event.key === "Escape") {
+      setActiveIndex(null);
+      event.currentTarget.blur();
+      return;
+    }
+
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+
+    if (event.key === "Home") {
+      setActiveIndex(0);
+      return;
+    }
+    if (event.key === "End") {
+      setActiveIndex(data.points.length - 1);
+      return;
+    }
+
+    const direction = event.key === "ArrowLeft" ? -1 : 1;
+    setActiveIndex((current) =>
+      Math.min(
+        data.points.length - 1,
+        Math.max(0, (current ?? data.points.length - 1) + direction),
+      ),
+    );
+  }
 
   return (
-    <div
-      className="aex-backdrop"
-      role="img"
-      aria-label={`AEX koersverloop van ${startLabel} tot ${endLabel}, laatste stand ${numberFormat.format(data.latest)}`}
-    >
+    <div className="aex-backdrop">
       <div className="aex-meta">
         <span>AEX · YTD</span>
         <strong>{numberFormat.format(data.latest)}</strong>
       </div>
-      <svg
-        className="aex-chart"
-        viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <path className="aex-chart-line" d={chart.path} />
-        {chart.last && (
-          <circle
-            className="aex-chart-point"
-            cx={chart.last.x}
-            cy={chart.last.y}
-            r="4"
+      <div className="aex-chart-wrap">
+        <svg
+          className="aex-chart"
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          preserveAspectRatio="none"
+          role="img"
+          tabIndex={0}
+          aria-label={
+            activePoint
+              ? `AEX op ${tooltipDateFormat.format(new Date(activePoint.point.timestamp * 1000))}: ${numberFormat.format(activePoint.point.close)} punten`
+              : `AEX koersverloop van ${startLabel} tot ${endLabel}. Beweeg over de lijn of gebruik de pijltjestoetsen om koersen te bekijken.`
+          }
+          onFocus={() => setActiveIndex((current) => current ?? data.points.length - 1)}
+          onBlur={() => setActiveIndex(null)}
+          onKeyDown={moveSelection}
+        >
+          <path
+            className="aex-chart-hit"
+            d={chart.path}
+            onPointerMove={selectPointFromPointer}
+            onPointerDown={selectPointFromPointer}
+            onPointerLeave={() => setActiveIndex(null)}
           />
+          <path className="aex-chart-line" d={chart.path} />
+          {chart.last && (
+            <circle
+              className="aex-chart-point"
+              cx={chart.last.x}
+              cy={chart.last.y}
+              r="4"
+            />
+          )}
+          {activePoint && (
+            <>
+              <line
+                className="aex-chart-crosshair"
+                x1={activePoint.x}
+                x2={activePoint.x}
+                y1={chartPadding}
+                y2={chartHeight - chartPadding}
+              />
+              <circle
+                className="aex-chart-hover-point"
+                cx={activePoint.x}
+                cy={activePoint.y}
+                r="7"
+              />
+            </>
+          )}
+        </svg>
+        {activePoint && (
+          <div
+            className={`aex-tooltip${
+              activePoint.x < 100
+                ? " aex-tooltip-start"
+                : activePoint.x > chartWidth - 100
+                  ? " aex-tooltip-end"
+                  : ""
+            }`}
+            style={{
+              left: `${(activePoint.x / chartWidth) * 100}%`,
+              top: `${(activePoint.y / chartHeight) * 100}%`,
+            }}
+            aria-hidden="true"
+          >
+            <time>
+              {tooltipDateFormat.format(new Date(activePoint.point.timestamp * 1000))}
+            </time>
+            <strong>{numberFormat.format(activePoint.point.close)}</strong>
+          </div>
         )}
-      </svg>
+      </div>
       <div className="aex-dates" aria-hidden="true">
         <span>{startLabel}</span>
         <span>{endLabel}</span>

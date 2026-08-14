@@ -10,7 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default function BlogPage() {
-  const [featured, ...rest] = blogPosts;
+  const featured = blogPosts.find(
+    (post) => post.slug === "mutual-fund-luidt-gong-euronext",
+  )!;
+  const rest = blogPosts.filter((post) => post.slug !== featured.slug);
   return (
     <main id="main-content" className="page-shell">
       <header className="container page-header">

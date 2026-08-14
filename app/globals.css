@@ -410,12 +410,32 @@ img {
   animation: aex-fade 700ms 180ms ease both;
 }
 
-.aex-chart {
+.aex-chart-wrap {
   position: absolute;
   inset: 17% 0 11%;
-  width: 100%;
   height: 72%;
+  pointer-events: auto;
+}
+
+.aex-chart {
+  width: 100%;
+  height: 100%;
   overflow: visible;
+  touch-action: none;
+}
+
+.aex-chart:focus-visible {
+  outline: 1px solid rgba(88, 147, 177, 0.72);
+  outline-offset: 8px;
+}
+
+.aex-chart-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 28;
+  vector-effect: non-scaling-stroke;
+  cursor: crosshair;
+  pointer-events: stroke;
 }
 
 .aex-chart-line {
@@ -426,11 +446,69 @@ img {
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
   opacity: 0.55;
+  pointer-events: none;
 }
 
 .aex-chart-point {
   fill: var(--accent);
   opacity: 0.8;
+  pointer-events: none;
+}
+
+.aex-chart-crosshair {
+  stroke: rgba(233, 229, 218, 0.3);
+  stroke-width: 1;
+  stroke-dasharray: 4 7;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.aex-chart-hover-point {
+  fill: var(--accent);
+  stroke: var(--bg);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.aex-tooltip {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  gap: 2px;
+  min-width: 122px;
+  padding: 9px 11px;
+  color: var(--ink);
+  background: rgba(18, 19, 18, 0.92);
+  border: 1px solid rgba(233, 229, 218, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 13px));
+  backdrop-filter: blur(8px);
+}
+
+.aex-tooltip time {
+  color: rgba(233, 229, 218, 0.62);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.aex-tooltip strong {
+  color: var(--accent);
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+}
+
+.aex-tooltip-start {
+  transform: translate(0, calc(-100% - 13px));
+}
+
+.aex-tooltip-end {
+  transform: translate(-100%, calc(-100% - 13px));
 }
 
 .aex-meta {
@@ -2210,7 +2288,7 @@ select:focus {
     inset: calc(var(--header-height) + 3vh) 20px 6vh;
   }
 
-  .aex-chart {
+  .aex-chart-wrap {
     inset: 20% 0 13%;
     height: 67%;
   }

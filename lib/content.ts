@@ -74,5 +74,5 @@ export const eventImages = {
   workshop: "/images/mf-meeting-discussion.png",
   social: "/images/mf-borrel.png",
   companyDay: "/images/mf-meeting-barclays.png",
-  trip: "/images/mf-meeting-audience.jpg",
+  trip: "/images/borsa-milaan.webp",
 };

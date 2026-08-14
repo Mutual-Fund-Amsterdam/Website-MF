@@ -18,18 +18,33 @@ export type BlogPost = {
 
 const posts: BlogPost[] = [
   {
-    title: "Recap: maandelijkse meeting oktober",
-    slug: "recap-maandelijkse-meeting-oktober",
-    date: "2026-10-15",
-    displayDate: "15 oktober 2026",
+    title: "Novembermeeting met IBS Capital Allies",
+    slug: "novembermeeting-ibs-capital-allies",
+    date: "2026-11-01",
+    displayDate: "November 2026",
     category: "Meeting",
-    cover: "/images/mf-meeting-audience.jpg",
+    cover: "/images/meetings/ibs-capital-allies.jpg",
     excerpt:
-      "Van macro-update tot fondsbespreking: dit waren de ideeën en inzichten die onze oktobermeeting bepaalden.",
+      "In november verwelkomen we IBS Capital Allies voor een inhoudelijke avond over beleggen en vermogensbeheer.",
     body: [
-      "Tijdens onze maandelijkse meeting in oktober kwamen de drie fondsen opnieuw samen om de portefeuilles kritisch tegen het licht te houden. De macrocommissie opende de avond met een analyse van renteverwachtingen, inflatie en de gevolgen voor Europese aandelen.",
-      "Na de partnerpresentatie gingen de fondsen uiteen. Leden bespraken de resultaten van bestaande posities, toetsten hun oorspronkelijke investment cases en stemden over voorgestelde wijzigingen. De avond eindigde zoals altijd met een informele borrel.",
-      "De volgende meeting vindt plaats op de tweede woensdag van november. Leden ontvangen het programma en de voorbereidende stukken via de gebruikelijke kanalen.",
+      "Tijdens onze novembermeeting ontvangen we IBS Capital Allies. De onafhankelijke Nederlandse vermogensbeheerder is actief sinds 1987 en werkt voor particuliere en professionele cliënten.",
+      "IBS Capital Allies neemt onze leden mee in de praktijk van beleggen en vermogensbeheer. Zo krijgen zij een beter beeld van de afwegingen, verantwoordelijkheden en langetermijnvisie die bij professioneel vermogensbeheer komen kijken.",
+      "Na de presentatie gaan de fondsen verder met hun eigen portefeuillebesprekingen en investment cases.",
+    ],
+  },
+  {
+    title: "Oktobermeeting met LYNX",
+    slug: "oktobermeeting-lynx",
+    date: "2026-10-01",
+    displayDate: "Oktober 2026",
+    category: "Meeting",
+    cover: "/images/meetings/lynx-office.jpg",
+    excerpt:
+      "In oktober komt online broker LYNX langs voor een inhoudelijke sessie over markten, handelsplatformen en actief beleggen.",
+    body: [
+      "Tijdens onze oktobermeeting verwelkomen we LYNX. De online broker richt zich sinds 2006 op actieve beleggers en biedt toegang tot een breed aanbod van financiële instrumenten en internationale markten.",
+      "LYNX combineert brokerage met handelsplatformen, analysetools, realtime koersinformatie en educatieve content. Tijdens de meeting krijgen onze leden een inhoudelijke blik op de praktijk achter actief beleggen.",
+      "Na de sessie volgen de vaste fondsbesprekingen, waarin leden hun posities en nieuwe investment cases bespreken.",
     ],
   },
   {
@@ -38,7 +53,7 @@ const posts: BlogPost[] = [
     date: "2026-08-12",
     displayDate: "12 augustus 2026",
     category: "Reis",
-    cover: "/images/mf-meeting-audience.jpg",
+    cover: "/images/borsa-milaan.webp",
     excerpt:
       "Van Borsa Italiana naar een wijnproeverij en het nachtleven: Milaan door de ogen van beleggers.",
     body: [
@@ -59,6 +74,7 @@ const posts: BlogPost[] = [
     body: [
       "Een goede buy-pitch begint met een duidelijke vraag: waarom is de marktprijs anders dan de intrinsieke waarde? Drie teams werkten hun antwoord uit aan de hand van bedrijfsanalyse, waardering, katalysatoren en risico's.",
       "De fondsleden testten de aannames tijdens een uitgebreide vragenronde. Vooral de duurzaamheid van marges, kapitaalallocatie en scenarioanalyse kregen veel aandacht.",
+      "Ook J.P. Morgan was die avond te gast. Daarmee kregen de leden naast de pitches de gelegenheid om in gesprek te gaan met professionals uit de financiële sector.",
       "Na discussie stemden de fondsen over omvang en timing. Daarmee werden drie nieuwe posities aan de gezamenlijke portefeuilles toegevoegd.",
     ],
   },
@@ -88,7 +104,7 @@ const posts: BlogPost[] = [
     date: "2026-01-13",
     displayDate: "13 januari 2026",
     category: "Pers",
-    cover: "/images/mf-meeting-audience.jpg",
+    cover: "/images/press/nieuwsuur-aex.webp",
     excerpt:
       "Nieuwsuur onderzocht waarom de beurs bleef stijgen ondanks geopolitieke spanningen en sprak over de AEX die de grens van 1.000 punten naderde.",
     body: [
@@ -107,7 +123,7 @@ const posts: BlogPost[] = [
     date: "2025-04-18",
     displayDate: "18 april 2025",
     category: "Pers",
-    cover: "/images/mf-meeting-discussion.png",
+    cover: "/images/press/parool-crisis.webp",
     excerpt:
       "Het Parool sprak met studenten van Mutual Fund over kalm blijven, analyseren en beleggen tijdens onrustige markten.",
     body: [
@@ -126,7 +142,7 @@ const posts: BlogPost[] = [
     date: "2020-02-13",
     displayDate: "13 februari 2020",
     category: "Pers",
-    cover: "/images/mf-borrel.png",
+    cover: "/images/press/parool-beleggingsclub.webp",
     excerpt:
       "Het Parool bezocht Amsterdamse beleggingsclubs en beschreef hoe inhoud, echt kapitaal en het sociale verenigingsleven samenkomen.",
     body: [
