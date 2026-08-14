@@ -92,14 +92,15 @@ export default function AexBackdrop() {
   const endLabel = dayFormat.format(chart.lastDate);
   const activePoint =
     activeIndex === null ? null : chart.coordinates[activeIndex] ?? null;
+  const pointCount = data.points.length;
 
-  function selectPointFromPointer(event: ReactPointerEvent<SVGPathElement>) {
+  function selectPointFromPointer(event: ReactPointerEvent<SVGSVGElement>) {
     const bounds = event.currentTarget.getBoundingClientRect();
     const position = Math.min(
       1,
       Math.max(0, (event.clientX - bounds.left) / Math.max(bounds.width, 1)),
     );
-    setActiveIndex(Math.round(position * (data.points.length - 1)));
+    setActiveIndex(Math.round(position * (pointCount - 1)));
   }
 
   function moveSelection(event: ReactKeyboardEvent<SVGSVGElement>) {
@@ -117,15 +118,15 @@ export default function AexBackdrop() {
       return;
     }
     if (event.key === "End") {
-      setActiveIndex(data.points.length - 1);
+      setActiveIndex(pointCount - 1);
       return;
     }
 
     const direction = event.key === "ArrowLeft" ? -1 : 1;
     setActiveIndex((current) =>
       Math.min(
-        data.points.length - 1,
-        Math.max(0, (current ?? data.points.length - 1) + direction),
+        pointCount - 1,
+        Math.max(0, (current ?? pointCount - 1) + direction),
       ),
     );
   }
@@ -148,17 +149,14 @@ export default function AexBackdrop() {
               ? `AEX op ${tooltipDateFormat.format(new Date(activePoint.point.timestamp * 1000))}: ${numberFormat.format(activePoint.point.close)} punten`
               : `AEX koersverloop van ${startLabel} tot ${endLabel}. Beweeg over de lijn of gebruik de pijltjestoetsen om koersen te bekijken.`
           }
-          onFocus={() => setActiveIndex((current) => current ?? data.points.length - 1)}
+          onFocus={() => setActiveIndex((current) => current ?? pointCount - 1)}
           onBlur={() => setActiveIndex(null)}
           onKeyDown={moveSelection}
+          onPointerMove={selectPointFromPointer}
+          onPointerDown={selectPointFromPointer}
+          onPointerLeave={() => setActiveIndex(null)}
         >
-          <path
-            className="aex-chart-hit"
-            d={chart.path}
-            onPointerMove={selectPointFromPointer}
-            onPointerDown={selectPointFromPointer}
-            onPointerLeave={() => setActiveIndex(null)}
-          />
+          <path className="aex-chart-hit" d={chart.path} />
           <path className="aex-chart-line" d={chart.path} />
           {chart.last && (
             <circle
