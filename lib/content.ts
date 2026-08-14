@@ -70,6 +70,7 @@ export const membershipSteps = [
 ];
 
 export const eventImages = {
+  gong: "/images/mf-gong-euronext.jpg",
   meeting: "/images/mf-meeting-audience.jpg",
   workshop: "/images/mf-meeting-discussion.png",
   social: "/images/mf-borrel.png",

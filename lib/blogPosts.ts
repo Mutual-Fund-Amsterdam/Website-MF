@@ -38,7 +38,7 @@ const posts: BlogPost[] = [
     date: "2026-10-01",
     displayDate: "Oktober 2026",
     category: "Meeting",
-    cover: "/images/meetings/lynx-office.jpg",
+    cover: "/images/meetings/lynx-platform.webp",
     excerpt:
       "In oktober komt online broker LYNX langs voor een inhoudelijke sessie over markten, handelsplatformen en actief beleggen.",
     body: [
