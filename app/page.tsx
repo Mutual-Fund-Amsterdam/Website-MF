@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import AexBackdrop from "@/components/AexBackdrop";
 import BoardGrid from "@/components/BoardGrid";
 import ContactForm from "@/components/ContactForm";
+import HomeHero from "@/components/HomeHero";
 import PartnerMarquee from "@/components/PartnerMarquee";
 import Stats from "@/components/AnimatedStats";
 import { eventImages, membershipSteps } from "@/lib/content";
@@ -28,40 +28,7 @@ const workCards = [
 export default function Home() {
   return (
     <main id="main-content">
-      <section className="hero" aria-labelledby="hero-title">
-        <AexBackdrop />
-        <h1
-          id="hero-title"
-          className="hero-statement"
-          aria-label="De beleggingsvereniging voor de financiële leiders van morgen."
-        >
-          <span className="hero-statement-part hero-statement-leading" aria-hidden="true">
-            <span>De</span>
-            <span>beleggings-</span>
-            <span>vereniging</span>
-          </span>
-          <span className="hero-statement-part hero-statement-trailing" aria-hidden="true">
-            <span>voor de</span>
-            <span>financiële</span>
-            <span>leiders van</span>
-            <span className="hero-statement-accent">morgen.</span>
-          </span>
-        </h1>
-        <figure className="bull-stage" aria-hidden="true">
-          <div className="bull-shadow" />
-          <img
-            className="bull-image"
-            src="/bull.png?v=charging-bull-20260813"
-            alt=""
-            width="1536"
-            height="1024"
-            fetchPriority="high"
-            decoding="sync"
-          />
-        </figure>
-        <p className="eyebrow hero-label hero-label-left">Amsterdam · sinds 2010</p>
-        <p className="eyebrow hero-label hero-label-right">Scroll ↓</p>
-      </section>
+      <HomeHero />
 
       <section className="section intro-section">
         <div className="container intro-grid">
