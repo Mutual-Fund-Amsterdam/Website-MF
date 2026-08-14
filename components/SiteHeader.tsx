@@ -40,7 +40,13 @@ export default function SiteHeader() {
     >
       <div className="nav-inner">
         <Link className="brand" href="/" aria-label="Mutual Fund homepage" onClick={() => setOpen(false)}>
-          Mutual Fund
+          {pathname === "/" && !scrolled ? (
+            <span className="brand-logo" aria-hidden="true">
+              <img src="/images/mutual-fund-logo.png" alt="" />
+            </span>
+          ) : (
+            <span className="brand-wordmark">Mutual Fund</span>
+          )}
         </Link>
         <nav className="desktop-nav" aria-label="Hoofdnavigatie">
           {links.map((link) => (
