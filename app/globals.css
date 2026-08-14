@@ -270,7 +270,10 @@ img {
 }
 
 .brand {
+  display: inline-flex;
   width: fit-content;
+  height: 100%;
+  align-items: center;
   font-family: var(--font-display);
   font-size: 1.12rem;
   font-weight: 700;
@@ -279,8 +282,28 @@ img {
   transition: font-size 220ms ease, color 180ms ease;
 }
 
-.site-header.is-home:not(.is-elevated) .brand {
-  font-size: clamp(1.45rem, 2vw, 1.9rem);
+.brand-logo {
+  position: relative;
+  display: block;
+  width: clamp(160px, 17vw, 210px);
+  height: 58px;
+  overflow: hidden;
+}
+
+.brand-logo img {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  filter: brightness(0) invert(1);
+  opacity: 0.94;
+  transform: translateY(-50%);
+}
+
+.brand-wordmark {
+  white-space: nowrap;
 }
 
 .desktop-nav {
@@ -1947,6 +1970,10 @@ select:focus {
     gap: 20px;
   }
 
+  .brand-logo {
+    width: 160px;
+  }
+
   .board-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -2148,6 +2175,11 @@ select:focus {
 
   body {
     font-size: 16px;
+  }
+
+  .brand-logo {
+    width: 150px;
+    height: 52px;
   }
 
   .section {
