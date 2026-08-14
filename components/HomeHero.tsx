@@ -19,6 +19,8 @@ export default function HomeHero() {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let pointerX = 0;
     let pointerY = 0;
+    let targetPointerX = 0;
+    let targetPointerY = 0;
     let animationFrame = 0;
 
     hero.classList.add("is-motion-ready");
@@ -27,15 +29,18 @@ export default function HomeHero() {
       animationFrame = 0;
       const heroBounds = hero.getBoundingClientRect();
       const scrollDistance = Math.max(0, -heroBounds.top);
-      const progress = clamp(scrollDistance / Math.max(hero.offsetHeight * 0.72, 1), 0, 1);
+      const progress = clamp(scrollDistance / Math.max(hero.offsetHeight * 0.96, 1), 0, 1);
 
       hero.style.setProperty("--hero-scroll-progress", progress.toFixed(3));
 
       if (reducedMotion.matches) {
         bull.style.removeProperty("transform");
-        bull.style.opacity = progress > 0.08 ? "0" : "1";
+        bull.style.opacity = progress > 0.9 ? "0" : "1";
         return;
       }
+
+      pointerX += (targetPointerX - pointerX) * 0.1;
+      pointerY += (targetPointerY - pointerY) * 0.1;
 
       const target = document.querySelector<HTMLElement>(
         ".site-header.is-home .brand-logo",
@@ -44,7 +49,9 @@ export default function HomeHero() {
       const bullHeight = bull.offsetHeight;
       const baseX = bull.offsetLeft + bullWidth / 2;
       const baseY = bull.offsetTop + bullHeight / 2;
-      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      const travelProgress = clamp((progress - 0.08) / 0.92, 0, 1);
+      const easedProgress =
+        travelProgress * travelProgress * (3 - 2 * travelProgress);
 
       let destinationX = 0;
       let destinationY = 0;
@@ -68,11 +75,18 @@ export default function HomeHero() {
       const translateY =
         destinationY * easedProgress + pointerY * (1 - easedProgress);
       const scale = 1 - (1 - destinationScale) * easedProgress;
-      const rotation = pointerX * 0.035 * (1 - easedProgress);
-      const fade = 1 - clamp((progress - 0.78) / 0.2, 0, 1);
+      const rotation = pointerX * 0.022 * (1 - easedProgress);
+      const fade = 1 - clamp((progress - 0.88) / 0.12, 0, 1);
 
       bull.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale}) rotate(${rotation}deg)`;
       bull.style.opacity = fade.toFixed(3);
+
+      if (
+        Math.abs(targetPointerX - pointerX) > 0.05 ||
+        Math.abs(targetPointerY - pointerY) > 0.05
+      ) {
+        scheduleRender();
+      }
     };
 
     const scheduleRender = () => {
@@ -82,14 +96,14 @@ export default function HomeHero() {
     const handlePointerMove = (event: PointerEvent) => {
       if (event.pointerType === "touch" || reducedMotion.matches) return;
       const bounds = hero.getBoundingClientRect();
-      pointerX = clamp((event.clientX - bounds.left) / Math.max(bounds.width, 1) - 0.5, -0.5, 0.5) * 22;
-      pointerY = clamp((event.clientY - bounds.top) / Math.max(bounds.height, 1) - 0.5, -0.5, 0.5) * 14;
+      targetPointerX = clamp((event.clientX - bounds.left) / Math.max(bounds.width, 1) - 0.5, -0.5, 0.5) * 10;
+      targetPointerY = clamp((event.clientY - bounds.top) / Math.max(bounds.height, 1) - 0.5, -0.5, 0.5) * 6;
       scheduleRender();
     };
 
     const resetPointer = () => {
-      pointerX = 0;
-      pointerY = 0;
+      targetPointerX = 0;
+      targetPointerY = 0;
       scheduleRender();
     };
 
@@ -122,9 +136,14 @@ export default function HomeHero() {
             van <em>morgen.</em>
           </span>
         </h1>
-        <Link className="button button-primary hero-cta" href="/word-lid">
-          Word lid
-        </Link>
+        <div className="hero-actions">
+          <Link className="button button-primary" href="/word-lid">
+            Word lid
+          </Link>
+          <Link className="hero-about-link" href="/over-ons">
+            Over ons <span aria-hidden="true">→</span>
+          </Link>
+        </div>
       </div>
 
       <div className="hero-market">

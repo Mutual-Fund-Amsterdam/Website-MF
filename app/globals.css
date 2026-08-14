@@ -345,7 +345,14 @@ img {
 }
 
 .nav-apply {
+  border-color: var(--board-gold);
   justify-self: end;
+}
+
+.nav-apply:hover {
+  border-color: var(--board-gold);
+  background: var(--board-gold);
+  color: var(--bg);
 }
 
 .menu-toggle,
@@ -392,8 +399,8 @@ img {
   color: var(--ink);
   font-size: clamp(3.2rem, 5.1vw, 6.45rem);
   font-weight: 800;
-  letter-spacing: -0.064em;
-  line-height: 0.88;
+  letter-spacing: -0.058em;
+  line-height: 1.02;
   text-wrap: nowrap;
   animation: hero-copy-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -407,9 +414,31 @@ img {
   font-style: normal;
 }
 
-.hero-cta {
+.hero-actions {
+  display: flex;
   margin-top: clamp(30px, 4vh, 52px);
+  align-items: center;
+  gap: clamp(22px, 2.2vw, 34px);
   animation: hero-copy-in 700ms 120ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hero-about-link {
+  display: inline-flex;
+  padding: 10px 0 8px;
+  align-items: center;
+  border-bottom: 1px solid rgba(233, 229, 218, 0.32);
+  gap: 10px;
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1;
+  transition: border-color 180ms ease, color 180ms ease, gap 180ms ease;
+}
+
+.hero-about-link:hover {
+  border-color: var(--accent);
+  gap: 14px;
+  color: var(--accent);
 }
 
 .hero-market {
@@ -2300,11 +2329,12 @@ select:focus {
   .hero-title {
     max-width: 100%;
     font-size: clamp(2.55rem, 11vw, 4.2rem);
-    line-height: 0.9;
+    line-height: 1;
   }
 
-  .hero-cta {
+  .hero-actions {
     margin-top: 26px;
+    gap: 20px;
   }
 
   .hero-market {
