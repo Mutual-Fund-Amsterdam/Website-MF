@@ -17,7 +17,7 @@ type MotionState = {
   marketProgress: number;
 };
 
-const bullSource = "/bull.png?v=charging-bull-20260815";
+const bullSource = "/hero-bull-front-20260815.webp";
 
 export default function HomeHero() {
   const heroRef = useRef<HTMLElement>(null);
@@ -68,15 +68,15 @@ export default function HomeHero() {
 
         hero.style.setProperty(
           "--bull-blur",
-          `${(1.1 + current.bullProgress * 4).toFixed(2)}px`,
+          `${(3.2 + current.bullProgress * 4.4).toFixed(2)}px`,
         );
         hero.style.setProperty(
           "--bull-focus-blur",
-          `${(0.2 + current.bullProgress * 3.2).toFixed(2)}px`,
+          `${(1.25 + current.bullProgress * 3.6).toFixed(2)}px`,
         );
         hero.style.setProperty(
           "--bull-brightness",
-          (0.78 - current.bullProgress * 0.25).toFixed(3),
+          (0.63 - current.bullProgress * 0.2).toFixed(3),
         );
       }
 
@@ -186,7 +186,7 @@ export default function HomeHero() {
           src={bullSource}
           alt=""
           width="1536"
-          height="1024"
+          height="1180"
           fetchPriority="high"
           decoding="sync"
         />
@@ -195,7 +195,7 @@ export default function HomeHero() {
           src={bullSource}
           alt=""
           width="1536"
-          height="1024"
+          height="1180"
           decoding="sync"
         />
       </figure>
