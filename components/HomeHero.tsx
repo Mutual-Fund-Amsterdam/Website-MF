@@ -3,124 +3,147 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import AexBackdrop from "@/components/AexBackdrop";
+import styles from "./HomeHero.module.css";
 
 const clamp = (value: number, minimum: number, maximum: number) =>
   Math.min(maximum, Math.max(minimum, value));
 
+const smoothstep = (value: number) => value * value * (3 - 2 * value);
+
+type MotionState = {
+  pointerX: number;
+  pointerY: number;
+  bullProgress: number;
+  marketProgress: number;
+};
+
+const bullSource = "/bull.png?v=charging-bull-20260815";
+
 export default function HomeHero() {
   const heroRef = useRef<HTMLElement>(null);
   const bullRef = useRef<HTMLElement>(null);
+  const marketRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const hero = heroRef.current;
     const bull = bullRef.current;
-    if (!hero || !bull) return;
+    const market = marketRef.current;
+    if (!hero || !bull || !market) return;
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let pointerX = 0;
-    let pointerY = 0;
-    let targetPointerX = 0;
-    let targetPointerY = 0;
+    const target: MotionState = {
+      pointerX: 0,
+      pointerY: 0,
+      bullProgress: 0,
+      marketProgress: 0,
+    };
+    const current: MotionState = { ...target };
     let animationFrame = 0;
-
-    hero.classList.add("is-motion-ready");
 
     const render = () => {
       animationFrame = 0;
-      const heroBounds = hero.getBoundingClientRect();
-      const scrollDistance = Math.max(0, -heroBounds.top);
-      const progress = clamp(scrollDistance / Math.max(hero.offsetHeight * 0.96, 1), 0, 1);
+      const ease = 0.075;
 
-      hero.style.setProperty("--hero-scroll-progress", progress.toFixed(3));
+      current.pointerX += (target.pointerX - current.pointerX) * ease;
+      current.pointerY += (target.pointerY - current.pointerY) * ease;
+      current.bullProgress += (target.bullProgress - current.bullProgress) * ease;
+      current.marketProgress += (target.marketProgress - current.marketProgress) * ease;
 
       if (reducedMotion.matches) {
         bull.style.removeProperty("transform");
-        bull.style.opacity = progress > 0.9 ? "0" : "1";
-        return;
-      }
+        bull.style.removeProperty("opacity");
+        market.style.removeProperty("transform");
+        market.style.removeProperty("opacity");
+      } else {
+        const bullFade = 1 - smoothstep(current.bullProgress);
+        const marketFade = 1 - smoothstep(current.marketProgress);
+        const translateX = current.pointerX + current.bullProgress * 34;
+        const translateY = current.pointerY + current.bullProgress * 30;
+        const scale = 1 + current.bullProgress * 0.05;
 
-      pointerX += (targetPointerX - pointerX) * 0.1;
-      pointerY += (targetPointerY - pointerY) * 0.1;
+        bull.style.transform = `translate3d(${translateX.toFixed(2)}px, ${translateY.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
+        bull.style.opacity = bullFade.toFixed(4);
+        market.style.transform = `translate3d(0, ${(current.marketProgress * 18).toFixed(2)}px, 0)`;
+        market.style.opacity = marketFade.toFixed(4);
 
-      const target = document.querySelector<HTMLElement>(
-        ".site-header.is-home .brand-logo",
-      );
-      const bullWidth = bull.offsetWidth;
-      const bullHeight = bull.offsetHeight;
-      const baseX = bull.offsetLeft + bullWidth / 2;
-      const baseY = bull.offsetTop + bullHeight / 2;
-      const travelProgress = clamp((progress - 0.08) / 0.92, 0, 1);
-      const easedProgress =
-        travelProgress * travelProgress * (3 - 2 * travelProgress);
-
-      let destinationX = 0;
-      let destinationY = 0;
-      let destinationScale = 0.14;
-
-      if (target) {
-        const targetBounds = target.getBoundingClientRect();
-        const targetX = targetBounds.left + targetBounds.width * 0.22;
-        const targetY = targetBounds.top + targetBounds.height / 2;
-        destinationX = targetX - baseX;
-        destinationY = targetY - baseY;
-        destinationScale = clamp(
-          (targetBounds.width * 0.38) / Math.max(bullWidth, 1),
-          0.1,
-          0.18,
+        hero.style.setProperty(
+          "--bull-blur",
+          `${(1.1 + current.bullProgress * 4).toFixed(2)}px`,
+        );
+        hero.style.setProperty(
+          "--bull-focus-blur",
+          `${(0.2 + current.bullProgress * 3.2).toFixed(2)}px`,
+        );
+        hero.style.setProperty(
+          "--bull-brightness",
+          (0.78 - current.bullProgress * 0.25).toFixed(3),
         );
       }
 
-      const translateX =
-        destinationX * easedProgress + pointerX * (1 - easedProgress);
-      const translateY =
-        destinationY * easedProgress + pointerY * (1 - easedProgress);
-      const scale = 1 - (1 - destinationScale) * easedProgress;
-      const rotation = pointerX * 0.022 * (1 - easedProgress);
-      const fade = 1 - clamp((progress - 0.88) / 0.12, 0, 1);
-
-      bull.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale}) rotate(${rotation}deg)`;
-      bull.style.opacity = fade.toFixed(3);
-
-      if (
-        Math.abs(targetPointerX - pointerX) > 0.05 ||
-        Math.abs(targetPointerY - pointerY) > 0.05
-      ) {
-        scheduleRender();
-      }
+      const moving = (Object.keys(current) as Array<keyof MotionState>).some(
+        (key) => Math.abs(target[key] - current[key]) > 0.001,
+      );
+      if (moving) animationFrame = window.requestAnimationFrame(render);
     };
 
     const scheduleRender = () => {
       if (!animationFrame) animationFrame = window.requestAnimationFrame(render);
     };
 
+    const updateScroll = () => {
+      const heroBounds = hero.getBoundingClientRect();
+      const scrollDistance = Math.max(0, -heroBounds.top);
+
+      target.bullProgress = clamp(
+        scrollDistance / Math.max(hero.offsetHeight * 0.28, 1),
+        0,
+        1,
+      );
+      target.marketProgress = clamp(
+        scrollDistance / Math.max(hero.offsetHeight * 0.43, 1),
+        0,
+        1,
+      );
+      scheduleRender();
+    };
+
     const handlePointerMove = (event: PointerEvent) => {
       if (event.pointerType === "touch" || reducedMotion.matches) return;
       const bounds = hero.getBoundingClientRect();
-      targetPointerX = clamp((event.clientX - bounds.left) / Math.max(bounds.width, 1) - 0.5, -0.5, 0.5) * 10;
-      targetPointerY = clamp((event.clientY - bounds.top) / Math.max(bounds.height, 1) - 0.5, -0.5, 0.5) * 6;
+      const normalizedX = clamp(
+        (event.clientX - bounds.left) / Math.max(bounds.width, 1),
+        0,
+        1,
+      );
+      const normalizedY = clamp(
+        (event.clientY - bounds.top) / Math.max(bounds.height, 1),
+        0,
+        1,
+      );
+      target.pointerX = normalizedX * 24 - 12;
+      target.pointerY = normalizedY * 20 - 10;
       scheduleRender();
     };
 
     const resetPointer = () => {
-      targetPointerX = 0;
-      targetPointerY = 0;
+      target.pointerX = 0;
+      target.pointerY = 0;
       scheduleRender();
     };
 
-    render();
-    window.addEventListener("scroll", scheduleRender, { passive: true });
-    window.addEventListener("resize", scheduleRender);
+    updateScroll();
     hero.addEventListener("pointermove", handlePointerMove, { passive: true });
     hero.addEventListener("pointerleave", resetPointer);
+    window.addEventListener("scroll", updateScroll, { passive: true });
+    window.addEventListener("resize", updateScroll, { passive: true });
     reducedMotion.addEventListener("change", scheduleRender);
 
     return () => {
-      hero.classList.remove("is-motion-ready");
       if (animationFrame) window.cancelAnimationFrame(animationFrame);
-      window.removeEventListener("scroll", scheduleRender);
-      window.removeEventListener("resize", scheduleRender);
       hero.removeEventListener("pointermove", handlePointerMove);
       hero.removeEventListener("pointerleave", resetPointer);
+      window.removeEventListener("scroll", updateScroll);
+      window.removeEventListener("resize", updateScroll);
       reducedMotion.removeEventListener("change", scheduleRender);
     };
   }, []);
@@ -147,18 +170,32 @@ export default function HomeHero() {
       </div>
 
       <div className="hero-market">
-        <AexBackdrop />
+        <div ref={marketRef} className={styles.marketMotion}>
+          <AexBackdrop />
+        </div>
       </div>
 
-      <figure ref={bullRef} className="hero-bull-motion" aria-hidden="true">
+      <figure
+        ref={bullRef}
+        className={`hero-bull-motion ${styles.bullMotion}`}
+        aria-hidden="true"
+      >
         <div className="hero-bull-shadow" />
         <img
-          className="hero-bull-image"
-          src="/bull.png?v=charging-bull-20260813"
+          className={`hero-bull-image ${styles.bullImage} ${styles.bullBase}`}
+          src={bullSource}
           alt=""
           width="1536"
           height="1024"
           fetchPriority="high"
+          decoding="sync"
+        />
+        <img
+          className={`hero-bull-image ${styles.bullImage} ${styles.bullFocus}`}
+          src={bullSource}
+          alt=""
+          width="1536"
+          height="1024"
           decoding="sync"
         />
       </figure>
