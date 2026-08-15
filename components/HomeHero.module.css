@@ -6,10 +6,33 @@
 
 .bullMotion.bullMotion {
   z-index: 6;
-  right: -4.5vw;
-  bottom: -8vh;
+  right: -7vw;
+  bottom: -11vh;
   width: min(54vw, 980px);
-  transform-origin: 60% 48%;
+  transform-origin: 62% 50%;
+}
+
+.bullMotion::after {
+  position: absolute;
+  z-index: 5;
+  inset: -2px;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      transparent 73%,
+      rgba(35, 35, 32, 0.28) 87%,
+      var(--bg) 100%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      transparent 67%,
+      rgba(35, 35, 32, 0.32) 82%,
+      var(--bg) 100%
+    );
+  content: "";
+  pointer-events: none;
 }
 
 .bullImage.bullImage {
@@ -17,10 +40,9 @@
 }
 
 .bullBase.bullBase {
-  filter: brightness(var(--bull-brightness, 0.63)) contrast(0.7)
-    saturate(0.3) blur(var(--bull-blur, 3.2px))
-    drop-shadow(0 32px 54px rgba(0, 0, 0, 0.42));
-  opacity: 0.74;
+  filter: brightness(var(--bull-brightness, 0.6)) contrast(0.64)
+    saturate(0.22) blur(var(--bull-blur, 2.05px));
+  opacity: 0.64;
 }
 
 .bullFocus.bullFocus {
@@ -28,36 +50,31 @@
   z-index: 3;
   top: 0;
   left: 0;
-  filter: brightness(calc(var(--bull-brightness, 0.63) + 0.08)) contrast(0.82)
-    saturate(0.28) blur(var(--bull-focus-blur, 1.25px));
-  opacity: 0.46;
-  -webkit-mask-image: radial-gradient(
-    ellipse 56% 46% at 50% 32%,
-    #000 0%,
-    #000 42%,
-    transparent 78%
-  );
-  mask-image: radial-gradient(
-    ellipse 56% 46% at 50% 32%,
-    #000 0%,
-    #000 42%,
-    transparent 78%
-  );
+  filter: brightness(calc(var(--bull-brightness, 0.6) + 0.075)) contrast(0.86)
+    saturate(0.2) blur(var(--bull-focus-blur, 0.55px));
+  opacity: 0.5;
+  -webkit-mask-image:
+    radial-gradient(ellipse 31% 39% at 50% 46%, #000 0%, #000 48%, transparent 86%),
+    radial-gradient(ellipse 42% 23% at 50% 18%, #000 0%, #000 44%, transparent 82%);
+  mask-image:
+    radial-gradient(ellipse 31% 39% at 50% 46%, #000 0%, #000 48%, transparent 86%),
+    radial-gradient(ellipse 42% 23% at 50% 18%, #000 0%, #000 44%, transparent 82%);
 }
 
 @media (max-width: 1100px) {
   .bullMotion.bullMotion {
-    right: -8vw;
+    right: -10.5vw;
+    bottom: -9vh;
     width: min(62vw, 760px);
   }
 }
 
 @media (max-width: 767px) {
   .bullMotion.bullMotion {
-    right: -19vw;
-    bottom: -2vh;
+    right: -22vw;
+    bottom: -4vh;
     width: min(94vw, 540px);
-    transform-origin: 58% 44%;
+    transform-origin: 60% 46%;
   }
 }
 

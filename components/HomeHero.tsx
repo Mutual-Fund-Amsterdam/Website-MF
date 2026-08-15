@@ -68,15 +68,15 @@ export default function HomeHero() {
 
         hero.style.setProperty(
           "--bull-blur",
-          `${(3.2 + current.bullProgress * 4.4).toFixed(2)}px`,
+          `${(2.05 + current.bullProgress * 3.8).toFixed(2)}px`,
         );
         hero.style.setProperty(
           "--bull-focus-blur",
-          `${(1.25 + current.bullProgress * 3.6).toFixed(2)}px`,
+          `${(0.55 + current.bullProgress * 2.6).toFixed(2)}px`,
         );
         hero.style.setProperty(
           "--bull-brightness",
-          (0.63 - current.bullProgress * 0.2).toFixed(3),
+          (0.6 - current.bullProgress * 0.18).toFixed(3),
         );
       }
 
