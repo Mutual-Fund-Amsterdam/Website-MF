@@ -1,0 +1,66 @@
+.marketMotion {
+  position: absolute;
+  inset: 0;
+  will-change: transform, opacity;
+}
+
+.bullMotion.bullMotion {
+  z-index: 18;
+  width: min(46.5vw, 805px);
+  transform-origin: 58% 42%;
+}
+
+.bullImage.bullImage {
+  width: 100%;
+}
+
+.bullBase.bullBase {
+  filter: brightness(var(--bull-brightness, 0.78)) contrast(0.76)
+    saturate(0.68) blur(var(--bull-blur, 1.1px))
+    drop-shadow(0 28px 48px rgba(0, 0, 0, 0.38));
+  opacity: 0.86;
+}
+
+.bullFocus.bullFocus {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  filter: brightness(calc(var(--bull-brightness, 0.78) + 0.1)) contrast(0.9)
+    saturate(0.72) blur(var(--bull-focus-blur, 0.2px));
+  opacity: 0.68;
+  -webkit-mask-image: radial-gradient(
+    ellipse 43% 39% at 68% 27%,
+    #000 0%,
+    #000 42%,
+    transparent 78%
+  );
+  mask-image: radial-gradient(
+    ellipse 43% 39% at 68% 27%,
+    #000 0%,
+    #000 42%,
+    transparent 78%
+  );
+}
+
+@media (max-width: 1100px) {
+  .bullMotion.bullMotion {
+    width: min(51vw, 685px);
+  }
+}
+
+@media (max-width: 767px) {
+  .bullMotion.bullMotion {
+    right: -7vw;
+    width: min(75.5vw, 430px);
+    transform-origin: 62% 40%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketMotion,
+  .bullMotion.bullMotion {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
