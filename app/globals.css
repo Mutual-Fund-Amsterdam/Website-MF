@@ -364,8 +364,8 @@ img {
 .hero {
   position: relative;
   isolation: isolate;
-  height: 100svh;
-  min-height: 620px;
+  height: calc(100svh - 82px);
+  min-height: 538px;
   overflow: hidden;
   background: var(--bg);
 }
@@ -446,7 +446,7 @@ img {
   z-index: 12;
   top: calc(var(--header-height) + 4vh);
   right: var(--gutter);
-  bottom: calc(112px + 3vh);
+  bottom: 3vh;
   left: 47%;
   animation: aex-fade 700ms 180ms ease both;
 }
@@ -599,29 +599,30 @@ img {
 }
 
 .hero-partner-strip {
-  position: absolute;
-  z-index: 50;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  height: 82px;
   overflow: hidden;
-  border-top: 1px solid var(--line);
-  background: rgba(35, 35, 32, 0.96);
+  align-items: center;
+  background: var(--bg-elevated);
   scroll-margin-top: var(--header-height);
 }
 
 .hero-partner-strip .partner-marquee {
+  width: 100%;
+  height: 100%;
   border: 0;
 }
 
 .hero-partner-strip .partner-logo {
-  width: 210px;
-  height: 112px;
-  padding: 14px 20px 12px;
+  width: 170px;
+  height: 64px;
+  padding: 7px 14px 6px;
 }
 
 .hero-partner-strip .partner-logo-media {
-  height: 55px;
+  height: 34px;
 }
 
 .aex-dates {
@@ -1144,13 +1145,14 @@ select:focus {
 
 .partner-marquee {
   overflow: hidden;
-  border-block: 1px solid var(--line);
 }
 
 .partner-track {
   display: flex;
+  height: 100%;
   width: max-content;
-  animation: marquee 34s linear infinite;
+  align-items: center;
+  animation: marquee 30s linear infinite;
 }
 
 .partner-marquee:hover .partner-track {
@@ -1159,32 +1161,34 @@ select:focus {
 
 .partner-logo {
   display: flex;
-  width: 240px;
-  height: 142px;
+  width: 170px;
+  height: 64px;
+  margin-right: 12px;
   align-items: center;
   justify-content: center;
-  padding: 20px 24px 16px;
-  border-right: 1px solid var(--line);
+  padding: 7px 14px 6px;
+  border-radius: 3px;
   flex-direction: column;
-  gap: 9px;
+  gap: 5px;
+  background: rgba(88, 147, 177, 0.06);
 }
 
 .partner-logo-media {
   display: flex;
   width: 100%;
-  height: 68px;
-  padding: 11px 18px;
-  border-radius: 3px;
+  height: 34px;
+  padding: 0 8px;
   align-items: center;
   justify-content: center;
-  background: #f3f1ea;
+  background: transparent;
 }
 
 .partner-logo-media img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  opacity: 0.94;
+  filter: saturate(0.65) brightness(1.55) contrast(0.9);
+  opacity: 0.78;
   transition: opacity 180ms ease, transform 180ms ease;
 }
 
@@ -1197,7 +1201,7 @@ select:focus {
   overflow: hidden;
   max-width: 100%;
   color: var(--ink-muted);
-  font-size: 0.66rem;
+  font-size: 0.56rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   line-height: 1.1;
@@ -1207,13 +1211,46 @@ select:focus {
 }
 
 .partner-fallback-name {
-  color: #18314a;
+  color: rgba(233, 229, 218, 0.72);
   font-family: var(--font-display);
   font-size: clamp(0.85rem, 1.2vw, 1.12rem);
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1;
   text-align: center;
+}
+
+.partners-directory-section {
+  padding-bottom: clamp(112px, 10vw, 160px);
+}
+
+.partner-directory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.partner-directory-card.partner-logo {
+  width: 100%;
+  height: 128px;
+  margin: 0;
+  padding: 18px 22px 14px;
+  background: rgba(88, 147, 177, 0.065);
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.partner-directory-card.partner-logo:hover {
+  background: rgba(88, 147, 177, 0.11);
+  transform: translateY(-2px);
+}
+
+.partner-directory-card .partner-logo-media {
+  height: 68px;
+  padding: 5px 18px;
+}
+
+.partner-directory-card .partner-logo-name {
+  font-size: 0.66rem;
 }
 
 .partners-link-row {
@@ -2248,6 +2285,10 @@ select:focus {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .partner-directory-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .about-feature-copy {
     padding: 44px;
   }
@@ -2429,6 +2470,10 @@ select:focus {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .partner-directory-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .partner-tile:nth-child(3n + 2),
   .partner-tile:nth-child(3n + 3) {
     border-left: 0;
@@ -2468,7 +2513,8 @@ select:focus {
   }
 
   .hero {
-    min-height: 720px;
+    height: calc(100svh - 74px);
+    min-height: 646px;
   }
 
   .hero-copy {
@@ -2496,7 +2542,7 @@ select:focus {
   .hero-market {
     top: 50%;
     right: 20px;
-    bottom: calc(104px + 3vh);
+    bottom: 3vh;
     left: 20px;
   }
 
@@ -2562,19 +2608,23 @@ select:focus {
   }
 
   .partner-logo {
-    width: 190px;
-    height: 104px;
-    padding: 12px 16px 10px;
+    width: 150px;
+    height: 58px;
+    padding: 6px 12px 5px;
   }
 
   .partner-logo-media {
-    height: 53px;
-    padding: 9px 14px;
+    height: 30px;
+    padding: 0 7px;
+  }
+
+  .hero-partner-strip {
+    height: 74px;
   }
 
   .hero-partner-strip .partner-logo {
-    width: 190px;
-    height: 104px;
+    width: 150px;
+    height: 58px;
   }
 
   .membership-step {
@@ -2695,6 +2745,10 @@ select:focus {
   }
 
   .partners-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .partner-directory-grid {
     grid-template-columns: 1fr;
   }
 

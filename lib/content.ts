@@ -77,4 +77,5 @@ export const eventImages = {
   companyDay: "/images/mf-meeting-barclays.png",
   trip: "/images/borsa-milaan.webp",
   teslin: "/images/teslin-meeting.webp",
+  macro: "/images/macro-update-fsa.webp",
 };

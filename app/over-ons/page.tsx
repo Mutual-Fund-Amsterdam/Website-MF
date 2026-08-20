@@ -23,8 +23,8 @@ const pillars = [
     label: "Macro",
     title: "Macro-economische update.",
     text: "Maandelijks geeft onze macrocommissie een update over de belangrijkste macro-economische gebeurtenissen van de afgelopen maand en vertaalt zij rente, inflatie en geopolitiek naar gevolgen voor onze portefeuilles.",
-    image: eventImages.meeting,
-    alt: "Leden tijdens een inhoudelijke bijeenkomst van Mutual Fund",
+    image: eventImages.macro,
+    alt: "Macro-economische update tijdens een bijeenkomst van Mutual Fund",
   },
   {
     number: "02",
