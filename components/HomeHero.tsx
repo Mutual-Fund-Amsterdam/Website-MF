@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import AexBackdrop from "@/components/AexBackdrop";
+import PartnerMarquee from "@/components/PartnerMarquee";
 import styles from "./HomeHero.module.css";
 
 const clamp = (value: number, minimum: number, maximum: number) =>
@@ -199,6 +200,10 @@ export default function HomeHero() {
           decoding="sync"
         />
       </figure>
+
+      <div className="hero-partner-strip" id="partners">
+        <PartnerMarquee />
+      </div>
     </section>
   );
 }

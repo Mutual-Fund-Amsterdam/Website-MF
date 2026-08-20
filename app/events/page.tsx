@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 const events = [
   {
     number: "01",
-    title: "De gong op Beursplein 5",
-    text: "Ter ere van het 15-jarig bestaan opende Mutual Fund de handelsdag bij Euronext Amsterdam. Penningmeester Tom Arends luidde samen met leden van Fonds 3 de gong: een bijzonder moment waarop vijftien jaar financiële educatie, debat en beleggen met echt kapitaal samenkwamen op de beursvloer.",
-    image: eventImages.gong,
+    title: "Meeting met Teslin Capital Management",
+    text: "In maart verwelkomen we Teslin Capital Management voor een inhoudelijke meeting. Teslin neemt onze leden mee in zijn langetermijnbenadering van beleggen, actieve betrokkenheid bij ondernemingen en de afwegingen achter geconcentreerde portefeuilles.",
+    image: eventImages.teslin,
   },
   {
     number: "02",
@@ -35,8 +35,8 @@ const events = [
   },
   {
     number: "05",
-    title: "MF Reis naar Milaan",
-    text: "De Mutual Fund-reis ging naar Milaan, met een bezoek aan Borsa Italiana, een wijnproeverij en natuurlijk het Milanese nachtleven. Volgens de leden leverde dat minstens zoveel positieve alpha op. EBITDA stond die week vooral voor Earnings Before Interest, Taxes, Depreciation and Aperitivo.",
+    title: "Van beursvloer tot wijnbar: Mutual Fund in Milaan",
+    text: "Van Borsa Italiana tot de wijnbars van Milaan: een weekend waarin beleggen, Italië en vooral een goede tijd samenkwamen.",
     image: eventImages.trip,
   },
 ];

@@ -1,52 +1,52 @@
 export const partners = [
   {
     name: "J.P. Morgan",
-    logo: "https://www.mutualfund.nl/wp-content/uploads/2026/07/jp-morgan-logo-png-pic-300x62.png",
+    logo: "/partners/logos/jpmorgan.svg",
     href: "https://www.jpmorgan.com/NL/en/about-us",
   },
   {
     name: "Egeria",
-    logo: "https://www.mutualfund.nl/wp-content/uploads/2026/07/egeria_private_equity_rgb-300x33.png",
+    logo: "/partners/logos/egeria.svg",
     href: "https://egeriagroup.com/",
   },
   {
     name: "Erasmus Society",
-    logo: "https://www.mutualfund.nl/wp-content/uploads/2026/07/erasmussociety-300x168.png",
+    logo: null,
     href: "https://www.erasmussociety.nl/",
   },
   {
     name: "DUFAS",
-    logo: "https://www.mutualfund.nl/wp-content/uploads/2026/07/logo-dufas-rgb-300x54.png",
+    logo: "/partners/logos/dufas.webp",
     href: "https://www.dufas.nl/",
   },
   {
     name: "IBS Capital Allies",
-    logo: "https://www.mutualfund.nl/wp-content/uploads/2023/08/ibs-300x168.png",
+    logo: "/partners/logos/ibs.svg",
     href: "https://www.ibsca.nl/",
   },
   {
     name: "Teslin",
-    logo: "https://www.mutualfund.nl/wp-content/uploads/2026/07/logo-teslin-nh2l9jwqnsrl002bq28o5qyss56vtydjzkegyows6w-300x82.png",
+    logo: "/partners/logos/teslin.svg",
     href: "https://www.teslin.nl/",
   },
   {
     name: "LYNX",
-    logo: "https://www.mutualfund.nl/wp-content/uploads/2026/07/logo-lynx-200-1-1.png",
+    logo: "/partners/logos/lynx.svg",
     href: "https://www.lynx.nl/",
   },
   {
     name: "Farringdon",
-    logo: "https://www.mutualfund.nl/wp-content/uploads/2023/08/farringdon-300x168.png",
+    logo: null,
     href: "https://www.farringdoncapital.com/",
   },
   {
     name: "Photon Capital",
-    logo: "https://www.mutualfund.nl/wp-content/uploads/2023/08/photoncapital-300x214.png",
+    logo: "/partners/logos/photon-capital.webp",
     href: "https://www.photoncapital.nl/",
   },
   {
     name: "FSA",
-    logo: "https://www.mutualfund.nl/wp-content/uploads/2022/12/fsa_logo-full.png",
+    logo: "/partners/logos/fsa.svg",
     href: "https://fsa.nl/",
   },
 ];
@@ -76,4 +76,5 @@ export const eventImages = {
   social: "/images/mf-borrel.png",
   companyDay: "/images/mf-meeting-barclays.png",
   trip: "/images/borsa-milaan.webp",
+  teslin: "/images/teslin-meeting.webp",
 };

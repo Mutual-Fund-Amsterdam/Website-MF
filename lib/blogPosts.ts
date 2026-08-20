@@ -48,18 +48,18 @@ const posts: BlogPost[] = [
     ],
   },
   {
-    title: "Mutual Fund-reis naar Milaan: beurs, wijn en positieve alpha",
+    title: "Van beursvloer tot wijnbar: Mutual Fund in Milaan",
     slug: "mutual-fund-reis-milaan",
     date: "2026-08-12",
     displayDate: "12 augustus 2026",
     category: "Reis",
     cover: "/images/borsa-milaan.webp",
     excerpt:
-      "Van Borsa Italiana naar een wijnproeverij en het nachtleven: Milaan door de ogen van beleggers.",
+      "Van Borsa Italiana tot de wijnbars van Milaan: een weekend waarin beleggen, Italië en vooral een goede tijd samenkwamen.",
     body: [
-      "Voor de jaarlijkse ledenreis vertrok Mutual Fund naar Milaan. Op het programma stond een bezoek aan Borsa Italiana, waar de groep de Italiaanse beurs en de markt eromheen van dichtbij zag.",
-      "Daarna verschoof de analyse van multiples naar wijn: tijdens een proeverij werd uitgebreid besproken welke fles de aantrekkelijkste risk-returnverhouding bood. De positieve alpha van de avond liet zich niet volledig in Excel vangen.",
-      "Ook het Milanese nachtleven kreeg een plek in de portefeuille. EBITDA stond tijdens deze reis dan ook vooral voor Earnings Before Interest, Taxes, Depreciation and Aperitivo.",
+      "Voor de jaarlijkse ledenreis vertrok Mutual Fund naar Milaan. Een stad die naast mode en goed eten ook een belangrijke plek inneemt in de Italiaanse financiële wereld. Een bezoek aan Borsa Italiana kon daarom natuurlijk niet ontbreken. Midden in het financiële hart van de stad kregen we een kijkje op de plek waar een groot deel van de Italiaanse aandelenmarkt samenkomt.",
+      "Maar een MF-reis draait gelukkig niet alleen om koersen en bedrijven. Na de beursvloer werd de Bloomberg-terminal ingeruild voor een goed glas wijn tijdens een Italiaanse wijnproeverij. Een uitstekende gelegenheid om de lokale markt eens op een andere manier te onderzoeken.",
+      "De rest van het weekend stond in het teken van Milaan ontdekken, goed eten en het nodige nachtleven. Geen uitgebreide investment case deze keer, maar over één ding bestond weinig discussie: Milaan was een geslaagde bestemming voor de jaarlijkse MF-reis.",
     ],
   },
   {
