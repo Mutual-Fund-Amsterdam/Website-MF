@@ -18,6 +18,21 @@ export type BlogPost = {
 
 const posts: BlogPost[] = [
   {
+    title: "Maartmeeting met Teslin Capital Management",
+    slug: "maartmeeting-teslin-capital-management",
+    date: "2027-03-01",
+    displayDate: "Maart 2027",
+    category: "Meeting",
+    cover: "/images/teslin-meeting.webp",
+    excerpt:
+      "In maart verwelkomen we Teslin Capital Management voor een inhoudelijke avond over langetermijnbeleggen en actief aandeelhouderschap.",
+    body: [
+      "Tijdens onze maartmeeting ontvangen we Teslin Capital Management. De Nederlandse investeerder richt zich op beursgenoteerde ondernemingen en kijkt daarbij nadrukkelijk naar waardecreatie op de lange termijn.",
+      "Teslin neemt onze leden mee in de afwegingen achter geconcentreerde portefeuilles, fundamentele analyse en actieve betrokkenheid bij ondernemingen. Daarmee krijgen de leden een praktisch beeld van hoe een langetermijninvesteerder kansen beoordeelt en ondernemingen volgt.",
+      "Na de presentatie gaan de drie fondsen verder met hun eigen portefeuillebesprekingen en investment cases.",
+    ],
+  },
+  {
     title: "Novembermeeting met IBS Capital Allies",
     slug: "novembermeeting-ibs-capital-allies",
     date: "2026-11-01",

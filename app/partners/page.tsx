@@ -1,7 +1,6 @@
-/* eslint-disable @next/next/no-img-element */
 import type { Metadata } from "next";
 import Link from "next/link";
-import { partners } from "@/lib/content";
+import PartnerMarquee from "@/components/PartnerMarquee";
 
 export const metadata: Metadata = {
   title: "Partners",
@@ -19,20 +18,8 @@ export default function PartnersPage() {
           ambitieuze, financieel georiënteerde studenten persoonlijk kennen.
         </p>
       </header>
-      <section className="container partners-grid">
-        {partners.map((partner, index) => (
-          <a href={partner.href} target="_blank" rel="noreferrer" className="partner-tile" key={partner.name}>
-            <span className="eyebrow">{String(index + 1).padStart(2, "0")}</span>
-            <span className="partner-tile-logo">
-              {partner.logo ? (
-                <img src={partner.logo} alt={partner.name} />
-              ) : (
-                <span className="partner-fallback-name">{partner.name}</span>
-              )}
-            </span>
-            <span className="partner-name">{partner.name} ↗</span>
-          </a>
-        ))}
+      <section className="container partners-directory-section">
+        <PartnerMarquee variant="grid" />
       </section>
       <section className="section page-cta">
         <div className="container page-cta-inner">

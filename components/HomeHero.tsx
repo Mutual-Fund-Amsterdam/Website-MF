@@ -150,60 +150,62 @@ export default function HomeHero() {
   }, []);
 
   return (
-    <section ref={heroRef} className="hero" aria-labelledby="hero-title">
-      <div className="hero-copy">
-        <h1 id="hero-title" className="hero-title">
-          <span>De beleggings-</span>
-          <span>vereniging voor de</span>
-          <span>financiële leiders</span>
-          <span>
-            van <em>morgen.</em>
-          </span>
-        </h1>
-        <div className="hero-actions">
-          <Link className="button button-primary" href="/word-lid">
-            Word lid
-          </Link>
-          <Link className="hero-about-link" href="/over-ons">
-            Over ons <span aria-hidden="true">→</span>
-          </Link>
+    <>
+      <section ref={heroRef} className="hero" aria-labelledby="hero-title">
+        <div className="hero-copy">
+          <h1 id="hero-title" className="hero-title">
+            <span>De beleggings-</span>
+            <span>vereniging voor de</span>
+            <span>financiële leiders</span>
+            <span>
+              van <em>morgen.</em>
+            </span>
+          </h1>
+          <div className="hero-actions">
+            <Link className="button button-primary" href="/word-lid">
+              Word lid
+            </Link>
+            <Link className="hero-about-link" href="/over-ons">
+              Over ons <span aria-hidden="true">→</span>
+            </Link>
+          </div>
         </div>
-      </div>
 
-      <div className="hero-market">
-        <div ref={marketRef} className={styles.marketMotion}>
-          <AexBackdrop />
+        <div className="hero-market">
+          <div ref={marketRef} className={styles.marketMotion}>
+            <AexBackdrop />
+          </div>
         </div>
-      </div>
 
-      <figure
-        ref={bullRef}
-        className={`hero-bull-motion ${styles.bullMotion}`}
-        aria-hidden="true"
-      >
-        <div className="hero-bull-shadow" />
-        <img
-          className={`hero-bull-image ${styles.bullImage} ${styles.bullBase}`}
-          src={bullSource}
-          alt=""
-          width="1536"
-          height="1180"
-          fetchPriority="high"
-          decoding="sync"
-        />
-        <img
-          className={`hero-bull-image ${styles.bullImage} ${styles.bullFocus}`}
-          src={bullSource}
-          alt=""
-          width="1536"
-          height="1180"
-          decoding="sync"
-        />
-      </figure>
+        <figure
+          ref={bullRef}
+          className={`hero-bull-motion ${styles.bullMotion}`}
+          aria-hidden="true"
+        >
+          <div className="hero-bull-shadow" />
+          <img
+            className={`hero-bull-image ${styles.bullImage} ${styles.bullBase}`}
+            src={bullSource}
+            alt=""
+            width="1536"
+            height="1180"
+            fetchPriority="high"
+            decoding="sync"
+          />
+          <img
+            className={`hero-bull-image ${styles.bullImage} ${styles.bullFocus}`}
+            src={bullSource}
+            alt=""
+            width="1536"
+            height="1180"
+            decoding="sync"
+          />
+        </figure>
+      </section>
 
       <div className="hero-partner-strip" id="partners">
         <PartnerMarquee />
       </div>
-    </section>
+    </>
   );
 }
