@@ -96,7 +96,7 @@ export default function AboutPage() {
         <div className="container about-feature-list">
           {pillars.map((pillar, index) => (
             <article
-              className={`about-feature${index % 2 === 1 ? " is-reversed" : ""}`}
+              className={`about-feature${index % 2 === 1 ? " is-reversed" : ""}${index === 0 ? " is-compact-media" : ""}`}
               key={pillar.label}
             >
               <div className="about-feature-media">
