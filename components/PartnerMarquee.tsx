@@ -16,7 +16,14 @@ export default function PartnerMarquee() {
             aria-hidden={index >= partners.length}
             tabIndex={index >= partners.length ? -1 : 0}
           >
-            <img src={partner.logo} alt={index < partners.length ? partner.name : ""} />
+            <span className="partner-logo-media">
+              {partner.logo ? (
+                <img src={partner.logo} alt={index < partners.length ? partner.name : ""} />
+              ) : (
+                <span className="partner-fallback-name" aria-hidden="true">{partner.name}</span>
+              )}
+            </span>
+            <span className="partner-logo-name">{partner.name}</span>
           </a>
         ))}
       </div>

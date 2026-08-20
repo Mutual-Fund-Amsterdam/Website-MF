@@ -134,8 +134,11 @@ export default function AexBackdrop() {
   return (
     <div className="aex-backdrop">
       <div className="aex-meta">
-        <span>AEX · YTD</span>
-        <strong>{numberFormat.format(data.latest)}</strong>
+        <span className="aex-meta-label">
+          <strong>AEX-index</strong>
+          <small>Koersverloop dit jaar (YTD)</small>
+        </span>
+        <strong className="aex-meta-value">{numberFormat.format(data.latest)} punten</strong>
       </div>
       <div className="aex-chart-wrap">
         <svg

@@ -23,7 +23,13 @@ export default function PartnersPage() {
         {partners.map((partner, index) => (
           <a href={partner.href} target="_blank" rel="noreferrer" className="partner-tile" key={partner.name}>
             <span className="eyebrow">{String(index + 1).padStart(2, "0")}</span>
-            <img src={partner.logo} alt={partner.name} />
+            <span className="partner-tile-logo">
+              {partner.logo ? (
+                <img src={partner.logo} alt={partner.name} />
+              ) : (
+                <span className="partner-fallback-name">{partner.name}</span>
+              )}
+            </span>
             <span className="partner-name">{partner.name} ↗</span>
           </a>
         ))}

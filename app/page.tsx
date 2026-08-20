@@ -3,7 +3,6 @@ import Link from "next/link";
 import BoardGrid from "@/components/BoardGrid";
 import ContactForm from "@/components/ContactForm";
 import HomeHero from "@/components/HomeHero";
-import PartnerMarquee from "@/components/PartnerMarquee";
 import Stats from "@/components/AnimatedStats";
 import { eventImages, membershipSteps } from "@/lib/content";
 
@@ -75,15 +74,23 @@ export default function Home() {
 
       <section className="section section-elevated" id="wat-we-doen">
         <div className="container">
-          <div className="section-heading split-heading">
-            <div>
-              <p className="eyebrow">De methode</p>
-              <h2>Wat we doen.</h2>
+          <div className="work-heading-media">
+            <div className="section-heading split-heading">
+              <div>
+                <p className="eyebrow">De methode</p>
+                <h2>Wat we doen.</h2>
+              </div>
+              <p>
+                Een pitch is pas het begin. Het fonds prikt door de aannames heen,
+                bespreekt de risico’s en stemt uiteindelijk met echt geld.
+              </p>
             </div>
-            <p>
-              Een pitch is pas het begin. Het fonds prikt door de aannames heen,
-              bespreekt de risico’s en stemt uiteindelijk met echt geld.
-            </p>
+            <figure className="work-heading-image">
+              <img
+                src="/images/mf-parool-home.webp"
+                alt="Leden van Mutual Fund tijdens een gezamenlijke bijeenkomst"
+              />
+            </figure>
           </div>
           <div className="work-grid">
             {workCards.map((card) => (
@@ -131,24 +138,6 @@ export default function Home() {
             <strong>Sebastian Bong</strong>
             <span>Société Générale</span>
           </p>
-        </div>
-      </section>
-
-      <section className="section section-elevated partners-section" id="partners">
-        <div className="container section-heading split-heading">
-          <div>
-            <p className="eyebrow">Ons netwerk</p>
-            <h2>Onze partners.</h2>
-          </div>
-          <p>
-            Onze partners schuiven tijdens meetings aan voor een case, marktvisie
-            of praktische sessie over het werk in investment banking, private
-            equity en asset management.
-          </p>
-        </div>
-        <PartnerMarquee />
-        <div className="container partners-link-row">
-          <Link className="text-link" href="/partners">Bekijk alle partners →</Link>
         </div>
       </section>
 
