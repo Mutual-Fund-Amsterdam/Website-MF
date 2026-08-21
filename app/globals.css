@@ -474,7 +474,7 @@ img {
 
 .aex-chart-wrap {
   position: absolute;
-  inset: 10% 0 1%;
+  inset: 0 0 -3%;
   pointer-events: auto;
 }
 
@@ -506,7 +506,7 @@ img {
   stroke-linejoin: round;
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
-  opacity: 0.72;
+  opacity: 0.82;
   pointer-events: none;
 }
 
@@ -2513,7 +2513,7 @@ select:focus {
   }
 
   .hero-market .aex-chart-wrap {
-    inset: 15% 0 11%;
+    inset: 4% 0 -2%;
   }
 
   .hero-bull-motion {
