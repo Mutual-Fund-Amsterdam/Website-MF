@@ -47,7 +47,7 @@ export default function AexBackdrop() {
     const values = data.points.map((point) => point.close);
     const smoothingRadius = Math.max(
       1,
-      Math.min(4, Math.floor(values.length / 40)),
+      Math.min(3, Math.floor(values.length / 40)),
     );
     const displayValues = values.map((value, index) => {
       if (index === 0 || index === values.length - 1) return value;
