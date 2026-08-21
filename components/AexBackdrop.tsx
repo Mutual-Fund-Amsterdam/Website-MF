@@ -133,13 +133,6 @@ export default function AexBackdrop() {
 
   return (
     <div className="aex-backdrop">
-      <div className="aex-meta">
-        <span className="aex-meta-label">
-          <strong>AEX-index</strong>
-          <small>Koersverloop dit jaar (YTD)</small>
-        </span>
-        <strong className="aex-meta-value">{numberFormat.format(data.latest)} punten</strong>
-      </div>
       <div className="aex-chart-wrap">
         <svg
           className="aex-chart"
@@ -202,16 +195,13 @@ export default function AexBackdrop() {
             }}
             aria-hidden="true"
           >
+            <span className="aex-tooltip-label">AEX</span>
             <time>
               {tooltipDateFormat.format(new Date(activePoint.point.timestamp * 1000))}
             </time>
-            <strong>{numberFormat.format(activePoint.point.close)}</strong>
+            <strong>{numberFormat.format(activePoint.point.close)} punten</strong>
           </div>
         )}
-      </div>
-      <div className="aex-dates" aria-hidden="true">
-        <span>{startLabel}</span>
-        <span>{endLabel}</span>
       </div>
     </div>
   );
