@@ -68,16 +68,8 @@ export default function HomeHero() {
         market.style.opacity = marketFade.toFixed(4);
 
         hero.style.setProperty(
-          "--bull-blur",
-          `${(0.72 + current.bullProgress * 3.2).toFixed(2)}px`,
-        );
-        hero.style.setProperty(
-          "--bull-focus-blur",
-          `${(0.18 + current.bullProgress * 2.2).toFixed(2)}px`,
-        );
-        hero.style.setProperty(
           "--bull-brightness",
-          (0.78 - current.bullProgress * 0.2).toFixed(3),
+          (0.82 - current.bullProgress * 0.18).toFixed(3),
         );
       }
 
