@@ -6,24 +6,10 @@
 
 .bullMotion.bullMotion {
   z-index: 6;
-  right: -22vw;
-  bottom: 6vh;
-  width: min(64vw, 1020px);
+  right: -7vw;
+  bottom: -11vh;
+  width: min(54vw, 980px);
   transform-origin: 62% 50%;
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(0, 0, 0, 0.18) 5%,
-    #000 17%,
-    #000 100%
-  );
-  mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(0, 0, 0, 0.18) 5%,
-    #000 17%,
-    #000 100%
-  );
 }
 
 .bullMotion::after {
@@ -35,34 +21,16 @@
       90deg,
       transparent 0%,
       transparent 73%,
-      rgba(7, 17, 27, 0.3) 87%,
-      #07111b 100%
+      rgba(35, 35, 32, 0.28) 87%,
+      var(--bg) 100%
     ),
     linear-gradient(
       180deg,
       transparent 0%,
       transparent 67%,
-      rgba(7, 17, 27, 0.34) 82%,
-      #07111b 100%
+      rgba(35, 35, 32, 0.32) 82%,
+      var(--bg) 100%
     );
-  content: "";
-  pointer-events: none;
-}
-
-.bullMotion::before {
-  position: absolute;
-  z-index: 4;
-  bottom: -2px;
-  left: -2px;
-  width: 38%;
-  height: 64%;
-  background: linear-gradient(
-    90deg,
-    #07111b 0%,
-    rgba(7, 17, 27, 0.94) 15%,
-    rgba(7, 17, 27, 0.58) 48%,
-    transparent 100%
-  );
   content: "";
   pointer-events: none;
 }
@@ -72,9 +40,9 @@
 }
 
 .bullBase.bullBase {
-  filter: brightness(calc(var(--bull-brightness, 0.6) + 0.1)) contrast(0.74)
-    saturate(0.22) blur(var(--bull-blur, 1.45px));
-  opacity: 0.72;
+  filter: brightness(var(--bull-brightness, 0.6)) contrast(0.64)
+    saturate(0.22) blur(var(--bull-blur, 2.05px));
+  opacity: 0.64;
 }
 
 .bullFocus.bullFocus {
@@ -82,9 +50,9 @@
   z-index: 3;
   top: 0;
   left: 0;
-  filter: brightness(calc(var(--bull-brightness, 0.6) + 0.17)) contrast(0.95)
-    saturate(0.2) blur(var(--bull-focus-blur, 0.35px));
-  opacity: 0.58;
+  filter: brightness(calc(var(--bull-brightness, 0.6) + 0.075)) contrast(0.86)
+    saturate(0.2) blur(var(--bull-focus-blur, 0.55px));
+  opacity: 0.5;
   -webkit-mask-image:
     radial-gradient(ellipse 31% 39% at 50% 46%, #000 0%, #000 48%, transparent 86%),
     radial-gradient(ellipse 42% 23% at 50% 18%, #000 0%, #000 44%, transparent 82%);
@@ -95,32 +63,18 @@
 
 @media (max-width: 1100px) {
   .bullMotion.bullMotion {
-    right: -25vw;
-    bottom: 4vh;
-    width: min(76vw, 820px);
+    right: -10.5vw;
+    bottom: -9vh;
+    width: min(62vw, 760px);
   }
 }
 
 @media (max-width: 767px) {
   .bullMotion.bullMotion {
-    right: -40vw;
-    bottom: 0;
-    width: min(116vw, 620px);
+    right: -22vw;
+    bottom: -4vh;
+    width: min(94vw, 540px);
     transform-origin: 60% 46%;
-    -webkit-mask-image: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(0, 0, 0, 0.2) 4%,
-      #000 15%,
-      #000 100%
-    );
-    mask-image: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(0, 0, 0, 0.2) 4%,
-      #000 15%,
-      #000 100%
-    );
   }
 }
 
