@@ -69,15 +69,15 @@ export default function HomeHero() {
 
         hero.style.setProperty(
           "--bull-blur",
-          `${(0.8 + current.bullProgress * 3.2).toFixed(2)}px`,
+          `${(0.5 + current.bullProgress * 3.2).toFixed(2)}px`,
         );
         hero.style.setProperty(
           "--bull-focus-blur",
-          `${(0.12 + current.bullProgress * 2.2).toFixed(2)}px`,
+          `${(0.08 + current.bullProgress * 2.2).toFixed(2)}px`,
         );
         hero.style.setProperty(
           "--bull-brightness",
-          (0.47 - current.bullProgress * 0.14).toFixed(3),
+          (0.7 - current.bullProgress * 0.2).toFixed(3),
         );
       }
 
@@ -187,8 +187,8 @@ export default function HomeHero() {
             className={`hero-bull-image ${styles.bullImage} ${styles.bullBase}`}
             src={bullSource}
             alt=""
-            width="1920"
-            height="1631"
+            width="1536"
+            height="1024"
             fetchPriority="high"
             decoding="sync"
           />
@@ -196,8 +196,8 @@ export default function HomeHero() {
             className={`hero-bull-image ${styles.bullImage} ${styles.bullFocus}`}
             src={bullSource}
             alt=""
-            width="1920"
-            height="1631"
+            width="1536"
+            height="1024"
             decoding="sync"
           />
         </figure>
