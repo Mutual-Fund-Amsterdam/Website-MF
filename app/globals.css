@@ -364,8 +364,8 @@ img {
 .hero {
   position: relative;
   isolation: isolate;
-  height: calc(100svh - 82px);
-  min-height: 538px;
+  height: 100svh;
+  min-height: 640px;
   overflow: hidden;
   background: var(--bg);
 }
@@ -447,7 +447,7 @@ img {
   top: calc(var(--header-height) + 4vh);
   right: var(--gutter);
   bottom: 3vh;
-  left: 47%;
+  left: var(--gutter);
   animation: aex-fade 700ms 180ms ease both;
 }
 
@@ -490,9 +490,10 @@ img {
   stroke: var(--accent);
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 2;
+  stroke-width: 1.8;
   vector-effect: non-scaling-stroke;
-  opacity: 0.72;
+  opacity: 0.78;
+  filter: drop-shadow(0 0 6px rgba(88, 147, 177, 0.24));
   pointer-events: none;
 }
 
@@ -1185,9 +1186,15 @@ select:focus {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: brightness(0) saturate(100%) invert(64%) sepia(18%) saturate(736%) hue-rotate(157deg) brightness(89%) contrast(86%);
-  opacity: 0.76;
+  filter: brightness(0) saturate(100%) invert(1);
+  opacity: 0.7;
   transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.partner-logo-media img[src$="/ibs-capital-allies.svg"],
+.partner-logo-media img[src$="/fsa.svg"],
+.partner-logo-media img[src$="/teslin.svg"] {
+  filter: none;
 }
 
 .partner-logo:hover .partner-logo-media img {
@@ -1200,7 +1207,7 @@ select:focus {
 }
 
 .partner-fallback-name {
-  color: rgba(127, 169, 190, 0.84);
+  color: rgba(255, 255, 255, 0.72);
   font-family: var(--font-display);
   font-size: clamp(0.82rem, 1.1vw, 1.02rem);
   font-weight: 650;
@@ -2278,7 +2285,7 @@ select:focus {
   }
 
   .hero-market {
-    left: 48%;
+    left: var(--gutter);
   }
 
   .hero-bull-motion {
@@ -2517,8 +2524,8 @@ select:focus {
   }
 
   .hero {
-    height: calc(100svh - 74px);
-    min-height: 646px;
+    height: 100svh;
+    min-height: 700px;
   }
 
   .hero-copy {
@@ -2544,7 +2551,7 @@ select:focus {
   }
 
   .hero-market {
-    top: 50%;
+    top: 42%;
     right: 20px;
     bottom: 3vh;
     left: 20px;
@@ -2559,9 +2566,9 @@ select:focus {
   }
 
   .hero-bull-motion {
-    right: -3vw;
-    bottom: 2vh;
-    width: min(62vw, 350px);
+    right: 0;
+    bottom: 0;
+    width: auto;
   }
 
   .aex-tooltip {
