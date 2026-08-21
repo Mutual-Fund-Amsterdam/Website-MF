@@ -45,8 +45,20 @@ export default function AexBackdrop() {
     if (!data?.points?.length) return null;
 
     const values = data.points.map((point) => point.close);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
+    const smoothingRadius = Math.max(
+      1,
+      Math.min(4, Math.floor(values.length / 40)),
+    );
+    const displayValues = values.map((value, index) => {
+      if (index === 0 || index === values.length - 1) return value;
+
+      const start = Math.max(0, index - smoothingRadius);
+      const end = Math.min(values.length, index + smoothingRadius + 1);
+      const window = values.slice(start, end);
+      return window.reduce((total, current) => total + current, 0) / window.length;
+    });
+    const min = Math.min(...displayValues);
+    const max = Math.max(...displayValues);
     const range = Math.max(max - min, 1);
 
     const coordinates = data.points.map((point, index) => {
@@ -56,7 +68,7 @@ export default function AexBackdrop() {
           (chartWidth - chartPadding * 2);
       const y =
         chartPadding +
-        ((max - point.close) / range) * (chartHeight - chartPadding * 2);
+        ((max - displayValues[index]) / range) * (chartHeight - chartPadding * 2);
       return { x, y, point };
     });
 
