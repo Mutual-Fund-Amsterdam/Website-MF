@@ -45,20 +45,8 @@ export default function AexBackdrop() {
     if (!data?.points?.length) return null;
 
     const values = data.points.map((point) => point.close);
-    const smoothingRadius = Math.max(
-      1,
-      Math.min(3, Math.floor(values.length / 40)),
-    );
-    const displayValues = values.map((value, index) => {
-      if (index === 0 || index === values.length - 1) return value;
-
-      const start = Math.max(0, index - smoothingRadius);
-      const end = Math.min(values.length, index + smoothingRadius + 1);
-      const window = values.slice(start, end);
-      return window.reduce((total, current) => total + current, 0) / window.length;
-    });
-    const min = Math.min(...displayValues);
-    const max = Math.max(...displayValues);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
     const range = Math.max(max - min, 1);
 
     const coordinates = data.points.map((point, index) => {
@@ -68,7 +56,7 @@ export default function AexBackdrop() {
           (chartWidth - chartPadding * 2);
       const y =
         chartPadding +
-        ((max - displayValues[index]) / range) * (chartHeight - chartPadding * 2);
+        ((max - point.close) / range) * (chartHeight - chartPadding * 2);
       return { x, y, point };
     });
 
@@ -145,6 +133,13 @@ export default function AexBackdrop() {
 
   return (
     <div className="aex-backdrop">
+      <div className="aex-meta">
+        <span className="aex-meta-label">
+          <strong>AEX-index</strong>
+          <small>Koersverloop dit jaar (YTD)</small>
+        </span>
+        <strong className="aex-meta-value">{numberFormat.format(data.latest)} punten</strong>
+      </div>
       <div className="aex-chart-wrap">
         <svg
           className="aex-chart"
@@ -207,13 +202,16 @@ export default function AexBackdrop() {
             }}
             aria-hidden="true"
           >
-            <span className="aex-tooltip-label">AEX</span>
             <time>
               {tooltipDateFormat.format(new Date(activePoint.point.timestamp * 1000))}
             </time>
-            <strong>{numberFormat.format(activePoint.point.close)} punten</strong>
+            <strong>{numberFormat.format(activePoint.point.close)}</strong>
           </div>
         )}
+      </div>
+      <div className="aex-dates" aria-hidden="true">
+        <span>{startLabel}</span>
+        <span>{endLabel}</span>
       </div>
     </div>
   );
