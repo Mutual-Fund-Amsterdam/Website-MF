@@ -541,6 +541,16 @@ img {
   backdrop-filter: blur(8px);
 }
 
+.aex-tooltip-label {
+  color: rgba(233, 229, 218, 0.78);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 .aex-tooltip time {
   color: rgba(233, 229, 218, 0.62);
   font-size: 0.58rem;
