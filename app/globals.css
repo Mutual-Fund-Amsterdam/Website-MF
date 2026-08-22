@@ -391,6 +391,7 @@ img {
   align-items: flex-start;
   justify-content: center;
   flex-direction: column;
+  pointer-events: none;
 }
 
 .hero-title {
@@ -420,6 +421,11 @@ img {
   align-items: center;
   gap: clamp(22px, 2.2vw, 34px);
   animation: hero-copy-in 700ms 120ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  pointer-events: none;
+}
+
+.hero-actions a {
+  pointer-events: auto;
 }
 
 .hero-about-link {
@@ -473,7 +479,7 @@ img {
 }
 
 .aex-chart:focus-visible .aex-chart-line {
-  opacity: 0.92;
+  opacity: 1;
 }
 
 .aex-chart-hit {
@@ -490,16 +496,15 @@ img {
   stroke: var(--accent);
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 1.8;
+  stroke-width: 2.3;
   vector-effect: non-scaling-stroke;
-  opacity: 0.78;
-  filter: drop-shadow(0 0 6px rgba(88, 147, 177, 0.24));
+  opacity: 0.92;
   pointer-events: none;
 }
 
 .aex-chart-point {
   fill: var(--accent);
-  opacity: 0.8;
+  opacity: 0.92;
   pointer-events: none;
 }
 
@@ -587,16 +592,17 @@ img {
 }
 
 .aex-meta-label small {
-  color: rgba(233, 229, 218, 0.52);
+  color: rgba(233, 229, 218, 0.7);
   font-size: 0.54rem;
   font-weight: 600;
   letter-spacing: 0.1em;
 }
 
 .aex-meta-value {
-  color: rgba(88, 147, 177, 0.86);
+  color: var(--accent);
   font-size: 0.76rem;
   letter-spacing: 0.06em;
+  opacity: 0.92;
 }
 
 .hero-partner-strip {
