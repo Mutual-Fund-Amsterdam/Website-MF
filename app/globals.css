@@ -400,7 +400,7 @@ img {
   font-size: clamp(3.2rem, 5.1vw, 6.45rem);
   font-weight: 800;
   letter-spacing: -0.058em;
-  line-height: 1.02;
+  line-height: 1.08;
   text-wrap: nowrap;
   animation: hero-copy-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -2542,7 +2542,7 @@ select:focus {
   .hero-title {
     max-width: 100%;
     font-size: clamp(2.55rem, 11vw, 4.2rem);
-    line-height: 1;
+    line-height: 1.07;
   }
 
   .hero-actions {

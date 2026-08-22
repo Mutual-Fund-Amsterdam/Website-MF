@@ -50,16 +50,16 @@
 }
 
 .bullBase.bullBase {
-  filter: brightness(var(--bull-brightness, 0.82)) contrast(1.16)
-    saturate(0.72);
-  opacity: 0.2;
+  filter: brightness(calc(var(--bull-brightness, 0.82) + 0.14)) contrast(0.88)
+    grayscale(1) blur(2px);
+  opacity: 0.1;
 }
 
 .bullFocus.bullFocus {
   z-index: 3;
-  filter: brightness(calc(var(--bull-brightness, 0.82) + 0.12)) contrast(1.24)
-    saturate(0.78);
-  opacity: 0.05;
+  filter: brightness(calc(var(--bull-brightness, 0.82) + 0.18)) contrast(0.94)
+    grayscale(1) blur(2px);
+  opacity: 0.02;
   -webkit-mask-image:
     radial-gradient(ellipse 25% 38% at 70% 56%, #000 0%, #000 52%, transparent 88%),
     radial-gradient(ellipse 47% 20% at 70% 24%, #000 0%, #000 44%, transparent 86%);
