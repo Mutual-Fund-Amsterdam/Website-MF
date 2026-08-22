@@ -21,7 +21,7 @@ export const partners = [
   },
   {
     name: "IBS Capital Allies",
-    logo: "/partners/logos/ibs.svg",
+    logo: "/partners/logos/ibs-capital-allies.svg",
     href: "https://www.ibsca.nl/",
   },
   {
@@ -31,7 +31,7 @@ export const partners = [
   },
   {
     name: "LYNX",
-    logo: "/partners/logos/lynx.svg",
+    logo: "/partners/logos/lynx-official.png",
     href: "https://www.lynx.nl/",
   },
   {

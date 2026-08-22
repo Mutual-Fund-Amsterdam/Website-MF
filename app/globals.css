@@ -364,8 +364,8 @@ img {
 .hero {
   position: relative;
   isolation: isolate;
-  height: calc(100svh - 82px);
-  min-height: 538px;
+  height: 100svh;
+  min-height: 640px;
   overflow: hidden;
   background: var(--bg);
 }
@@ -391,6 +391,7 @@ img {
   align-items: flex-start;
   justify-content: center;
   flex-direction: column;
+  pointer-events: none;
 }
 
 .hero-title {
@@ -400,7 +401,7 @@ img {
   font-size: clamp(3.2rem, 5.1vw, 6.45rem);
   font-weight: 800;
   letter-spacing: -0.058em;
-  line-height: 1.02;
+  line-height: 1.08;
   text-wrap: nowrap;
   animation: hero-copy-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -420,6 +421,11 @@ img {
   align-items: center;
   gap: clamp(22px, 2.2vw, 34px);
   animation: hero-copy-in 700ms 120ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  pointer-events: none;
+}
+
+.hero-actions a {
+  pointer-events: auto;
 }
 
 .hero-about-link {
@@ -447,7 +453,7 @@ img {
   top: calc(var(--header-height) + 4vh);
   right: var(--gutter);
   bottom: 3vh;
-  left: 47%;
+  left: var(--gutter);
   animation: aex-fade 700ms 180ms ease both;
 }
 
@@ -473,7 +479,7 @@ img {
 }
 
 .aex-chart:focus-visible .aex-chart-line {
-  opacity: 0.92;
+  opacity: 1;
 }
 
 .aex-chart-hit {
@@ -490,15 +496,15 @@ img {
   stroke: var(--accent);
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 2;
+  stroke-width: 2.3;
   vector-effect: non-scaling-stroke;
-  opacity: 0.72;
+  opacity: 0.92;
   pointer-events: none;
 }
 
 .aex-chart-point {
   fill: var(--accent);
-  opacity: 0.8;
+  opacity: 0.92;
   pointer-events: none;
 }
 
@@ -533,6 +539,16 @@ img {
   pointer-events: none;
   transform: translate(-50%, calc(-100% - 13px));
   backdrop-filter: blur(8px);
+}
+
+.aex-tooltip-label {
+  color: rgba(233, 229, 218, 0.78);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .aex-tooltip time {
@@ -586,16 +602,17 @@ img {
 }
 
 .aex-meta-label small {
-  color: rgba(233, 229, 218, 0.52);
+  color: rgba(233, 229, 218, 0.7);
   font-size: 0.54rem;
   font-weight: 600;
   letter-spacing: 0.1em;
 }
 
 .aex-meta-value {
-  color: rgba(88, 147, 177, 0.86);
+  color: var(--accent);
   font-size: 0.76rem;
   letter-spacing: 0.06em;
+  opacity: 0.92;
 }
 
 .hero-partner-strip {
@@ -1185,9 +1202,15 @@ select:focus {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: brightness(0) saturate(100%) invert(64%) sepia(18%) saturate(736%) hue-rotate(157deg) brightness(89%) contrast(86%);
-  opacity: 0.76;
+  filter: brightness(0) saturate(100%) invert(1);
+  opacity: 0.7;
   transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.partner-logo-media img[src$="/ibs-capital-allies.svg"],
+.partner-logo-media img[src$="/fsa.svg"],
+.partner-logo-media img[src$="/teslin.svg"] {
+  filter: none;
 }
 
 .partner-logo:hover .partner-logo-media img {
@@ -1200,7 +1223,7 @@ select:focus {
 }
 
 .partner-fallback-name {
-  color: rgba(127, 169, 190, 0.84);
+  color: rgba(255, 255, 255, 0.72);
   font-family: var(--font-display);
   font-size: clamp(0.82rem, 1.1vw, 1.02rem);
   font-weight: 650;
@@ -2278,7 +2301,7 @@ select:focus {
   }
 
   .hero-market {
-    left: 48%;
+    left: var(--gutter);
   }
 
   .hero-bull-motion {
@@ -2517,8 +2540,8 @@ select:focus {
   }
 
   .hero {
-    height: calc(100svh - 74px);
-    min-height: 646px;
+    height: 100svh;
+    min-height: 700px;
   }
 
   .hero-copy {
@@ -2535,7 +2558,7 @@ select:focus {
   .hero-title {
     max-width: 100%;
     font-size: clamp(2.55rem, 11vw, 4.2rem);
-    line-height: 1;
+    line-height: 1.07;
   }
 
   .hero-actions {
@@ -2544,7 +2567,7 @@ select:focus {
   }
 
   .hero-market {
-    top: 50%;
+    top: 42%;
     right: 20px;
     bottom: 3vh;
     left: 20px;
@@ -2559,9 +2582,9 @@ select:focus {
   }
 
   .hero-bull-motion {
-    right: -3vw;
-    bottom: 2vh;
-    width: min(62vw, 350px);
+    right: 0;
+    bottom: 0;
+    width: auto;
   }
 
   .aex-tooltip {

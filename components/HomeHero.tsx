@@ -18,7 +18,7 @@ type MotionState = {
   marketProgress: number;
 };
 
-const bullSource = "/hero-bull-front-20260815.webp";
+const bullSource = "/bull-hero.webp";
 
 export default function HomeHero() {
   const heroRef = useRef<HTMLElement>(null);
@@ -68,16 +68,8 @@ export default function HomeHero() {
         market.style.opacity = marketFade.toFixed(4);
 
         hero.style.setProperty(
-          "--bull-blur",
-          `${(2.05 + current.bullProgress * 3.8).toFixed(2)}px`,
-        );
-        hero.style.setProperty(
-          "--bull-focus-blur",
-          `${(0.55 + current.bullProgress * 2.6).toFixed(2)}px`,
-        );
-        hero.style.setProperty(
           "--bull-brightness",
-          (0.6 - current.bullProgress * 0.18).toFixed(3),
+          (0.82 - current.bullProgress * 0.18).toFixed(3),
         );
       }
 
@@ -188,7 +180,7 @@ export default function HomeHero() {
             src={bullSource}
             alt=""
             width="1536"
-            height="1180"
+            height="1024"
             fetchPriority="high"
             decoding="sync"
           />
@@ -197,7 +189,7 @@ export default function HomeHero() {
             src={bullSource}
             alt=""
             width="1536"
-            height="1180"
+            height="1024"
             decoding="sync"
           />
         </figure>

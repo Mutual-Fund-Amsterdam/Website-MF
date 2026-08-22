@@ -6,29 +6,32 @@
 
 .bullMotion.bullMotion {
   z-index: 6;
-  right: -7vw;
-  bottom: -11vh;
-  width: min(54vw, 980px);
-  transform-origin: 62% 50%;
+  inset: 0 0 0 20%;
+  width: auto;
+  overflow: hidden;
+  transform-origin: 72% 54%;
 }
 
 .bullMotion::after {
   position: absolute;
   z-index: 5;
-  inset: -2px;
+  inset: 0;
   background:
     linear-gradient(
       90deg,
-      transparent 0%,
-      transparent 73%,
-      rgba(35, 35, 32, 0.28) 87%,
+      var(--bg) 0%,
+      rgba(35, 35, 32, 0.82) 7%,
+      rgba(35, 35, 32, 0.18) 22%,
+      transparent 39%,
+      transparent 91%,
+      rgba(35, 35, 32, 0.76) 98%,
       var(--bg) 100%
     ),
     linear-gradient(
       180deg,
       transparent 0%,
-      transparent 67%,
-      rgba(35, 35, 32, 0.32) 82%,
+      transparent 62%,
+      rgba(35, 35, 32, 0.3) 77%,
       var(--bg) 100%
     );
   content: "";
@@ -36,45 +39,72 @@
 }
 
 .bullImage.bullImage {
+  position: absolute;
+  right: 0;
+  bottom: 0;
   width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: contain;
+  object-position: right center;
 }
 
 .bullBase.bullBase {
-  filter: brightness(var(--bull-brightness, 0.6)) contrast(0.64)
-    saturate(0.22) blur(var(--bull-blur, 2.05px));
-  opacity: 0.64;
+  filter: brightness(calc(var(--bull-brightness, 0.82) + 0.2)) contrast(0.86)
+    grayscale(1) blur(0.6px);
+  opacity: 0.12;
 }
 
 .bullFocus.bullFocus {
-  position: absolute;
   z-index: 3;
-  top: 0;
-  left: 0;
-  filter: brightness(calc(var(--bull-brightness, 0.6) + 0.075)) contrast(0.86)
-    saturate(0.2) blur(var(--bull-focus-blur, 0.55px));
-  opacity: 0.5;
+  filter: brightness(calc(var(--bull-brightness, 0.82) + 0.24)) contrast(0.94)
+    grayscale(1) blur(0.2px);
+  opacity: 0.045;
   -webkit-mask-image:
-    radial-gradient(ellipse 31% 39% at 50% 46%, #000 0%, #000 48%, transparent 86%),
-    radial-gradient(ellipse 42% 23% at 50% 18%, #000 0%, #000 44%, transparent 82%);
+    radial-gradient(ellipse 25% 38% at 70% 56%, #000 0%, #000 52%, transparent 88%),
+    radial-gradient(ellipse 47% 20% at 70% 24%, #000 0%, #000 44%, transparent 86%);
   mask-image:
-    radial-gradient(ellipse 31% 39% at 50% 46%, #000 0%, #000 48%, transparent 86%),
-    radial-gradient(ellipse 42% 23% at 50% 18%, #000 0%, #000 44%, transparent 82%);
+    radial-gradient(ellipse 25% 38% at 70% 56%, #000 0%, #000 52%, transparent 88%),
+    radial-gradient(ellipse 47% 20% at 70% 24%, #000 0%, #000 44%, transparent 86%);
 }
 
 @media (max-width: 1100px) {
   .bullMotion.bullMotion {
-    right: -10.5vw;
-    bottom: -9vh;
-    width: min(62vw, 760px);
+    inset: 0 0 0 14%;
   }
 }
 
 @media (max-width: 767px) {
   .bullMotion.bullMotion {
-    right: -22vw;
-    bottom: -4vh;
-    width: min(94vw, 540px);
-    transform-origin: 60% 46%;
+    inset: 38% 0 0;
+    transform-origin: 68% 58%;
+  }
+
+  .bullImage.bullImage {
+    right: -12%;
+    bottom: 4%;
+    width: 160%;
+    height: auto;
+  }
+
+  .bullMotion::after {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(35, 35, 32, 0.68) 0%,
+        rgba(35, 35, 32, 0.18) 20%,
+        transparent 48%,
+        transparent 92%,
+        var(--bg) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(35, 35, 32, 0.2) 0%,
+        transparent 18%,
+        transparent 60%,
+        rgba(35, 35, 32, 0.4) 78%,
+        var(--bg) 100%
+      );
   }
 }
 
