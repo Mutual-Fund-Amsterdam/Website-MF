@@ -5,6 +5,16 @@ export const partners = [
     href: "https://www.jpmorgan.com/NL/en/about-us",
   },
   {
+    name: "Laaken Asset Management",
+    logo: "/partners/logos/laaken-asset-management.jpg",
+    href: "https://www.laaken.nl/",
+  },
+  {
+    name: "BlackRock",
+    logo: "/partners/logos/blackrock.png",
+    href: "https://www.blackrock.com/nl/professionele-beleggers/",
+  },
+  {
     name: "Egeria",
     logo: "/partners/logos/egeria.svg",
     href: "https://egeriagroup.com/",
@@ -25,7 +35,7 @@ export const partners = [
     href: "https://www.ibsca.nl/",
   },
   {
-    name: "Teslin",
+    name: "Teslin Capital Management",
     logo: "/partners/logos/teslin.svg",
     href: "https://www.teslin.nl/",
   },

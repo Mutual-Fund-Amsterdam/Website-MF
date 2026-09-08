@@ -1209,7 +1209,9 @@ select:focus {
 
 .partner-logo-media img[src$="/ibs-capital-allies.svg"],
 .partner-logo-media img[src$="/fsa.svg"],
-.partner-logo-media img[src$="/teslin.svg"] {
+.partner-logo-media img[src$="/teslin.svg"],
+.partner-logo-media img[src$="/laaken-asset-management.jpg"],
+.partner-logo-media img[src$="/blackrock.png"] {
   filter: none;
 }
 
@@ -1865,6 +1867,14 @@ select:focus {
   object-fit: cover;
   filter: grayscale(1);
   transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.featured-image img[src$="/egeria.svg"],
+.blog-card-image img[src$="/egeria.svg"],
+.article-cover[src$="/egeria.svg"] {
+  padding: clamp(42px, 6vw, 84px);
+  object-fit: contain;
+  background: #f1eee8;
 }
 
 .featured-post:hover .featured-image img,
