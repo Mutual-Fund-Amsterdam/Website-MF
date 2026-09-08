@@ -13,12 +13,13 @@ export const metadata: Metadata = {
     "De beleggingsvereniging voor financieel georiënteerde studenten in Amsterdam. Leer beleggen, pitch aandelen en bouw aan je netwerk.",
   icons: {
     icon: [
-      { url: "/icon-light-32x32.png", media: "(prefers-color-scheme: light)" },
-      { url: "/icon-dark-32x32.png", media: "(prefers-color-scheme: dark)" },
-      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon-16x16.png", type: "image/png", sizes: "16x16" },
+      { url: "/icon-32x32.png", type: "image/png", sizes: "32x32" },
     ],
     apple: "/apple-icon.png",
   },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "Mutual Fund — Beleggen met passie",
     description: "Dé beleggingsvereniging voor financieel georiënteerde studenten in Amsterdam.",
