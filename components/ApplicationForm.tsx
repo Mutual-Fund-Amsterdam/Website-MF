@@ -18,6 +18,8 @@ type Values = {
   studyYear: string;
 };
 
+const MAX_TOTAL_FILE_SIZE = 3.5 * 1024 * 1024;
+
 const initialValues: Values = {
   firstName: "",
   lastName: "",
@@ -62,18 +64,21 @@ export default function ApplicationForm() {
   }, [values, files]);
 
   function validateFile(file: File, kind: FileKind) {
+    const input = kind === "motivation" ? motivationInput.current : cvInput.current;
+    const other = files[kind === "motivation" ? "cv" : "motivation"];
+
+    function reject(message: string) {
+      setFileErrors((current) => ({ ...current, [kind]: message }));
+      setFiles((current) => ({ ...current, [kind]: null }));
+      if (input) input.value = "";
+    }
+
     if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      setFileErrors((current) => ({
-        ...current,
-        [kind]: "Upload een PDF-bestand.",
-      }));
+      reject("Upload een PDF-bestand.");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setFileErrors((current) => ({
-        ...current,
-        [kind]: "Dit bestand is groter dan 5 MB. Upload een kleinere versie.",
-      }));
+    if (file.size === 0 || file.size + (other?.size || 0) > MAX_TOTAL_FILE_SIZE) {
+      reject("Je PDF-bestanden mogen samen maximaal 3,5 MB zijn.");
       return;
     }
     setFileErrors((current) => ({ ...current, [kind]: "" }));
@@ -99,7 +104,12 @@ export default function ApplicationForm() {
 
     try {
       const response = await fetch("/api/apply", { method: "POST", body: data });
-      const result = (await response.json()) as { error?: string };
+      const result = response.headers.get("content-type")?.includes("application/json")
+        ? ((await response.json()) as { error?: string })
+        : {};
+      if (response.status === 413) {
+        throw new Error("Je PDF-bestanden zijn samen te groot. Maak ze kleiner en probeer opnieuw.");
+      }
       if (!response.ok) throw new Error(result.error || "Versturen is niet gelukt.");
       setStatus("success");
     } catch (error) {
@@ -177,7 +187,7 @@ export default function ApplicationForm() {
             <>
               <span className="upload-icon" aria-hidden="true">↑</span>
               <strong>Sleep je PDF hierheen of klik om te uploaden</strong>
-              <small>Alleen PDF · max 5 MB</small>
+              <small>Alleen PDF · samen max 3,5 MB</small>
             </>
           )}
         </div>
@@ -267,7 +277,14 @@ export default function ApplicationForm() {
       >
         {status === "sending" ? "Bezig met versturen…" : "Verstuur sollicitatie"}
       </button>
-      {submitError && <p className="submit-error" role="alert">{submitError}</p>}
+      {submitError && (
+        <p className="submit-error" role="alert">
+          {submitError} Je kunt je CV en motivatiebrief ook zelf als bijlagen mailen naar{" "}
+          <a href="mailto:secretaris@mutualfund.nl?subject=Sollicitatie%20Mutual%20Fund">
+            secretaris@mutualfund.nl
+          </a>.
+        </p>
+      )}
       <p className="privacy-note">
         Je gegevens worden uitsluitend gebruikt voor de sollicitatieprocedure.
       </p>
