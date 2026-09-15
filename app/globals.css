@@ -1223,11 +1223,6 @@ select:focus {
   filter: none;
 }
 
-.partner-logo-media img[src$="/laaken-asset-management.jpg"] {
-  filter: grayscale(1) contrast(100);
-  mix-blend-mode: screen;
-}
-
 .partner-logo:hover .partner-logo-media img {
   opacity: 1;
   transform: scale(1.025);
