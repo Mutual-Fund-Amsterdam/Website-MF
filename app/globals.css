@@ -1210,9 +1210,13 @@ select:focus {
 .partner-logo-media img[src$="/ibs-capital-allies.svg"],
 .partner-logo-media img[src$="/fsa.svg"],
 .partner-logo-media img[src$="/teslin.svg"],
-.partner-logo-media img[src$="/laaken-asset-management.jpg"],
 .partner-logo-media img[src$="/blackrock.png"] {
   filter: none;
+}
+
+.partner-logo-media img[src$="/laaken-asset-management.jpg"] {
+  filter: grayscale(1) contrast(100);
+  mix-blend-mode: screen;
 }
 
 .partner-logo:hover .partner-logo-media img {
