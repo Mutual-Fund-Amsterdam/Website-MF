@@ -6,7 +6,7 @@ export const partners = [
   },
   {
     name: "Laaken Asset Management",
-    logo: "/partners/logos/laaken-asset-management.jpg",
+    logo: "/partners/logos/laaken-asset-management-transparent.svg",
     href: "https://www.laaken.nl/",
   },
   {
