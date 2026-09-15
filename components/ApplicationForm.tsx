@@ -277,14 +277,13 @@ export default function ApplicationForm() {
       >
         {status === "sending" ? "Bezig met versturen…" : "Verstuur sollicitatie"}
       </button>
-      {submitError && (
-        <p className="submit-error" role="alert">
-          {submitError} Je kunt je CV en motivatiebrief ook zelf als bijlagen mailen naar{" "}
-          <a href="mailto:secretaris@mutualfund.nl?subject=Sollicitatie%20Mutual%20Fund">
-            secretaris@mutualfund.nl
-          </a>.
-        </p>
-      )}
+      {submitError && <p className="submit-error" role="alert">{submitError}</p>}
+      <p className="privacy-note application-email-fallback">
+        Lukt online uploaden of versturen niet? Mail je CV en motivatiebrief als bijlagen naar{" "}
+        <a href="mailto:secretaris@mutualfund.nl?subject=Sollicitatie%20Mutual%20Fund">
+          secretaris@mutualfund.nl
+        </a>.
+      </p>
       <p className="privacy-note">
         Je gegevens worden uitsluitend gebruikt voor de sollicitatieprocedure.
       </p>
