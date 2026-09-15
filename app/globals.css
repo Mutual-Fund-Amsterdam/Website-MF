@@ -1118,6 +1118,15 @@ select:focus {
   font-size: 0.78rem;
 }
 
+.application-email-fallback {
+  margin-top: 12px;
+}
+
+.application-email-fallback a {
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
+
 .form-membership-link a {
   border-bottom: 1px solid var(--line);
   color: var(--ink);
