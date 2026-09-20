@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 
-export const runtime = "edge";
-
 const MAX_TOTAL_FILE_SIZE = 3.5 * 1024 * 1024;
 
 function arrayBufferToBase64(buffer: ArrayBuffer) {
