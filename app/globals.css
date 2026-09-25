@@ -1504,44 +1504,39 @@ select:focus {
   padding-top: 16px;
 }
 
-.about-rhythm {
-  display: grid;
-  padding-top: clamp(72px, 8vw, 112px);
-  grid-template-columns: 0.86fr 1.14fr;
-  gap: clamp(64px, 10vw, 150px);
+.about-overview {
+  display: flex;
+  padding-top: clamp(56px, 6vw, 88px);
+  padding-bottom: clamp(40px, 4vw, 56px);
+  border-bottom: 1px solid var(--line);
+  align-items: baseline;
+  justify-content: space-between;
+  gap: clamp(24px, 5vw, 80px);
 }
 
-.about-rhythm-heading .eyebrow {
-  margin-bottom: 20px;
+.about-overview p {
+  max-width: 780px;
+  font-size: clamp(1.1rem, 1.7vw, 1.32rem);
+  line-height: 1.5;
 }
 
-.about-rhythm-heading h2 {
-  max-width: 560px;
-  font-size: clamp(2.4rem, 4.2vw, 3.8rem);
-  letter-spacing: -0.035em;
-  line-height: 1.04;
-}
-
-.about-rhythm-copy {
-  display: grid;
-  padding-left: clamp(30px, 4vw, 60px);
-  border-left: 1px solid var(--line);
-  align-content: center;
-  gap: 28px;
-}
-
-.about-rhythm-copy .eyebrow {
-  margin-bottom: 8px;
+.about-overview-link {
+  flex: 0 0 auto;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--accent);
   color: var(--accent);
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.about-rhythm-copy p:not(.eyebrow) {
-  max-width: 600px;
-  color: var(--ink-muted);
+.about-overview-link:hover {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
 }
 
 .about-schedule-section {
-  padding-top: clamp(96px, 8vw, 128px);
+  padding-top: clamp(72px, 6vw, 104px);
 }
 
 .about-grid {
@@ -1658,22 +1653,9 @@ select:focus {
   font-size: clamp(2.25rem, 3.7vw, 3.35rem);
 }
 
-.about-feature-copy > p:not(.eyebrow) {
+.about-feature-copy > p:last-child {
   max-width: 570px;
   color: rgba(233, 229, 218, 0.68);
-}
-
-.about-feature-link {
-  margin-top: 28px;
-  border-bottom: 1px solid transparent;
-  font-size: 0.9rem;
-  font-weight: 600;
-  transition: border-color 180ms ease, color 180ms ease;
-}
-
-.about-feature-link:hover {
-  border-bottom-color: var(--accent);
-  color: var(--accent);
 }
 
 .page-cta {
@@ -2491,19 +2473,14 @@ select:focus {
   .contact-layout,
   .contact-page-layout,
   .apply-layout,
-  .about-grid,
-  .about-rhythm {
+  .about-grid {
     grid-template-columns: 1fr;
   }
 
-  .about-rhythm {
-    gap: 32px;
-  }
-
-  .about-rhythm-copy {
-    padding: 32px 0 0;
-    border-top: 1px solid var(--line);
-    border-left: 0;
+  .about-overview {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 20px;
   }
 
   .intro-copy {
