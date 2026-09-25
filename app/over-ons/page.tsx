@@ -5,17 +5,8 @@ import { eventImages } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Over ons",
-  description: "Lees hoe de maandelijkse meetings en drie fondsen van Mutual Fund werken.",
+  description: "Ontdek de maandelijkse fondsmeetings, evenementen en drie fondsen van Mutual Fund.",
 };
-
-const schedule = [
-  ["19:00", "Start maandelijkse meeting"],
-  ["19:15", "Macro-economische update"],
-  ["19:30", "Tell Me Something I Don’t Know"],
-  ["20:15", "Pauze"],
-  ["20:45", "Fondsbesprekingen"],
-  ["22:00", "Afsluitende borrel"],
-];
 
 const pillars = [
   {
@@ -42,14 +33,6 @@ const pillars = [
     image: eventImages.workshop,
     alt: "Leden in gesprek tijdens een fondsbespreking",
   },
-  {
-    number: "04",
-    label: "Vereniging",
-    title: "Buiten de meeting.",
-    text: "Door het jaar heen organiseren we workshops, inhousedagen en sociale activiteiten. Ook de afsluitende borrel en jaarlijkse ledenreis maken Mutual Fund tot meer dan alleen een maandelijkse meeting.",
-    image: eventImages.social,
-    alt: "Leden van Mutual Fund tijdens een informele borrel",
-  },
 ];
 
 export default function AboutPage() {
@@ -70,25 +53,24 @@ export default function AboutPage() {
         <p className="image-caption eyebrow">Amsterdam · maandelijkse meeting</p>
       </section>
 
-      <section className="section">
-        <div className="container about-grid">
-          <div>
-            <p className="eyebrow">Iedere tweede woensdag</p>
-            <h2>Een avond met ritme.</h2>
-            <p>
-              Kennis uit de collegezaal wordt toegepast in presentaties van
-              professionals, stock-pitches en fondsbesprekingen. Ieder onderdeel heeft
-              één doel: leren om een financiële overtuiging scherp te formuleren.
-            </p>
-          </div>
-          <div className="schedule-list">
-            {schedule.map(([time, item]) => (
-              <div className="schedule-row" key={time}>
-                <time>{time}</time>
-                <span>{item}</span>
-              </div>
-            ))}
-          </div>
+      <section className="container about-overview" aria-labelledby="about-overview-title">
+        <div className="about-overview-main">
+          <p className="eyebrow">Maandelijks</p>
+          <h2 id="about-overview-title">De fondsmeeting.</h2>
+          <p>
+            In principe komen we elke maand samen. Hieronder zie je wat er op
+            zo’n avond gebeurt.
+          </p>
+        </div>
+        <div className="about-events-note">
+          <p className="eyebrow">Buiten de meeting</p>
+          <p>
+            We organiseren ook workshops, inhousedagen, borrels en de jaarlijkse
+            ledenreis.
+          </p>
+          <Link className="about-events-link" href="/events">
+            Bekijk onze evenementen →
+          </Link>
         </div>
       </section>
 
