@@ -96,9 +96,10 @@ export default function AexBackdrop() {
 
   function selectPointFromPointer(event: ReactPointerEvent<SVGSVGElement>) {
     const bounds = event.currentTarget.getBoundingClientRect();
+    const pointerX = ((event.clientX - bounds.left) / Math.max(bounds.width, 1)) * chartWidth;
     const position = Math.min(
       1,
-      Math.max(0, (event.clientX - bounds.left) / Math.max(bounds.width, 1)),
+      Math.max(0, (pointerX - chartPadding) / (chartWidth - chartPadding * 2)),
     );
     setActiveIndex(Math.round(position * (pointCount - 1)));
   }
