@@ -46,7 +46,7 @@ const pillars = [
     number: "04",
     label: "Vereniging",
     title: "Buiten de meeting.",
-    text: "Workshops, inhousedagen, borrels en de jaarlijkse ledenreis bieden ruimte om ook buiten de fondsmeeting te leren en elkaar te ontmoeten.",
+    text: "Naast de fondsmeetings organiseren we workshops en inhousedagen. Ook borrels en de jaarlijkse ledenreis horen erbij.",
     image: eventImages.social,
     alt: "Leden van Mutual Fund tijdens een informele borrel",
   },
