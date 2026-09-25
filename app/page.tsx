@@ -3,6 +3,7 @@ import Link from "next/link";
 import BoardGrid from "@/components/BoardGrid";
 import ContactForm from "@/components/ContactForm";
 import HomeHero from "@/components/HomeHero";
+import IntroVideo from "@/components/IntroVideo";
 import Stats from "@/components/AnimatedStats";
 import { eventImages, membershipSteps } from "@/lib/content";
 
@@ -31,15 +32,7 @@ export default function Home() {
 
       <section className="section intro-section">
         <div className="container intro-grid">
-          <div className="video-frame">
-            <iframe
-              src="https://www.youtube-nocookie.com/embed/5cAZ-VM_MpQ?autoplay=1&mute=1&controls=0&loop=1&playlist=5cAZ-VM_MpQ&playsinline=1&rel=0&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0"
-              title="Mutual Fund — beleggen met passie"
-              allow="autoplay; encrypted-media"
-              loading="lazy"
-              tabIndex={-1}
-            />
-          </div>
+          <IntroVideo />
           <div className="intro-copy">
             <p className="eyebrow">De vereniging</p>
             <h2>Beleggen met passie.</h2>
@@ -49,20 +42,26 @@ export default function Home() {
               echt kapitaal, pitchen ze hun ideeën en stemmen ze over de portefeuille.
             </p>
             <p className="intro-schedule">
-              Wij komen bijeen op iedere tweede woensdag van de maand.
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="16" rx="2" />
+                <path d="M7 3v4M17 3v4M3 10h18" />
+              </svg>
+              <span>Elke tweede woensdag van de maand</span>
             </p>
             <div className="button-row">
               <Link className="button button-primary" href="/word-lid">Word lid</Link>
-              <a
-                className="button button-outline button-instagram"
-                href="https://www.instagram.com/mutual_fund/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Instagram ↗
+              <a className="text-link" href="#wat-we-doen">
+                Ontdek Mutual Fund →
               </a>
-              <a className="text-link" href="#wat-we-doen">Ontdek Mutual Fund →</a>
             </div>
+            <a
+              className="intro-instagram"
+              href="https://www.instagram.com/mutual_fund/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Volg ons op Instagram ↗
+            </a>
           </div>
         </div>
         <div className="stats-band">
