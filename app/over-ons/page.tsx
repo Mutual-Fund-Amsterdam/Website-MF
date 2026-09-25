@@ -8,15 +8,6 @@ export const metadata: Metadata = {
   description: "Ontdek de maandelijkse fondsmeetings, evenementen en drie fondsen van Mutual Fund.",
 };
 
-const schedule = [
-  ["19:00", "Start maandelijkse meeting"],
-  ["19:15", "Macro-economische update"],
-  ["19:30", "Tell Me Something I Don’t Know"],
-  ["20:15", "Pauze"],
-  ["20:45", "Fondsbesprekingen"],
-  ["22:00", "Afsluitende borrel"],
-];
-
 const pillars = [
   {
     number: "01",
@@ -42,14 +33,6 @@ const pillars = [
     image: eventImages.workshop,
     alt: "Leden in gesprek tijdens een fondsbespreking",
   },
-  {
-    number: "04",
-    label: "Vereniging",
-    title: "Buiten de meeting.",
-    text: "Naast de fondsmeetings organiseren we workshops en inhousedagen. Ook borrels en de jaarlijkse ledenreis horen erbij.",
-    image: eventImages.social,
-    alt: "Leden van Mutual Fund tijdens een informele borrel",
-  },
 ];
 
 export default function AboutPage() {
@@ -70,34 +53,24 @@ export default function AboutPage() {
         <p className="image-caption eyebrow">Amsterdam · maandelijkse meeting</p>
       </section>
 
-      <section className="container about-overview" aria-label="Meetings en evenementen">
-        <p>
-          In principe komen we elke maand bij elkaar voor een fondsmeeting.
-          Daarnaast organiseren we door het jaar heen activiteiten voor leden.{" "}
-          <Link className="about-overview-link" href="/events">
-            Bekijk alle evenementen →
+      <section className="container about-overview" aria-labelledby="about-overview-title">
+        <div className="about-overview-main">
+          <p className="eyebrow">Maandelijks</p>
+          <h2 id="about-overview-title">De fondsmeeting.</h2>
+          <p>
+            In principe komen we elke maand samen. Hieronder zie je wat er op
+            zo’n avond gebeurt.
+          </p>
+        </div>
+        <div className="about-events-note">
+          <p className="eyebrow">Buiten de meeting</p>
+          <p>
+            We organiseren ook workshops, inhousedagen, borrels en de jaarlijkse
+            ledenreis.
+          </p>
+          <Link className="about-events-link" href="/events">
+            Bekijk onze evenementen →
           </Link>
-        </p>
-      </section>
-
-      <section className="section about-schedule-section">
-        <div className="container about-grid">
-          <div>
-            <p className="eyebrow">De maandelijkse meeting</p>
-            <h2>Zo verloopt een fondsmeeting.</h2>
-            <p>
-              De precieze invulling verschilt per keer, maar een fondsmeeting
-              volgt meestal dit programma.
-            </p>
-          </div>
-          <div className="schedule-list">
-            {schedule.map(([time, item]) => (
-              <div className="schedule-row" key={time}>
-                <time>{time}</time>
-                <span>{item}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
