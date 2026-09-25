@@ -73,11 +73,11 @@ export default function AboutPage() {
       <section className="container about-overview" aria-label="Meetings en evenementen">
         <p>
           In principe komen we elke maand bij elkaar voor een fondsmeeting.
-          Daarnaast organiseren we door het jaar heen activiteiten voor leden.
+          Daarnaast organiseren we door het jaar heen activiteiten voor leden.{" "}
+          <Link className="about-overview-link" href="/events">
+            Bekijk alle evenementen →
+          </Link>
         </p>
-        <Link className="about-overview-link" href="/events">
-          Bekijk alle evenementen →
-        </Link>
       </section>
 
       <section className="section about-schedule-section">
