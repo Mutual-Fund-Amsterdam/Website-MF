@@ -1505,24 +1505,18 @@ select:focus {
 }
 
 .about-overview {
-  display: flex;
   padding-top: clamp(56px, 6vw, 88px);
   padding-bottom: clamp(40px, 4vw, 56px);
   border-bottom: 1px solid var(--line);
-  align-items: baseline;
-  justify-content: space-between;
-  gap: clamp(24px, 5vw, 80px);
 }
 
 .about-overview p {
-  max-width: 780px;
+  max-width: 900px;
   font-size: clamp(1.1rem, 1.7vw, 1.32rem);
   line-height: 1.5;
 }
 
 .about-overview-link {
-  flex: 0 0 auto;
-  padding-bottom: 3px;
   border-bottom: 1px solid var(--accent);
   color: var(--accent);
   font-size: 0.88rem;
@@ -2475,12 +2469,6 @@ select:focus {
   .apply-layout,
   .about-grid {
     grid-template-columns: 1fr;
-  }
-
-  .about-overview {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 20px;
   }
 
   .intro-copy {
