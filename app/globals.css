@@ -1505,67 +1505,54 @@ select:focus {
 }
 
 .about-overview {
-  padding-top: clamp(56px, 6vw, 88px);
-  padding-bottom: clamp(40px, 4vw, 56px);
-  border-bottom: 1px solid var(--line);
-}
-
-.about-overview p {
-  max-width: 900px;
-  font-size: clamp(1.1rem, 1.7vw, 1.32rem);
-  line-height: 1.5;
-}
-
-.about-overview-link {
-  border-bottom: 1px solid var(--accent);
-  color: var(--accent);
-  font-size: 0.88rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.about-overview-link:hover {
-  color: var(--ink);
-  border-bottom-color: var(--ink);
-}
-
-.about-schedule-section {
-  padding-top: clamp(72px, 6vw, 104px);
-}
-
-.about-grid {
   display: grid;
-  grid-template-columns: 0.86fr 1.14fr;
-  gap: clamp(64px, 10vw, 150px);
+  padding-top: clamp(72px, 8vw, 112px);
+  padding-bottom: clamp(88px, 9vw, 128px);
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.75fr);
+  gap: clamp(56px, 8vw, 120px);
 }
 
-.about-grid .eyebrow {
+.about-overview-main .eyebrow,
+.about-events-note .eyebrow {
   margin-bottom: 20px;
 }
 
-.about-grid h2 {
+.about-overview-main h2 {
+  max-width: 600px;
   margin-bottom: 24px;
+  font-size: clamp(2.7rem, 4.2vw, 3.8rem);
 }
 
-.about-grid > div:first-child > p:last-child {
+.about-overview-main > p:last-child {
+  max-width: 580px;
+  color: var(--ink-muted);
+  font-size: clamp(1.05rem, 1.55vw, 1.2rem);
+}
+
+.about-events-note {
+  padding: 8px 0 0 clamp(32px, 4vw, 64px);
+  border-left: 1px solid var(--line);
+}
+
+.about-events-note > p:not(.eyebrow) {
+  max-width: 410px;
   color: var(--ink-muted);
 }
 
-.schedule-list {
-  border-top: 1px solid var(--line);
+.about-events-link {
+  display: inline-flex;
+  margin-top: 26px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--accent);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: color 180ms ease, border-color 180ms ease;
 }
 
-.schedule-row {
-  display: grid;
-  padding: 19px 0;
-  border-bottom: 1px solid var(--line);
-  grid-template-columns: 90px 1fr;
-  gap: 24px;
-}
-
-.schedule-row time {
-  color: var(--ink-muted);
-  font-size: 0.82rem;
+.about-events-link:hover {
+  border-bottom-color: var(--ink);
+  color: var(--accent);
 }
 
 .about-feature-section {
@@ -2369,6 +2356,17 @@ select:focus {
 }
 
 @media (max-width: 900px) {
+  .about-overview {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .about-events-note {
+    padding: 32px 0 0;
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+
   .desktop-nav,
   .nav-apply {
     display: none;
