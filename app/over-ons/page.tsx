@@ -5,7 +5,7 @@ import { eventImages } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Over ons",
-  description: "Lees hoe de maandelijkse meetings en drie fondsen van Mutual Fund werken.",
+  description: "Ontdek de maandelijkse fondsmeetings, evenementen en drie fondsen van Mutual Fund.",
 };
 
 const schedule = [
@@ -46,7 +46,7 @@ const pillars = [
     number: "04",
     label: "Vereniging",
     title: "Buiten de meeting.",
-    text: "Door het jaar heen organiseren we workshops, inhousedagen en sociale activiteiten. Ook de afsluitende borrel en jaarlijkse ledenreis maken Mutual Fund tot meer dan alleen een maandelijkse meeting.",
+    text: "Workshops, inhousedagen, borrels en de jaarlijkse ledenreis bieden ruimte om ook buiten de fondsmeeting te leren en elkaar te ontmoeten.",
     image: eventImages.social,
     alt: "Leden van Mutual Fund tijdens een informele borrel",
   },
@@ -70,15 +70,43 @@ export default function AboutPage() {
         <p className="image-caption eyebrow">Amsterdam · maandelijkse meeting</p>
       </section>
 
-      <section className="section">
+      <section className="container about-rhythm" aria-labelledby="about-rhythm-title">
+        <div className="about-rhythm-heading">
+          <p className="eyebrow">Zo werkt de vereniging</p>
+          <h2 id="about-rhythm-title">
+            Iedere maand samen. Het hele jaar in beweging.
+          </h2>
+        </div>
+        <div className="about-rhythm-copy">
+          <div>
+            <p className="eyebrow">De fondsmeeting</p>
+            <p>
+              In principe komen we elke maand bijeen voor een fondsmeeting,
+              doorgaans op de tweede woensdag. We bespreken de markt, pitchen
+              beleggingsideeën en nemen samen besluiten over de portefeuilles
+              van onze drie fondsen.
+            </p>
+          </div>
+          <div>
+            <p className="eyebrow">Daarnaast</p>
+            <p>
+              Door het jaar heen organiseren we workshops, inhousedagen bij
+              partners en sociale activiteiten, zoals borrels en de ledenreis.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="section about-schedule-section">
         <div className="container about-grid">
           <div>
-            <p className="eyebrow">Iedere tweede woensdag</p>
-            <h2>Een avond met ritme.</h2>
+            <p className="eyebrow">De maandelijkse meeting</p>
+            <h2>Zo verloopt een fondsmeeting.</h2>
             <p>
-              Kennis uit de collegezaal wordt toegepast in presentaties van
-              professionals, stock-pitches en fondsbesprekingen. Ieder onderdeel heeft
-              één doel: leren om een financiële overtuiging scherp te formuleren.
+              Tijdens de meeting vertalen we kennis naar praktijk: van macro en
+              inzichten van professionals tot aandelenpitches en fondsbesprekingen.
+              Ieder onderdeel helpt ons een financiële overtuiging scherper te
+              formuleren.
             </p>
           </div>
           <div className="schedule-list">
@@ -108,6 +136,11 @@ export default function AboutPage() {
                 </p>
                 <h2>{pillar.title}</h2>
                 <p>{pillar.text}</p>
+                {pillar.number === "04" && (
+                  <Link className="about-feature-link" href="/events">
+                    Bekijk onze evenementen →
+                  </Link>
+                )}
               </div>
             </article>
           ))}
