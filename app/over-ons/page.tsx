@@ -33,6 +33,14 @@ const pillars = [
     image: eventImages.workshop,
     alt: "Leden in gesprek tijdens een fondsbespreking",
   },
+  {
+    number: "04",
+    label: "Borrel",
+    title: "Afsluitende borrel.",
+    text: "Na de fondsbesprekingen sluiten we de avond af met een borrel. Er is tijd om na te praten en andere leden beter te leren kennen.",
+    image: eventImages.social,
+    alt: "Leden van Mutual Fund tijdens de afsluitende borrel",
+  },
 ];
 
 export default function AboutPage() {
@@ -56,7 +64,7 @@ export default function AboutPage() {
       <section className="container about-overview" aria-labelledby="about-overview-title">
         <div className="about-overview-main">
           <p className="eyebrow">Maandelijks</p>
-          <h2 id="about-overview-title">De fondsmeeting.</h2>
+          <h2 id="about-overview-title">De maandelijkse meeting</h2>
           <p>
             In principe komen we elke maand samen. Hieronder zie je wat er op
             zo’n avond gebeurt.
@@ -65,8 +73,7 @@ export default function AboutPage() {
         <div className="about-events-note">
           <p className="eyebrow">Buiten de meeting</p>
           <p>
-            We organiseren ook workshops, inhousedagen, borrels en de jaarlijkse
-            ledenreis.
+            We organiseren ook workshops, inhousedagen en de jaarlijkse ledenreis.
           </p>
           <Link className="about-events-link" href="/events">
             Bekijk onze evenementen →
