@@ -51,8 +51,12 @@ function allowedFunds(raw: string, own: FundNumber): FundNumber[] {
   return [...new Set<FundNumber>([own, ...funds])].sort() as FundNumber[];
 }
 
-export function codeDigest(fund: FundNumber, code: string, pepper: string): string {
-  return createHmac("sha256", pepper).update(`fonds${fund}:\0${code.normalize("NFKC").trim().toLocaleLowerCase("nl-NL")}`).digest("hex");
+export function normalizeMemberId(id: string): string {
+  return id.normalize("NFKC").trim().toLocaleLowerCase("nl-NL");
+}
+
+export function codeDigest(id: string, code: string, pepper: string): string {
+  return createHmac("sha256", pepper).update(`${normalizeMemberId(id)}:\0${code.normalize("NFKC").trim()}`).digest("hex");
 }
 
 export function summarize(snapshot: Snapshot): ImportSummary {
@@ -77,7 +81,7 @@ export async function parseWorkbook(bytes: Buffer, pepper: string): Promise<Snap
   if (!accessSheet || !participationSheet || !positionsSheet || !cashSheet) throw new Error("Een vereist tabblad ontbreekt: Leden & toegang, Participaties (check), Posities of Cashsaldi.");
 
   const { headers: accessHeaders, firstDataRow: accessStart } = table(accessSheet, "Naam");
-  for (const column of ["Fonds", "Lid-ID", "Gebruikersnaam", "Persoonlijke code", "Rol"]) {
+  for (const column of ["Fonds", "Lid-ID", "Persoonlijke code", "Rol"]) {
     if (!accessHeaders.has(column)) throw new Error(`Kolom “${column}” ontbreekt bij Leden & toegang.`);
   }
   const warnings: string[] = [];
@@ -91,14 +95,13 @@ export async function parseWorkbook(bytes: Buffer, pepper: string): Promise<Snap
     const fund = fundNumber(value(row, accessHeaders, "Fonds"));
     const id = cellText(value(row, accessHeaders, "Lid-ID"));
     if (!name && !fund && !id) continue;
-    const username = cellText(value(row, accessHeaders, "Gebruikersnaam")).toLowerCase().replace(/\s+/g, "");
     const code = cellText(value(row, accessHeaders, "Persoonlijke code"));
-    if (!name || !fund || !id || username !== `fonds${fund}` || !code) throw new Error(`Ongeldige ledenrij ${index + 1}: naam, fonds, lid-ID, fondsgebruikersnaam en code zijn verplicht.`);
+    if (!name || !fund || !id || !code) throw new Error(`Ongeldige ledenrij ${index + 1}: naam, fonds, lid-ID en code zijn verplicht.`);
     const key = `${fund}:${id}`;
     if (seenKeys.has(key)) throw new Error(`Dubbel lid-ID in fonds ${fund}, rij ${index + 1}.`);
     seenKeys.add(key);
-    const loginDigest = codeDigest(fund, code, pepper);
-    if (seenLogins.has(loginDigest)) throw new Error(`Twee leden van fonds ${fund} hebben dezelfde code (rij ${index + 1}).`);
+    const loginDigest = codeDigest(id, code, pepper);
+    if (seenLogins.has(loginDigest)) throw new Error(`De combinatie van lid-ID en code komt meerdere keren voor (rij ${index + 1}).`);
     seenLogins.add(loginDigest);
     const status = cellText(value(row, accessHeaders, "Status")).toLowerCase();
     const active = !["inactief", "uitgeschreven", "vervallen", "geblokkeerd"].includes(status);

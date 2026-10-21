@@ -4,7 +4,7 @@ import { Redis } from "@upstash/redis";
 import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import type { FundNumber, Member, Snapshot } from "./types";
-import { codeDigest } from "./workbook";
+import { codeDigest, normalizeMemberId } from "./workbook";
 import { createLocalStore } from "./local-store";
 
 const PREFIX = `mf:portal:${process.env.VERCEL_ENV ?? "development"}:`;
@@ -108,9 +108,10 @@ export async function getMemberSession(): Promise<{ member: Member; snapshot: Sn
   return member ? { member, snapshot } : null;
 }
 
-export async function findMember(fund: FundNumber, code: string, snapshot: Snapshot): Promise<Member | null> {
-  const digest = codeDigest(fund, code, pepper());
-  return snapshot.members.find((member) => member.fund === fund && member.active && member.loginDigest === digest) ?? null;
+export async function findMember(id: string, code: string, snapshot: Snapshot): Promise<Member | null> {
+  const normalizedId = normalizeMemberId(id);
+  const digest = codeDigest(id, code, pepper());
+  return snapshot.members.find((member) => normalizeMemberId(member.id) === normalizedId && member.active && member.loginDigest === digest) ?? null;
 }
 
 export async function allowAttempt(request: Request, kind: "login" | "import"): Promise<boolean> {

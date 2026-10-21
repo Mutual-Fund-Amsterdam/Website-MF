@@ -15,11 +15,11 @@ De proefversie kan met `MF_LOCAL_PREVIEW=1` en `MF_AUTH_PEPPER` zonder externe d
 ## Bij een wijziging in Excel
 
 1. Sla de nieuwe versie van het MASTER-bestand in OneDrive op en wacht tot OneDrive aangeeft dat het synchroniseren klaar is.
-2. Log in met je eigen fonds en code. Alleen een account met de rol `Hoofdbestuurder` kan vanuit het fondsoverzicht `/beheer/import` openen.
+2. Log in met je lid-ID en persoonlijke code. Alleen de code is hoofdlettergevoelig. Alleen een account met de rol `Hoofdbestuurder` kan vanuit het fondsoverzicht `/beheer/import` openen.
 3. Kies het bestand opnieuw en controleer de voorvertoning vóór publicatie.
 4. Na publicatie moeten leden opnieuw inloggen. De vorige versie blijft 30 dagen in de afgeschermde opslag bewaard.
 
-De website kijkt **niet rechtstreeks in OneDrive**. Bewerkingen in Excel verschijnen dus pas na een nieuwe import. Codes blijven in het Excelbestand; de website slaat voor het inloggen alleen een eenrichtingsafdruk van de code op. Bewaar het Excelbestand alleen voor het bestuur toegankelijk.
+De website kijkt **niet rechtstreeks in OneDrive**. Bewerkingen in Excel verschijnen dus pas na een nieuwe import. Codes blijven in het Excelbestand; de website slaat voor het inloggen alleen een eenrichtingsafdruk van de combinatie lid-ID en code op. Bewaar het Excelbestand alleen voor het bestuur toegankelijk.
 
 ## Huidige inhoud en beperkingen
 

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { allowAttempt, clearAttempts, configured, createSession, findMember, getSnapshot, sameOrigin, setSessionCookie } from "@/lib/portal/store";
-import type { FundNumber } from "@/lib/portal/types";
 
 export const runtime = "nodejs";
 
@@ -11,12 +10,12 @@ export async function POST(request: Request) {
   try {
     if (!await allowAttempt(request, "login")) return NextResponse.json({ error: "Te veel pogingen. Probeer het over 15 minuten opnieuw." }, { status: 429, headers });
     const body = await request.json();
-    const fund = Number(body.fund) as FundNumber;
+    const memberId = String(body.memberId ?? "").trim();
     const code = String(body.code ?? "");
-    if (![1, 2, 3].includes(fund) || !code || code.length > 100) return NextResponse.json({ error: "Kies je fonds en vul je code in." }, { status: 400, headers });
+    if (!memberId || memberId.length > 100 || !code || code.length > 100) return NextResponse.json({ error: "Vul je lid-ID en persoonlijke code in." }, { status: 400, headers });
     const snapshot = await getSnapshot();
-    const member = snapshot && await findMember(fund, code, snapshot);
-    if (!member || !snapshot) return NextResponse.json({ error: "Fonds of code klopt niet." }, { status: 401, headers });
+    const member = snapshot && await findMember(memberId, code, snapshot);
+    if (!member || !snapshot) return NextResponse.json({ error: "Lid-ID of code klopt niet." }, { status: 401, headers });
     const token = await createSession(member, snapshot);
     await setSessionCookie(token);
     await clearAttempts(request, "login");
