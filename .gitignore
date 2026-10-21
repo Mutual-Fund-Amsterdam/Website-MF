@@ -2,6 +2,7 @@
 /.next
 /out
 /.vercel
+/.private
 .env*
 *.log
 *.tsbuildinfo
