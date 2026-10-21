@@ -2867,3 +2867,43 @@ select:focus {
     animation: none;
   }
 }
+
+/* Ledenomgeving: navigatie naast Word lid */
+.nav-inner {
+  grid-template-columns: minmax(150px, 1fr) auto minmax(250px, 1fr);
+}
+.nav-actions {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 10px;
+}
+.nav-actions .nav-apply,
+.nav-actions .nav-login {
+  justify-self: auto;
+  white-space: nowrap;
+}
+.nav-actions .nav-login {
+  border-color: var(--accent);
+}
+.nav-actions .nav-login:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--bg);
+}
+.mobile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.mobile-menu .mobile-actions .button {
+  margin-top: 28px;
+}
+@media (max-width: 1100px) {
+  .nav-inner { grid-template-columns: 150px auto minmax(250px, 1fr); }
+}
+@media (max-width: 900px) {
+  .nav-actions { display: none; }
+  .nav-inner { display: flex; }
+}
