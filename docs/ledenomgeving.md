@@ -2,7 +2,7 @@
 
 ## Eenmalige inrichting in Vercel
 
-1. Voeg via **Vercel → project Website-MF → Storage / Marketplace** een Upstash Redis-database aan het project toe. Controleer dat `UPSTASH_REDIS_REST_URL` en `UPSTASH_REDIS_REST_TOKEN` als omgevingsvariabelen beschikbaar zijn voor **Production** en **Preview** (of alleen Production als de proef eerst lokaal gebeurt).
+1. Voeg via **Vercel → project Website-MF → Storage / Marketplace** een Upstash Redis-database in een EU-regio aan het project toe. Controleer dat `UPSTASH_REDIS_REST_URL` en `UPSTASH_REDIS_REST_TOKEN` als omgevingsvariabelen beschikbaar zijn voor **Production** en eventueel **Preview**. Beide omgevingen gebruiken gescheiden sleutelnamen in de database.
 2. Voeg twee eigen, willekeurige geheimen toe aan de omgevingsvariabelen: `MF_AUTH_PEPPER` (minimaal 32 tekens) en `MF_IMPORT_SECRET` (minimaal 24 tekens). Gebruik voor elk een andere reeks uit een wachtwoordmanager. Zet ze voor Production en eventueel Preview. Deel ze niet via GitHub, Excel of e-mail.
 3. Start een nieuwe deployment zodat de variabelen actief worden.
 4. Open `/beheer/import` en kies het bestand **Website invoer - MASTER.xlsx** uit `OneDrive/Mutual Fund/Website invoer`. Vul de beheersleutel in. Bekijk de aantallen per fonds en waarschuwingen. Publiceer alleen na controle.
