@@ -5,14 +5,21 @@ import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import type { FundNumber, Member, Snapshot } from "./types";
 import { codeDigest } from "./workbook";
+import { createLocalStore } from "./local-store";
 
 const PREFIX = `mf:portal:${process.env.VERCEL_ENV ?? "development"}:`;
 const CURRENT_KEY = `${PREFIX}current`;
 const COOKIE_NAME = "__Host-mf_session";
 const SESSION_SECONDS = 12 * 60 * 60;
 let redisClient: Redis | null = null;
+let localClient: ReturnType<typeof createLocalStore> | null = null;
+
+function localPreview(): boolean {
+  return process.env.MF_LOCAL_PREVIEW === "1" && !process.env.VERCEL;
+}
 
 export function configured(): boolean {
+  if (localPreview()) return (process.env.MF_AUTH_PEPPER?.length ?? 0) >= 32;
   return Boolean(
     process.env.UPSTASH_REDIS_REST_URL &&
     process.env.UPSTASH_REDIS_REST_TOKEN &&
@@ -25,8 +32,12 @@ export function pepper(): string {
   return process.env.MF_AUTH_PEPPER!;
 }
 
-function redis(): Redis {
+function redis(): Redis | ReturnType<typeof createLocalStore> {
   if (!configured()) throw new Error("Ledenomgeving is nog niet ingericht.");
+  if (localPreview()) {
+    if (!localClient) localClient = createLocalStore(pepper());
+    return localClient;
+  }
   if (!redisClient) redisClient = Redis.fromEnv();
   return redisClient;
 }
@@ -121,6 +132,13 @@ export async function clearAttempts(request: Request, kind: "login" | "import"):
 
 export function sameOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
-  if (!origin) return false;
-  return origin === new URL(request.url).origin;
+  const host = request.headers.get("host");
+  if (!origin || !host) return false;
+  try {
+    const parsed = new URL(origin);
+    if (process.env.VERCEL && parsed.protocol !== "https:") return false;
+    return parsed.host === host && (parsed.protocol === "http:" || parsed.protocol === "https:");
+  } catch {
+    return false;
+  }
 }

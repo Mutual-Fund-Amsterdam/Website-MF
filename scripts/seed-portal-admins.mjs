@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { Redis } from "@upstash/redis";
 import { parseWorkbook } from "../lib/portal/workbook.ts";
+import { createLocalStore } from "../lib/portal/local-store.ts";
 
 const [mode, filePath] = process.argv.slice(2);
 if (!(["--check", "--publish"].includes(mode) && filePath)) {
@@ -9,10 +10,11 @@ if (!(["--check", "--publish"].includes(mode) && filePath)) {
 }
 
 const target = process.env.MF_TARGET_ENV;
-if (mode === "--publish" && !["preview", "production"].includes(target)) {
-  throw new Error("Zet MF_TARGET_ENV op preview of production voordat je publiceert.");
+const local = process.env.MF_LOCAL_PREVIEW === "1" && target === "development" && !process.env.VERCEL;
+if (mode === "--publish" && !local && !["preview", "production"].includes(target)) {
+  throw new Error("Zet MF_TARGET_ENV op preview of production, of gebruik de lokale proefstand.");
 }
-if (mode === "--publish" && (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN)) {
+if (mode === "--publish" && !local && (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN)) {
   throw new Error("Upstash-omgeving ontbreekt.");
 }
 const pepper = process.env.MF_AUTH_PEPPER;
@@ -38,7 +40,7 @@ const snapshot = {
   cash: [],
   warnings: ["Alleen beheerders zijn voorbereid. Importeer het volledige Excelbestand na inloggen."],
 };
-const redis = Redis.fromEnv();
+const redis = local ? createLocalStore(pepper) : Redis.fromEnv();
 const key = `mf:portal:${target}:current`;
 if (await redis.exists(key)) throw new Error("Er bestaat al een portalversie. De opstartstap mag niet opnieuw draaien.");
 await redis.set(key, snapshot);

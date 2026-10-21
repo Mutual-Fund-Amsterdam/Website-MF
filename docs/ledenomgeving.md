@@ -1,5 +1,9 @@
 # Ledenomgeving: inrichting en dagelijks gebruik
 
+## Lokale proefversie
+
+De proefversie kan met `MF_LOCAL_PREVIEW=1` en `MF_AUTH_PEPPER` zonder externe database draaien op `127.0.0.1`. De eerste drie beheerders worden met `MF_TARGET_ENV=development` voorbereid via `scripts/seed-portal-admins.mjs`. Daarna logt een beheerder in en importeert het volledige bestand via de website. De lokale opslag staat versleuteld in `.private/portal`; `.private` en `.env.local` zijn uitgesloten van Git. Deze proefstand werkt alleen op de computer waar de server draait en is niet de live website.
+
 ## Eenmalige inrichting in Vercel
 
 1. Voeg via **Vercel → project Website-MF → Storage / Marketplace** een Upstash Redis-database in een EU-regio aan het project toe. Controleer dat `UPSTASH_REDIS_REST_URL` en `UPSTASH_REDIS_REST_TOKEN` als omgevingsvariabelen beschikbaar zijn voor **Production** en eventueel **Preview**. Beide omgevingen gebruiken gescheiden sleutelnamen in de database.
