@@ -71,9 +71,14 @@ export default function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <Link className="button button-outline nav-apply" href="/word-lid">
-          Word lid
-        </Link>
+        <div className="nav-actions">
+          <Link className="button button-outline nav-apply" href="/word-lid">
+            Word lid
+          </Link>
+          <Link className="button button-outline nav-login" href="/inloggen">
+            Inloggen
+          </Link>
+        </div>
         <button
           className="menu-toggle"
           type="button"
@@ -94,9 +99,14 @@ export default function SiteHeader() {
               {link.label}
             </Link>
           ))}
-          <Link className="button button-primary" href="/word-lid" tabIndex={open ? 0 : -1} onClick={() => setOpen(false)}>
-            Word lid
-          </Link>
+          <div className="mobile-actions">
+            <Link className="button button-primary" href="/word-lid" tabIndex={open ? 0 : -1} onClick={() => setOpen(false)}>
+              Word lid
+            </Link>
+            <Link className="button button-outline" href="/inloggen" tabIndex={open ? 0 : -1} onClick={() => setOpen(false)}>
+              Inloggen
+            </Link>
+          </div>
         </nav>
       </div>
     </header>
