@@ -1,5 +1,3 @@
-import "server-only";
-
 import { createHash, createHmac } from "node:crypto";
 import readExcelFile from "read-excel-file/node";
 import type { Cash, FundNumber, ImportSummary, Member, Position, Snapshot } from "./types";

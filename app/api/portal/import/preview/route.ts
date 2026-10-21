@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { parseWorkbook, summarize } from "@/lib/portal/workbook";
-import { allowAttempt, checkImportSecret, configured, getMemberSession, getSnapshot, pepper, sameOrigin, savePending } from "@/lib/portal/store";
+import { allowAttempt, configured, getMemberSession, pepper, sameOrigin, savePending } from "@/lib/portal/store";
 
 export const runtime = "nodejs";
 
@@ -9,15 +9,12 @@ export async function POST(request: Request) {
   if (!sameOrigin(request)) return NextResponse.json({ error: "Ongeldige aanvraag." }, { status: 403, headers });
   if (!configured()) return NextResponse.json({ error: "De ledenomgeving is nog niet ingericht." }, { status: 503, headers });
   try {
+    const session = await getMemberSession();
+    if (session?.member.role.toLowerCase() !== "hoofdbestuurder") {
+      return NextResponse.json({ error: "Alleen het ingelogde hoofdbestuur kan importeren." }, { status: 403, headers });
+    }
     if (!await allowAttempt(request, "import")) return NextResponse.json({ error: "Te veel pogingen. Probeer het later opnieuw." }, { status: 429, headers });
     const form = await request.formData();
-    const secret = String(form.get("secret") ?? "");
-    if (!checkImportSecret(secret)) return NextResponse.json({ error: "Beheersleutel klopt niet." }, { status: 401, headers });
-    const existing = await getSnapshot();
-    const session = await getMemberSession();
-    if (existing && session?.member.role.toLowerCase() !== "hoofdbestuurder") {
-      return NextResponse.json({ error: "Alleen het hoofdbestuur kan importeren." }, { status: 403, headers });
-    }
     const file = form.get("file");
     if (!(file instanceof File) || !file.name.toLowerCase().endsWith(".xlsx") || file.size > 2_000_000) {
       return NextResponse.json({ error: "Kies een .xlsx-bestand van maximaal 2 MB." }, { status: 400, headers });

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import styles from "./page.module.css";
 
-export default function LoginForm() {
+export default function LoginForm({ available }: { available: boolean }) {
   const router = useRouter();
   const [fund, setFund] = useState("");
   const [code, setCode] = useState("");
@@ -22,9 +22,9 @@ export default function LoginForm() {
   }
   return <form onSubmit={submit}>
     <p className={styles.cardIntro}>Kies je fonds en vul je persoonlijke code in.</p>
-    <div className={styles.field}><label htmlFor="fund">Fonds</label><select id="fund" value={fund} onChange={(event) => setFund(event.target.value)} required><option value="">Kies je fonds</option><option value="1">Fonds 1</option><option value="2">Fonds 2</option><option value="3">Fonds 3</option></select></div>
-    <div className={styles.field}><label htmlFor="member-code">Persoonlijke code</label><input id="member-code" type="password" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="current-password" required maxLength={100} /></div>
+    <div className={styles.field}><label htmlFor="fund">Fonds</label><select id="fund" value={fund} onChange={(event) => setFund(event.target.value)} required disabled={!available}><option value="">Kies je fonds</option><option value="1">Fonds 1</option><option value="2">Fonds 2</option><option value="3">Fonds 3</option></select></div>
+    <div className={styles.field}><label htmlFor="member-code">Persoonlijke code</label><input id="member-code" type="password" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="current-password" required maxLength={100} disabled={!available} /></div>
     {error && <p role="alert" className={styles.error}>{error}</p>}
-    <button className="button button-primary" type="submit" disabled={busy}>{busy ? "Even wachten…" : "Inloggen"}</button>
+    <button className="button button-primary" type="submit" disabled={busy || !available}>{busy ? "Even wachten…" : "Inloggen"}</button>
   </form>;
 }

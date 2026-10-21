@@ -1,7 +1,7 @@
 import "server-only";
 
 import { Redis } from "@upstash/redis";
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import type { FundNumber, Member, Snapshot } from "./types";
 import { codeDigest } from "./workbook";
@@ -16,8 +16,7 @@ export function configured(): boolean {
   return Boolean(
     process.env.UPSTASH_REDIS_REST_URL &&
     process.env.UPSTASH_REDIS_REST_TOKEN &&
-    (process.env.MF_AUTH_PEPPER?.length ?? 0) >= 32 &&
-    (process.env.MF_IMPORT_SECRET?.length ?? 0) >= 24,
+    (process.env.MF_AUTH_PEPPER?.length ?? 0) >= 32,
   );
 }
 
@@ -30,14 +29,6 @@ function redis(): Redis {
   if (!configured()) throw new Error("Ledenomgeving is nog niet ingericht.");
   if (!redisClient) redisClient = Redis.fromEnv();
   return redisClient;
-}
-
-export function checkImportSecret(candidate: string): boolean {
-  const expected = process.env.MF_IMPORT_SECRET;
-  if (!expected || expected.length < 24) return false;
-  const left = createHash("sha256").update(candidate).digest();
-  const right = createHash("sha256").update(expected).digest();
-  return timingSafeEqual(left, right);
 }
 
 export async function getSnapshot(): Promise<Snapshot | null> {
