@@ -1,6 +1,7 @@
 /node_modules
 /.next
 /out
+/outputs
 /.vercel
 /.private
 .env*

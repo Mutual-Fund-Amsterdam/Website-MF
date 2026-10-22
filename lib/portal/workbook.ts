@@ -1,6 +1,6 @@
 import { createHash, createHmac } from "node:crypto";
 import readExcelFile from "read-excel-file/node";
-import type { Cash, FundNumber, ImportSummary, Member, Position, Snapshot } from "./types";
+import type { Cash, FundHistoryPoint, FundNumber, ImportSummary, Member, MemberTransaction, Position, RiskMetrics, Snapshot } from "./types";
 
 type Cell = string | number | boolean | Date | null;
 type Sheet = { sheet: string; data: Cell[][] };
@@ -126,7 +126,65 @@ export async function parseWorkbook(bytes: Buffer, pepper: string): Promise<Snap
     member.deposits = cellNumber(value(row, participationHeaders, "Totale inleg"));
     member.withdrawals = cellNumber(value(row, participationHeaders, "Totale opname"));
   }
-  if (members.some((member) => member.participation === null)) throw new Error("Niet ieder lid heeft een bijpassende rij in Participaties (check).");
+  const mutationsSheet = get("Mutaties");
+  const fundIndexSheet = get("Fondsindex");
+  const transactions: MemberTransaction[] = [];
+  const fundHistory: FundHistoryPoint[] = [];
+  let totalUnitsByFund: Record<FundNumber, number> | undefined;
+  if (mutationsSheet && fundIndexSheet) {
+    const { headers: mutationHeaders, firstDataRow: mutationStart } = table(mutationsSheet, "Deelbewijsprijs EUR");
+    for (let index = mutationStart; index < mutationsSheet.data.length; index++) {
+      const row = mutationsSheet.data[index];
+      const fund = fundNumber(value(row, mutationHeaders, "Fonds"));
+      const memberId = cellText(value(row, mutationHeaders, "Lid-ID"));
+      if (!fund && !memberId) continue;
+      const date = cellDate(value(row, mutationHeaders, "Datum"));
+      const amount = cellNumber(value(row, mutationHeaders, "Bedrag EUR"));
+      const nav = cellNumber(value(row, mutationHeaders, "Deelbewijsprijs EUR"));
+      if (!fund || !memberId || !date || amount === null || !nav || nav <= 0) throw new Error(`Ongeldige ledenmutatie op rij ${index + 1}.`);
+      if (!memberMap.has(`${fund}:${memberId}`)) throw new Error(`Lid-ID ${memberId} op mutatierij ${index + 1} staat niet bij Leden & toegang.`);
+      transactions.push({ fund, memberId, date, amount, nav, units: amount / nav, source: cellText(value(row, mutationHeaders, "Bron")) });
+    }
+    const { headers: indexHeaders, firstDataRow: indexStart } = table(fundIndexSheet, "Waarde deelbewijs EUR");
+    for (let index = indexStart; index < fundIndexSheet.data.length; index++) {
+      const row = fundIndexSheet.data[index];
+      const fund = fundNumber(value(row, indexHeaders, "Fonds"));
+      const date = cellDate(value(row, indexHeaders, "Datum"));
+      const nav = cellNumber(value(row, indexHeaders, "Waarde deelbewijs EUR"));
+      const totalUnits = cellNumber(value(row, indexHeaders, "Totaal deelbewijzen"));
+      if (fund && date && nav && nav > 0 && totalUnits && totalUnits > 0) fundHistory.push({ fund, date, nav, totalUnits });
+    }
+    const base: Record<FundNumber, number> = { 1: 0, 2: 0, 3: 0 };
+    for (let row = 4; row <= 6; row++) {
+      const fund = fundNumber(fundIndexSheet.data[row]?.[6]);
+      const units = cellNumber(fundIndexSheet.data[row]?.[7]);
+      if (fund && units && units > 0) base[fund] = units;
+    }
+    if (Object.values(base).some((units) => units <= 0)) throw new Error("Basisdeelbewijzen ontbreken in Fondsindex.");
+    totalUnitsByFund = { ...base };
+    for (const event of transactions) if (event.source.toLowerCase() === "nieuw") totalUnitsByFund[event.fund] += event.units;
+    if (Object.values(totalUnitsByFund).some((units) => units <= 0)) throw new Error("Het aantal fondsdeelbewijzen is ongeldig.");
+    for (const member of members) {
+      const own = transactions.filter((event) => event.fund === member.fund && event.memberId === member.id).sort((a, b) => a.date.localeCompare(b.date));
+      const units = own.reduce((sum, event) => sum + event.units, 0);
+      if (units < -0.000001) throw new Error(`Lid ${member.id} heeft meer deelbewijzen opgenomen dan opgebouwd.`);
+      member.participation = Math.max(0, units) / totalUnitsByFund[member.fund];
+      member.firstEntry = own.find((event) => event.amount > 0)?.date ?? null;
+      member.lastTransaction = own.at(-1)?.date ?? null;
+      member.deposits = own.filter((event) => event.amount > 0).reduce((sum, event) => sum + event.amount, 0);
+      member.withdrawals = -own.filter((event) => event.amount < 0).reduce((sum, event) => sum + event.amount, 0);
+    }
+  } else if (members.some((member) => member.participation === null)) {
+    throw new Error("Niet ieder lid heeft een bijpassende rij in Participaties (check).");
+  }
+
+  const riskSheet = get("Risico");
+  const risk: Partial<Record<FundNumber, RiskMetrics>> = {};
+  if (riskSheet) for (let index = 4; index <= 6; index++) {
+    const row = riskSheet.data[index];
+    const fund = fundNumber(row?.[0]);
+    if (fund) risk[fund] = { asOf: fundHistory.filter((point) => point.fund === fund).at(-1)?.date ?? null, volatility: cellNumber(row?.[1]), sharpe: cellNumber(row?.[2]), beta: cellNumber(row?.[3]), maxDrawdown: cellNumber(row?.[4]) };
+  }
 
   const { headers: positionHeaders, firstDataRow: positionStart } = table(positionsSheet, "Ticker");
   const positions: Position[] = [];
@@ -158,10 +216,10 @@ export async function parseWorkbook(bytes: Buffer, pepper: string): Promise<Snap
   }
 
   const overview = get("Overzicht");
-  const snapshot: Snapshot = { schema: 1, digest: createHash("sha256").update(bytes).digest("hex"), importedAt: new Date().toISOString(), requestedDate: cellDate(overview?.data[4]?.[1]), members, positions, cash, warnings };
+  const snapshot: Snapshot = { schema: 1, digest: createHash("sha256").update(bytes).digest("hex"), importedAt: new Date().toISOString(), requestedDate: cellDate(overview?.data[4]?.[1]), members, positions, cash, transactions, fundHistory, totalUnitsByFund, risk, warnings };
   const totals = summarize(snapshot).participationTotals;
   for (const fund of [1, 2, 3] as const) {
-    if (Math.abs(totals[fund] - 1) > 0.005) warnings.push(`Participaties van fonds ${fund} tellen op tot ${(totals[fund] * 100).toFixed(2)}% in plaats van 100%; persoonlijke eurobedragen blijven verborgen.`);
+    if (Math.abs(totals[fund] - 1) > 0.005) warnings.push(`Participaties van fonds ${fund} tellen op tot ${(totals[fund] * 100).toFixed(2)}% in plaats van 100%; controleer ontbrekende of uitgeschreven deelnemers.`);
   }
   if (members.some((member) => (member.sourceValue ?? 0) < 0)) warnings.push("Er zijn negatieve ledenwaarden in de bronadministratie; controleer deze vóór publicatie.");
   return snapshot;

@@ -17,6 +17,8 @@ const providerVenue: Record<string, string> = { LEU: "XNYS", CEG: "XNYS", PANW: 
 const INDEX_SYMBOL = "GSPC.INDX";
 const MAX_SYMBOLS = 80;
 const MAX_PAGES = 8;
+const TEN_YEARS_DAYS = 3653;
+const BACKFILL_PER_REFRESH = 4;
 
 export function quoteKey(position: Pick<Position, "ticker" | "exchange">): string {
   return `${position.exchange}:${position.ticker.toUpperCase()}`;
@@ -33,7 +35,29 @@ function symbolFor(position: Position, mic: string): string {
 
 function mergeHistory(old: PricePoint[], fresh: PricePoint[]): PricePoint[] {
   const byDate = new Map([...old, ...fresh].map((point) => [point.date, point]));
-  return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date)).slice(-260);
+  const all = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+  const oldest = new Date(Date.now() - TEN_YEARS_DAYS * 86_400_000).toISOString().slice(0, 10);
+  const dailyFrom = new Date(Date.now() - 366 * 86_400_000).toISOString().slice(0, 10);
+  const weekly = new Map<string, PricePoint>();
+  const daily: PricePoint[] = [];
+  for (const point of all) {
+    if (point.date < oldest) continue;
+    if (point.date >= dailyFrom) daily.push(point);
+    else {
+      const day = new Date(`${point.date}T00:00:00Z`);
+      day.setUTCDate(day.getUTCDate() - ((day.getUTCDay() + 6) % 7));
+      weekly.set(day.toISOString().slice(0, 10), point);
+    }
+  }
+  return [...weekly.values(), ...daily];
+}
+
+function rowsForPosition(rows: Array<Record<string, unknown>>, position: Position, mic: string, todayAmsterdam: string): PricePoint[] {
+  return rows.filter((row) => String(row.symbol ?? "").toUpperCase() === symbolFor(position, mic).toUpperCase()
+      && String(row.exchange ?? "").toUpperCase() === mic
+      && String(row.price_currency ?? "").toUpperCase() === position.currency.toUpperCase())
+    .map((row) => ({ date: validDate(row.date), close: Number(row.close) }))
+    .filter((point): point is PricePoint => point.date !== null && point.date < todayAmsterdam && Number.isFinite(point.close) && point.close > 0);
 }
 
 async function marketstackRows(symbols: string[], mic: string | null, key: string, from: string): Promise<Array<Record<string, unknown>>> {
@@ -53,9 +77,9 @@ async function marketstackRows(symbols: string[], mic: string | null, key: strin
       throw new Error("Marketstack gaf geen geldige koerslijst terug.");
     }
     results.push(...payload.data as Array<Record<string, unknown>>);
-    const pagination = "pagination" in payload ? payload.pagination as { total?: number } : null;
-    const total = Number(pagination?.total ?? results.length);
-    if (!Number.isFinite(total) || total <= results.length || payload.data.length === 0) return results;
+    // The legacy index endpoint reports total=1000 on every full page, so
+    // continue until a page contains fewer rows than the requested limit.
+    if (payload.data.length < 1000) return results;
   }
   throw new Error("Marketstack-historie is te lang voor de ingestelde paginalimiet.");
 }
@@ -76,9 +100,7 @@ async function benchmarkRows(key: string, from: string): Promise<Array<Record<st
     const payload: unknown = await response.json();
     if (!payload || typeof payload !== "object" || !("data" in payload) || !Array.isArray(payload.data)) throw new Error("Geen geldige indexdata.");
     results.push(...payload.data as Array<Record<string, unknown>>);
-    const pagination = "pagination" in payload ? payload.pagination as { total?: number } : null;
-    const total = Number(pagination?.total ?? results.length);
-    if (!Number.isFinite(total) || total <= results.length || payload.data.length === 0) return results;
+    if (payload.data.length < 1000) return results;
   }
   throw new Error("Indexhistorie overschrijdt de paginalimiet.");
 }
@@ -102,6 +124,7 @@ export async function fetchDailyQuotes(positions: Position[], key: string, previ
 
   const prices: Record<string, DailyQuote> = { ...previous?.prices };
   const history: Record<string, PricePoint[]> = { ...previous?.history };
+  const historyBackfilled = new Set(previous?.historyBackfilled ?? []);
   for (const [mic, group] of groups) {
     const lookup = new Map(group.map((position) => [symbolFor(position, mic).toUpperCase(), position]));
     const rows = await marketstackRows([...lookup.keys()], mic, key, historyStart(group.map(quoteKey), previous));
@@ -124,19 +147,37 @@ export async function fetchDailyQuotes(positions: Position[], key: string, previ
     }
   }
 
+  // Historical retrieval is spread over several daily jobs. One symbol costs at
+  // most eight paginated calls, and never runs in response to a member visit.
+  const pending = [...unique.values()].filter((position) => !historyBackfilled.has(quoteKey(position))).slice(0, BACKFILL_PER_REFRESH);
+  const tenYearsAgo = new Date(Date.now() - TEN_YEARS_DAYS * 86_400_000).toISOString().slice(0, 10);
+  for (const position of pending) {
+    const id = quoteKey(position);
+    const mic = providerVenue[position.ticker.toUpperCase()] ?? exchangeMic[position.exchange];
+    try {
+      const rows = await marketstackRows([symbolFor(position, mic)], mic, key, tenYearsAgo);
+      history[id] = mergeHistory(history[id] ?? [], rowsForPosition(rows, position, mic, todayAmsterdam));
+      historyBackfilled.add(id);
+    } catch {
+      // The regular close remains available; this symbol is retried tomorrow.
+    }
+  }
+
   // Basic includes indices. A missing index never prevents publication of stock quotes.
   let benchmark = previous?.benchmark;
   try {
     const last = previous?.benchmark?.latest?.date;
-    const from = new Date(Date.now() - (last ? 8 : 180) * 86_400_000).toISOString().slice(0, 10);
+    const benchmarkBackfilled = historyBackfilled.has(INDEX_SYMBOL);
+    const from = benchmarkBackfilled ? new Date(Date.now() - 8 * 86_400_000).toISOString().slice(0, 10) : tenYearsAgo;
     const rows = await benchmarkRows(key, from);
     const fresh = rows.filter((row) => String(row.symbol ?? "").toUpperCase() === INDEX_SYMBOL && String(row.exchange ?? "").toUpperCase() === "INDX")
       .map((row) => ({ date: validDate(row.date), close: Number(row.close) }))
       .filter((point): point is PricePoint => point.date !== null && point.date < todayAmsterdam && Number.isFinite(point.close) && point.close > 0);
     const points = mergeHistory(benchmark?.points ?? [], fresh);
     benchmark = { name: "S&P 500", points, latest: points.at(-1) ?? null };
+    if (!benchmarkBackfilled) historyBackfilled.add(INDEX_SYMBOL);
   } catch {
     // Keep existing data; the UI displays a missing-data state if no series exists.
   }
-  return { fetchedAt: new Date().toISOString(), prices, history, benchmark };
+  return { fetchedAt: new Date().toISOString(), prices, history, historyBackfilled: [...historyBackfilled], benchmark };
 }

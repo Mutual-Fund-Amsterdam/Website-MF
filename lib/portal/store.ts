@@ -3,13 +3,15 @@ import "server-only";
 import { Redis } from "@upstash/redis";
 import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
-import type { DailyQuotes, FundNumber, Member, Snapshot } from "./types";
+import type { DailyQuotes, FundNumber, FundValuePoint, Member, Snapshot } from "./types";
 import { codeDigest, normalizeMemberId } from "./workbook";
+import { portfolioView } from "./portfolio";
 import { createLocalStore } from "./local-store";
 
 const PREFIX = `mf:portal:${process.env.VERCEL_ENV ?? "development"}:`;
 const CURRENT_KEY = `${PREFIX}current`;
 const QUOTES_KEY = `${PREFIX}daily-quotes`;
+const FUND_DAILY_KEY = `${PREFIX}fund-daily-values`;
 const COOKIE_NAME = "__Host-mf_session";
 const SESSION_SECONDS = 12 * 60 * 60;
 let redisClient: Redis | null = null;
@@ -58,6 +60,25 @@ export async function saveDailyQuotes(quotes: DailyQuotes): Promise<void> {
   await redis().set(QUOTES_KEY, quotes);
 }
 
+export async function getFundDailyValues(): Promise<FundValuePoint[]> {
+  return await redis().get<FundValuePoint[]>(FUND_DAILY_KEY) ?? [];
+}
+
+export async function recordFundDailyValues(snapshot: Snapshot, quotes: DailyQuotes): Promise<void> {
+  const date = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Amsterdam", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(quotes.fetchedAt));
+  const old = await getFundDailyValues();
+  const values = old.filter((point) => point.date !== date);
+  for (const fund of [1, 2, 3] as const) {
+    const totalUnits = snapshot.totalUnitsByFund?.[fund];
+    if (!totalUnits || totalUnits <= 0) continue;
+    const positions = snapshot.positions.filter((item) => item.fund === fund);
+    const cash = snapshot.cash.find((item) => item.fund === fund);
+    const fundValue = portfolioView(positions, cash, quotes).fundValue;
+    if (fundValue !== null) values.push({ fund, date, nav: fundValue / totalUnits, fundValue });
+  }
+  await redis().set(FUND_DAILY_KEY, values.sort((a, b) => a.date.localeCompare(b.date)).slice(-3 * 3653));
+}
+
 export async function claimDailyRefresh(date: string): Promise<boolean> {
   const key = `${PREFIX}quotes-refresh:${date}`;
   if (localPreview()) {
@@ -89,6 +110,8 @@ export async function publishPending(id: string): Promise<Snapshot | null> {
     await client.set(`${PREFIX}archive:${previous.digest}`, previous, { ex: 30 * 24 * 60 * 60 });
   }
   await client.set(CURRENT_KEY, snapshot);
+  const quotes = await getDailyQuotes();
+  if (quotes) await recordFundDailyValues(snapshot, quotes);
   await client.del(key);
   return snapshot;
 }

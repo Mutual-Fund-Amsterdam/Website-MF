@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { fetchEcbRates } from "@/lib/portal/ecb";
 import { fetchDailyQuotes } from "@/lib/portal/marketstack";
-import { claimDailyRefresh, configured, getDailyQuotes, getSnapshot, releaseDailyRefresh, saveDailyQuotes } from "@/lib/portal/store";
+import { claimDailyRefresh, configured, getDailyQuotes, getSnapshot, recordFundDailyValues, releaseDailyRefresh, saveDailyQuotes } from "@/lib/portal/store";
 
 export const runtime = "nodejs";
 
@@ -28,6 +28,7 @@ export async function GET(request: Request) {
     const quotes = await fetchDailyQuotes(snapshot.positions, process.env.MARKETSTACK_API_KEY, previous);
     try { quotes.fx = await fetchEcbRates(); } catch { quotes.fx = previous?.fx; }
     await saveDailyQuotes(quotes);
+    await recordFundDailyValues(snapshot, quotes);
     return NextResponse.json({ updated: Object.keys(quotes.prices).length, fetchedAt: quotes.fetchedAt }, { headers });
   } catch {
     await releaseDailyRefresh(today);

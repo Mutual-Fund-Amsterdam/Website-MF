@@ -10,6 +10,11 @@
 .cards span { color: var(--accent); font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; }
 .cards strong { display: block; margin: 16px 0; font-size: clamp(1.3rem, 2.5vw, 2rem); }
 .cards p { color: var(--ink-muted); font-size: .8rem; }
+.memberChart { height: 285px; width: 100%; margin-top: 14px; }
+.memberLegend { display: flex; gap: 22px; color: var(--ink-muted); font-size: .76rem; }
+.memberLegend span { display: inline-flex; align-items: center; gap: 7px; }
+.memberLegend i { display: inline-block; width: 11px; height: 3px; background: var(--accent); }
+.memberLegend span:nth-child(2) i { background: var(--board-gold); }
 .grid, .chartGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
 .panel { margin-bottom: 12px; min-width: 0; }
 .panel h2 { margin: 10px 0 20px; }
@@ -63,6 +68,17 @@
 .positive { color: #78b993; }
 .negative { color: #db9086; }
 .periods { display: flex; gap: 4px; margin: 17px 0 10px; }
+.chartControls { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.chartControls .periods { flex-wrap: wrap; }
+.beastButton { border: 1px solid var(--accent); background: rgba(88,147,177,.13); color: var(--accent); padding: 8px 12px; font-size: .72rem; cursor: pointer; }
+.beastButton:hover { background: rgba(88,147,177,.25); }
+.beastOverlay { position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column; background: #191d1b; padding: 12px; }
+.beastHeader { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--ink); }
+.beastHeader > div { display: flex; gap: 8px; }
+.beastHeader button { border: 1px solid var(--line); background: transparent; color: var(--ink); padding: 8px 12px; cursor: pointer; }
+.beastHeader button:hover { color: var(--accent); border-color: var(--accent); }
+.beastWidget { flex: 1; min-height: 0; width: 100%; }
+.tradingViewCredit { color: var(--ink-muted); font-size: .68rem; padding: 6px 0 0; align-self: flex-end; }
 .periods button { background: transparent; border: 0; padding: 5px 9px; color: var(--ink-muted); cursor: pointer; font-size: .7rem; }
 .periods button:hover, .periods .activePeriod { color: var(--accent); background: rgba(88,147,177,.13); }
 .chartArea { height: 250px; width: 100%; }
@@ -75,3 +91,4 @@
 .admin a { color: var(--accent); }
 @media(max-width:850px){.cards,.grid,.chartGrid{grid-template-columns:1fr}.top{flex-wrap:wrap}}
 @media(max-width:550px){.riskGrid{grid-template-columns:1fr}.switcher{flex-wrap:wrap}}
+@media(max-width:550px){.beastHeader{align-items:flex-start;flex-direction:column;padding-bottom:8px}.beastHeader > div{width:100%}.beastHeader button{flex:1}}
