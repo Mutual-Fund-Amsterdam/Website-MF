@@ -21,7 +21,7 @@ export default function LoginForm({ available }: { available: boolean }) {
     finally { setBusy(false); }
   }
   return <form onSubmit={submit}>
-    <p className={styles.cardIntro}>Vul je lid-ID en persoonlijke code in. Alleen de code is hoofdlettergevoelig.</p>
+    <p className={styles.cardIntro}>Log in voor jouw fonds.</p>
     <div className={styles.field}><label htmlFor="member-id">Lid-ID</label><input id="member-id" type="text" value={memberId} onChange={(event) => setMemberId(event.target.value)} autoComplete="username" required maxLength={100} disabled={!available} /></div>
     <div className={styles.field}><label htmlFor="member-code">Persoonlijke code</label><input id="member-code" type="password" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="current-password" required maxLength={100} disabled={!available} /></div>
     {error && <p role="alert" className={styles.error}>{error}</p>}

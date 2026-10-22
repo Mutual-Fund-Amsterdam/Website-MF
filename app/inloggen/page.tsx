@@ -17,9 +17,7 @@ export default async function LoginPage() {
         <div className={styles.loginCard}>
           <span className={styles.cardNumber}>LEDENOMGEVING</span>
           <h1>Inloggen.</h1>
-          {!ready && <p className={styles.cardIntro}>De inlog wordt actief na het aansluiten van de beveiligde opslag en het voorbereiden van de drie beheerders.</p>}
           <LoginForm available={ready} />
-          <p className={styles.help}>Vragen over je toegang? <a href="mailto:secretaris@mutualfund.nl">Neem contact op met het bestuur →</a></p>
         </div>
       </section>
     </main>

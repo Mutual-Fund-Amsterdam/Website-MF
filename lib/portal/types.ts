@@ -26,6 +26,27 @@ export type Position = {
   exchange: string;
   isin: string;
   tradingViewSymbol: string;
+  marketSymbol?: string;
+  sector?: string;
+};
+
+export type PricePoint = { date: string; close: number };
+export type FxRate = { currency: "USD" | "CAD"; perEuro: number; date: string };
+
+export type DailyQuote = {
+  symbol: string;
+  exchange: string;
+  currency: string;
+  close: number;
+  date: string;
+};
+
+export type DailyQuotes = {
+  fetchedAt: string;
+  prices: Record<string, DailyQuote>;
+  history?: Record<string, PricePoint[]>;
+  benchmark?: { name: "S&P 500"; points: PricePoint[]; latest: PricePoint | null };
+  fx?: Partial<Record<"USD" | "CAD", FxRate>>;
 };
 
 export type Cash = {

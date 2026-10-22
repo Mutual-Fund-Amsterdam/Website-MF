@@ -139,7 +139,7 @@ export async function parseWorkbook(bytes: Buffer, pepper: string): Promise<Snap
     const quantity = cellNumber(value(row, positionHeaders, "Aantal"));
     if (quantity === null || quantity < 0) throw new Error(`Aantal ontbreekt of is negatief bij ${ticker}, rij ${index + 1}.`);
     if (quantity === 0) continue;
-    positions.push({ fund, ticker, quantity, name: cellText(value(row, positionHeaders, "Aandeel")) || ticker, currency: cellText(value(row, positionHeaders, "Valuta")).toUpperCase(), exchange: cellText(value(row, positionHeaders, "Beurs")), isin: cellText(value(row, positionHeaders, "ISIN")), tradingViewSymbol: cellText(value(row, positionHeaders, "TradingView-code")) });
+    positions.push({ fund, ticker, quantity, name: cellText(value(row, positionHeaders, "Aandeel")) || ticker, currency: cellText(value(row, positionHeaders, "Valuta")).toUpperCase(), exchange: cellText(value(row, positionHeaders, "Beurs")), isin: cellText(value(row, positionHeaders, "ISIN")), tradingViewSymbol: cellText(value(row, positionHeaders, "TradingView-code")), marketSymbol: cellText(value(row, positionHeaders, "Koerscode")) || undefined, sector: cellText(value(row, positionHeaders, "Sector")) || undefined });
   }
 
   const { headers: cashHeaders, firstDataRow: cashStart } = table(cashSheet, "Fonds");

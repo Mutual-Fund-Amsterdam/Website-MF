@@ -3,12 +3,13 @@ import "server-only";
 import { Redis } from "@upstash/redis";
 import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
-import type { FundNumber, Member, Snapshot } from "./types";
+import type { DailyQuotes, FundNumber, Member, Snapshot } from "./types";
 import { codeDigest, normalizeMemberId } from "./workbook";
 import { createLocalStore } from "./local-store";
 
 const PREFIX = `mf:portal:${process.env.VERCEL_ENV ?? "development"}:`;
 const CURRENT_KEY = `${PREFIX}current`;
+const QUOTES_KEY = `${PREFIX}daily-quotes`;
 const COOKIE_NAME = "__Host-mf_session";
 const SESSION_SECONDS = 12 * 60 * 60;
 let redisClient: Redis | null = null;
@@ -21,8 +22,8 @@ function localPreview(): boolean {
 export function configured(): boolean {
   if (localPreview()) return (process.env.MF_AUTH_PEPPER?.length ?? 0) >= 32;
   return Boolean(
-    process.env.UPSTASH_REDIS_REST_URL &&
-    process.env.UPSTASH_REDIS_REST_TOKEN &&
+    (process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL) &&
+    (process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN) &&
     (process.env.MF_AUTH_PEPPER?.length ?? 0) >= 32,
   );
 }
@@ -38,12 +39,37 @@ function redis(): Redis | ReturnType<typeof createLocalStore> {
     if (!localClient) localClient = createLocalStore(pepper());
     return localClient;
   }
-  if (!redisClient) redisClient = Redis.fromEnv();
+  if (!redisClient) redisClient = new Redis({
+    url: (process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL)!,
+    token: (process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN)!,
+  });
   return redisClient;
 }
 
 export async function getSnapshot(): Promise<Snapshot | null> {
   return redis().get<Snapshot>(CURRENT_KEY);
+}
+
+export async function getDailyQuotes(): Promise<DailyQuotes | null> {
+  return redis().get<DailyQuotes>(QUOTES_KEY);
+}
+
+export async function saveDailyQuotes(quotes: DailyQuotes): Promise<void> {
+  await redis().set(QUOTES_KEY, quotes);
+}
+
+export async function claimDailyRefresh(date: string): Promise<boolean> {
+  const key = `${PREFIX}quotes-refresh:${date}`;
+  if (localPreview()) {
+    if (await redis().get(key)) return false;
+    await redis().set(key, "running", { ex: 36 * 60 * 60 });
+    return true;
+  }
+  return (await (redis() as Redis).set(key, "running", { nx: true, ex: 36 * 60 * 60 })) === "OK";
+}
+
+export async function releaseDailyRefresh(date: string): Promise<void> {
+  await redis().del(`${PREFIX}quotes-refresh:${date}`);
 }
 
 export async function savePending(snapshot: Snapshot): Promise<string> {

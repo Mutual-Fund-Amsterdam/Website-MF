@@ -14,7 +14,9 @@ const local = process.env.MF_LOCAL_PREVIEW === "1" && target === "development" &
 if (mode === "--publish" && !local && !["preview", "production"].includes(target)) {
   throw new Error("Zet MF_TARGET_ENV op preview of production, of gebruik de lokale proefstand.");
 }
-if (mode === "--publish" && !local && (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN)) {
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
+if (mode === "--publish" && !local && (!redisUrl || !redisToken)) {
   throw new Error("Upstash-omgeving ontbreekt.");
 }
 const pepper = process.env.MF_AUTH_PEPPER;
@@ -40,7 +42,7 @@ const snapshot = {
   cash: [],
   warnings: ["Alleen beheerders zijn voorbereid. Importeer het volledige Excelbestand na inloggen."],
 };
-const redis = local ? createLocalStore(pepper) : Redis.fromEnv();
+const redis = local ? createLocalStore(pepper) : new Redis({ url: redisUrl, token: redisToken });
 const key = `mf:portal:${target}:current`;
 if (await redis.exists(key)) throw new Error("Er bestaat al een portalversie. De opstartstap mag niet opnieuw draaien.");
 await redis.set(key, snapshot);
