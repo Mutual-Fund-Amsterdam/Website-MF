@@ -25,8 +25,12 @@ export async function POST(request: Request) {
     const symbols = new Set(snapshot.positions.map(quoteKey));
     const remaining = [...symbols].filter((symbol) => !completed.has(symbol)).length;
     return NextResponse.json({ remaining, loaded: symbols.size - remaining, benchmark: completed.has("GSPC.INDX") }, { headers });
-  } catch {
-    return NextResponse.json({ error: "Historische koersen konden niet worden geladen." }, { status: 502, headers });
+  } catch (error) {
+    const snapshot = await getSnapshot();
+    const previous = await getDailyQuotes();
+    const completed = new Set(previous?.historyBackfilled);
+    const pending = [...new Set(snapshot?.positions.map(quoteKey) ?? [])].filter((symbol) => !completed.has(symbol));
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Historische koersen konden niet worden geladen.", pending }, { status: 502, headers });
   } finally {
     await releaseDailyRefresh("manual-history-backfill");
   }
