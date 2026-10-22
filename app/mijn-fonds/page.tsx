@@ -30,7 +30,8 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
   const admin = member.role.toLowerCase() === "hoofdbestuurder";
   const ownFund = fund === member.fund;
   const participationTotal = snapshot.members.filter((item) => item.fund === fund && item.active).reduce((sum, item) => sum + (item.participation ?? 0), 0);
-  const personalValue = ownFund && member.participation !== null && Math.abs(participationTotal - 1) <= 0.005 && view.fundValue !== null ? member.participation * view.fundValue : null;
+  const participationReconciled = Math.abs(participationTotal - 1) <= 0.005;
+  const personalValue = ownFund && member.participation !== null && view.fundValue !== null ? member.participation * view.fundValue : null;
   const excelValue = ownFund ? member.sourceValue : null;
   const stockShare = view.fundValue && view.stockValue !== null ? view.stockValue / view.fundValue : null;
   const cashShare = view.fundValue && view.cashValue !== null ? view.cashValue / view.fundValue : null;
@@ -46,7 +47,7 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
     <div className={styles.cards}>
       <article><span>Jouw eerste inleg</span><strong>{ownFund ? date(member.firstEntry) : "—"}</strong><p>{ownFund ? "Volgens de ledenadministratie" : `Jouw eigen deelname hoort bij fonds ${member.fund}`}</p></article>
       <article><span>Jouw participatie</span><strong>{ownFund && member.participation !== null ? pct(member.participation) : "—"}</strong><p>{ownFund ? "Volgens de laatst geïmporteerde Excel" : `Jouw eigen deelname hoort bij fonds ${member.fund}`}</p></article>
-      <article><span>Jouw positie</span><strong>{personalValue !== null ? eur(personalValue) : excelValue !== null ? eur(excelValue) : "—"}</strong><p>{personalValue !== null ? "Indicatief: fondswaarde × jouw participatie; koersen en cash hebben eigen peildata" : excelValue !== null ? `Excelwaarde per ${date(snapshot.requestedDate)}; niet de huidige koerswaarde` : "Verschijnt zodra alle koersen, valuta en participaties aansluiten"}</p></article>
+      <article><span>Jouw positie</span><strong>{personalValue !== null ? eur(personalValue) : excelValue !== null ? eur(excelValue) : "—"}</strong><p>{personalValue !== null ? participationReconciled ? "Indicatief: fondswaarde × jouw participatie; koersen en cash hebben eigen peildata" : `Voorlopig: de participaties van fonds ${fund} tellen samen op tot ${pct(participationTotal)}. De ledenadministratie moet worden gecontroleerd.` : excelValue !== null ? `Excelwaarde per ${date(snapshot.requestedDate)}; niet de huidige koerswaarde` : "Verschijnt zodra alle koersen en valuta beschikbaar zijn"}</p></article>
     </div>
 
     <section className={styles.panel}><div className={styles.sectionHeader}><div><p className="eyebrow">Fonds {fund}</p><h2>Portefeuille.</h2></div><span className={styles.dataTag}>{positions.length} posities</span></div>
