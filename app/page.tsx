@@ -104,7 +104,7 @@ export default function Home() {
         </div>
       </section>
 
-      <BoardGrid />
+      <BoardGrid homepage />
 
       <section className="section section-elevated" id="contact">
         <div className="container contact-layout">

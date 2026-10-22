@@ -910,30 +910,12 @@ img {
   filter: grayscale(1) contrast(1.04);
 }
 
-#bestuur > div:nth-of-type(2) > div > div:first-child {
-  background-position: center;
-  background-size: cover;
+.board-profile:target > div:first-child {
+  box-shadow: 0 0 0 3px var(--accent);
 }
 
-#bestuur > div:nth-of-type(2) > div:nth-child(1) > div:first-child {
-  background-image: url("/board/lucas-ham.webp");
-}
-
-#bestuur > div:nth-of-type(2) > div:nth-child(2) > div:first-child {
-  background-image: url("/board/annemijn-hekelaar-gombert.webp");
-}
-
-#bestuur > div:nth-of-type(2) > div:nth-child(3) > div:first-child {
-  background-image: url("/board/bryan-berlijn.webp");
-}
-
-#bestuur > div:nth-of-type(2) > div:nth-child(4) > div:first-child {
-  background-image: url("/board/florian-van-heest.webp");
-}
-
-#bestuur img {
-  visibility: visible !important;
-  opacity: 1 !important;
+.board-portrait-image {
+  transform: translateY(7%) scale(1.22);
 }
 
 .board-grid {

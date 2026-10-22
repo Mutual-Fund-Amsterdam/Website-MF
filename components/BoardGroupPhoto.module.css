@@ -1,0 +1,114 @@
+.figure {
+  position: relative;
+  width: min(100%, 1120px);
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--bg);
+  isolation: isolate;
+}
+
+.photo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hotspot {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  cursor: pointer;
+  transition: background-color 240ms ease;
+}
+
+.hotspot:hover,
+.hotspot:focus-visible {
+  background: rgba(233, 229, 218, 0.1);
+}
+
+.hotspot:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+
+.card {
+  position: absolute;
+  z-index: 2;
+  bottom: clamp(12px, 2vw, 24px);
+  left: clamp(118px, var(--label-x), calc(100% - 118px));
+  display: grid;
+  width: min(236px, calc(100% - 24px));
+  gap: 3px;
+  padding: 14px 18px;
+  border: 1px solid rgba(233, 229, 218, 0.24);
+  border-radius: 3px;
+  background: rgba(35, 35, 32, 0.9);
+  color: var(--ink);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.13);
+  transform: translateX(-50%);
+  animation: appear 240ms ease both;
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+}
+
+.name {
+  font-size: 1.08rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.role {
+  color: var(--board-gold);
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.contact {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 0.78rem;
+}
+
+.contact a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--board-gold);
+  text-underline-offset: 4px;
+}
+
+.contact a:hover,
+.contact a:focus-visible {
+  color: var(--board-gold);
+}
+
+@keyframes appear {
+  from { opacity: 0; transform: translate(-50%, 7px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (hover: none) {
+  .card {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .card {
+    bottom: 12px;
+    padding: 9px 12px;
+    animation: none;
+  }
+
+  .name { font-size: 0.88rem; }
+  .role { font-size: 0.58rem; }
+  .contact { margin-top: 5px; font-size: 0.7rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hotspot { transition: none; }
+  .card { animation: none; }
+}
