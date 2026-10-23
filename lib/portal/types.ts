@@ -79,6 +79,7 @@ export type Cash = {
 };
 
 export type Snapshot = {
+  input?: {version:2;cutoff:string;events:Record<string,string>};
   schema: 1;
   digest: string;
   importedAt: string;

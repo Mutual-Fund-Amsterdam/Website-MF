@@ -108,4 +108,4 @@
 .legend button { display:inline-flex; align-items:center; gap:8px; font:inherit; font-size:.78rem; color:var(--ink-muted); border:0; padding:0; background:transparent; cursor:pointer; }
 .legend button:nth-child(2) i { background:var(--board-gold); }
 .legend button:nth-child(3) i { background:var(--ink-muted); }
-.compositionTooltip { font-size:.8rem; color:var(--ink); border:1px solid var(--line); padding:10px 12px; }
+.compositionTooltip { z-index:80; max-width:calc(100vw - 24px); font-size:.8rem; color:var(--ink); background:var(--paper, #252522); border:1px solid var(--line); padding:8px 11px; border-radius:5px; box-shadow:0 5px 20px #0003; pointer-events:none; }

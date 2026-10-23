@@ -9,6 +9,7 @@ import { portfolioView } from "./portfolio";
 import { createLocalStore } from "./local-store";
 import { auditLedger, reconstructDays, verifiedValues } from "./ledger";
 import {fetchEurUsdHistory,fetchEstrHistory} from "./ecb";
+import {validateInputContinuity} from "./input-workbook";
 import type { BankEvent, BrokerEvent, LedgerStorage, ReconstructionDay } from "./ledger";
 
 const PREFIX = `mf:portal:${process.env.VERCEL_ENV ?? "development"}:`;
@@ -105,7 +106,7 @@ export async function saveDailyQuotes(quotes: DailyQuotes): Promise<void> {
   await redis().set(QUOTES_KEY, {...quotes,history:undefined,historyKeys:keys,fxHistory:undefined,fxHistoryKeys:currencies});quoteCache=null;
 }
 
-export async function reserveMarketstackCalls(cost:number,historical=false):Promise<number>{
+export async function reserveMarketstackCalls(cost:number,historical=false,context?:{runId:string;cause:string}):Promise<number>{
   if(!Number.isSafeInteger(cost)||cost<1||cost>100)throw new Error("Ongeldige koersaanvraag.");
   const month=new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Amsterdam",year:"numeric",month:"2-digit"}).format(new Date());
   const opening=/^(\d{4}-\d{2}):(\d+)$/.exec(process.env.MARKETSTACK_USAGE_BASELINE??"");
@@ -115,6 +116,7 @@ export async function reserveMarketstackCalls(cost:number,historical=false):Prom
   const key=`${PREFIX}marketstack-usage:${month}`;const used=baseline+await redis().incrby(key,cost);
   const limit=historical?8000:10000;
   if(used>limit){await redis().incrby(key,-cost);throw new Error("Marketstack-maandbudget bereikt; geen aanvraag verstuurd.");}
+  await recordOperation({kind:"marketstack",cause:context?.cause??(historical?"historical":"daily"),runId:context?.runId??"legacy",credits:cost,result:"gereserveerd",budgetUsed:used});
   return used;
 }
 
@@ -177,6 +179,7 @@ export async function claimDailyRefresh(date: string): Promise<boolean> {
 }
 
 export async function savePending(snapshot: Snapshot): Promise<string> {
+  validateInputContinuity(snapshot,await getSnapshot());
   const id = randomBytes(24).toString("hex");
   const header=await storeLedger(snapshot,id,10*60);
   await redis().set(`${PREFIX}pending:${id}`, header, { ex: 10 * 60 });
@@ -184,6 +187,10 @@ export async function savePending(snapshot: Snapshot): Promise<string> {
 }
 
 export async function publishPending(id: string): Promise<Snapshot | null> {
+ const token=await integrationLock("publish",300);if(!token)throw Error("Een import wordt al verwerkt. Probeer later opnieuw.");
+ try{return await publishPendingLocked(id);}finally{await integrationUnlock("publish",token);}
+}
+async function publishPendingLocked(id: string): Promise<Snapshot | null> {
   if (!/^[a-f0-9]{48}$/.test(id)) return null;
   const client = redis();
   const key = `${PREFIX}pending:${id}`;
@@ -191,6 +198,8 @@ export async function publishPending(id: string): Promise<Snapshot | null> {
   if (!stored) return null;
   const snapshot=await hydrateLedger(stored);
   const previous = await getSnapshot();
+  validateInputContinuity(snapshot,previous);
+  if(previous?.digest===snapshot.digest){await client.del(key);return previous;}
   if (previous) {
     const previousHeader=await storeLedger(previous,previous.digest);
     await client.set(`${PREFIX}archive:${previous.digest}`, previousHeader, { ex: 30 * 24 * 60 * 60 });
@@ -215,7 +224,7 @@ export async function publishPending(id: string): Promise<Snapshot | null> {
   return snapshot;
 }
 
-type Session = { memberKey: string; snapshotDigest: string };
+type Session = { memberKey: string; snapshotDigest: string; loginDigest?:string };
 
 function tokenKey(token: string): string {
   return `${PREFIX}session:${createHash("sha256").update(token).digest("hex")}`;
@@ -223,7 +232,7 @@ function tokenKey(token: string): string {
 
 export async function createSession(member: Member, snapshot: Snapshot): Promise<string> {
   const token = randomBytes(32).toString("base64url");
-  await redis().set(tokenKey(token), { memberKey: member.key, snapshotDigest: snapshot.digest } satisfies Session, { ex: SESSION_SECONDS });
+  await redis().set(tokenKey(token), { memberKey: member.key, snapshotDigest: snapshot.digest,loginDigest:member.loginDigest } satisfies Session, { ex: SESSION_SECONDS });
   return token;
 }
 
@@ -251,9 +260,10 @@ export async function getMemberSession(): Promise<{ member: Member; snapshot: Sn
   const session = await redis().get<Session>(tokenKey(token));
   if (!session) return null;
   const snapshot = await getSnapshot();
-  if (!snapshot || snapshot.digest !== session.snapshotDigest) return null;
+  if (!snapshot) return null;
   const member = snapshot.members.find((item) => item.key === session.memberKey && item.active);
-  return member ? { member, snapshot } : null;
+  if(!member||(session.loginDigest?member.loginDigest!==session.loginDigest:snapshot.digest!==session.snapshotDigest))return null;
+  return { member, snapshot };
 }
 
 export async function findMember(id: string, code: string, snapshot: Snapshot): Promise<Member | null> {
@@ -307,4 +317,24 @@ export function sameOrigin(request: Request): boolean {
   } catch {
     return false;
   }
+}
+
+export type Operation={at?:string;kind:string;cause:string;runId?:string;credits?:number;result:string;budgetUsed?:number;detail?:string};
+export async function recordOperation(event:Operation){
+ const id=await redis().incr(`${PREFIX}operations-count`);
+ await redis().set(`${PREFIX}operation:${id}`,{...event,at:new Date().toISOString()},{ex:90*86400});
+}
+export async function operations(limit=70){
+ const last=await redis().get<number>(`${PREFIX}operations-count`)??0;
+ const rows=await Promise.all(Array.from({length:Math.min(last,limit)},(_,i)=>redis().get<Operation>(`${PREFIX}operation:${last-i}`)));
+ return rows.filter((r):r is Operation=>!!r);
+}
+export async function integrationGet<T>(key:string){return redis().get<T>(`${PREFIX}integration:${key}`);}
+export async function integrationSet(key:string,value:unknown,seconds?:number){await redis().set(`${PREFIX}integration:${key}`,value,seconds?{ex:seconds}:undefined);}
+export async function integrationDelete(key:string){await redis().del(`${PREFIX}integration:${key}`);}
+export async function integrationLock(key:string,seconds=90){const token=randomBytes(24).toString("hex");return await redis().set(`${PREFIX}integration-lock:${key}`,token,{nx:true,ex:seconds})==="OK"?token:null;}
+export async function integrationUnlock(key:string,token:string){
+ const full=`${PREFIX}integration-lock:${key}`;
+ if(localPreview()){if(await redis().get(full)===token)await redis().del(full);}
+ else await (redis() as Redis).eval('if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end',[full],[token]);
 }
