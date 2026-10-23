@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import {estimatedFundHistory} from '../lib/portal/estimated-history.ts';
+import {historicalComparison,chartPeriod} from '../lib/portal/comparison.ts';
+import {fetchHistoryInstrument,historyPlan} from '../lib/portal/history-backfill.ts';
+const dates=['2026-09-14','2026-09-15','2026-09-16','2026-09-17','2026-09-18'];
+const points=dates.map((date,i)=>({date,close:[50,55,48,56,60][i],adjustedClose:[50,55,48,56,60][i]}));
+const snapshot={positions:[{fund:1,ticker:'TEST',currency:'EUR',exchange:'Euronext Amsterdam'}],fundHistory:[{fund:1,date:dates[0],nav:100,totalUnits:10},{fund:1,date:dates.at(-1),nav:110,totalUnits:10}],ledger:{bank:[{fund:1,date:dates[0],kind:'Bankopening',amountCents:50000},{fund:1,date:dates.at(-1),kind:'Banksluiting',amountCents:50000}],broker:[{fund:1,date:dates[0],kind:'Ankerpositie',symbol:'TEST',currency:'EUR',quantity:10,grossEur:500,assetClass:'stock',exchange:'Euronext Amsterdam'}]},transactions:[]};
+const quotes={prices:{},history:{'Euronext Amsterdam:TEST':points},eurUsdHistory:dates.map(date=>({date,close:1})),benchmark:{points:dates.map((date,i)=>({date,close:100+i}))}};
+const originalFetch=globalThis.fetch;
+try{
+ globalThis.fetch=()=>{throw Error('Rendering must never request provider data');};
+ const rows=estimatedFundHistory(snapshot,quotes,1),comparison=historicalComparison(rows,quotes);
+ assert.equal(rows.length,5);assert.equal(rows[0].nav,100);assert.equal(rows.at(-1).nav,110);
+ assert.ok(rows[2].nav<rows[1].nav,'Real price drop must remain visible between anchor measurements');
+ assert.equal(comparison.points.find(p=>p.date==='2026-09-16').fund,0);
+ assert.equal(comparison.points.find(p=>p.date==='2026-09-16').benchmark,0);
+ assert.equal(chartPeriod(comparison.points,'fund-year').length,3);
+ assert.deepEqual(chartPeriod(comparison.points,'all'),comparison.points);
+ for(const period of ['6m','1y','2y'])assert.equal(chartPeriod(comparison.points,period).at(-1).fund,comparison.points.at(-1).fund,'Period change must not rebase returns');
+ assert.ok(comparison.points.every(p=>p.band[0]<=p.fund+1e-10&&p.band[1]>=p.fund-1e-10));
+ const flat=structuredClone(quotes);flat.history['Euronext Amsterdam:TEST']=points.map(p=>({...p,close:50,adjustedClose:50}));
+ const deposit=structuredClone(snapshot);deposit.fundHistory[1]={...deposit.fundHistory[1],nav:100,totalUnits:15};deposit.ledger.bank.push({fund:1,date:dates[2],kind:'Inleg',amountCents:50000});deposit.ledger.bank[1].amountCents=100000;
+ assert.ok(estimatedFundHistory(deposit,flat,1).every(p=>Math.abs(p.nav-100)<1e-9),'Deposits do not create investment returns');
+ const split=structuredClone(quotes);split.history['Euronext Amsterdam:TEST']=points.map((p,i)=>({...p,close:i<2?100:50,adjustedClose:50}));
+ const same=structuredClone(snapshot);same.fundHistory[1].nav=100;
+ assert.ok(estimatedFundHistory(same,split,1).every(p=>Math.abs(p.nav-100)<1e-9),'Stock split is not a loss');
+ assert.deepEqual(estimatedFundHistory(snapshot,quotes,2),[],'Funds remain isolated');
+ let requests=0;
+ globalThis.fetch=async url=>{requests++;const u=new URL(url);assert.equal(u.searchParams.get('limit'),'1000');assert.equal(u.searchParams.get('symbols'),'TEST.XAMS');return Response.json({pagination:{total:2},data:[{symbol:'TEST.XAMS',exchange:'XAMS',price_currency:'EUR',date:dates[0],close:50,adj_close:49},{symbol:'TEST.XAMS',exchange:'XNYS',price_currency:'USD',date:dates[1],close:100}]});};
+ const loaded=await fetchHistoryInstrument(snapshot.positions[0],'fixture',dates[0],dates.at(-1));assert.equal(loaded.points.length,1);assert.equal(loaded.points[0].adjustedClose,49);assert.equal(requests,1);
+ const plan=historyPlan(snapshot,quotes);const marked={...quotes,dailyHistoryWindows:{'TEST:EUR':plan.window,'GSPC.INDX:USD':plan.window}};assert.equal(historyPlan(snapshot,marked).pending.length,0,'A completed or attempted window is not repeatedly fetched');
+}finally{globalThis.fetch=originalFetch;}
+console.log('Passed: anchored daily moves, fixed meeting baseline and periods, deposit neutrality, split handling, band bounds, provider identity, bounded calls and no repeated downloads.');

@@ -34,7 +34,7 @@ export type Position = {
   sector?: string;
 };
 
-export type PricePoint = { date: string; close: number };
+export type PricePoint = { date: string; close: number; adjustedClose?: number };
 export type FxRate = { currency: "USD" | "CAD"; perEuro: number; date: string };
 
 export type DailyQuote = {
@@ -54,6 +54,8 @@ export type DailyQuotes = {
   historyResolution?: "daily";
   historyAttemptedAt?: Record<string,string>;
   historyBackfillIssues?: string[];
+  historyUpdatedAt?: string;
+  dailyHistoryWindows?: Record<string,string>;
   benchmark?: { name: "S&P 500"; points: PricePoint[]; latest: PricePoint | null };
   fx?: Partial<Record<"USD" | "CAD", FxRate>>;
   eurUsdHistory?: PricePoint[];
