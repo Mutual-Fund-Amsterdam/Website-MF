@@ -62,5 +62,13 @@ export function patchRiskResults(bytes:Buffer,report:RiskReport):Buffer{
   xml=xml.replace(re,(_,a,b,c)=>{const column=(cell:string)=>cell.match(/\br="([A-Z]+)/)![1].split('').reduce((n,k)=>n*26+k.charCodeAt(0)-64,0);const cells=b.match(new RegExp(`<${prefix}c\\b(?:[^>]*\\/>|[^>]*>[\\s\\S]*?<\\/${prefix}c>)`,"g"))??[];return a+cells.sort((x:string,y:string)=>column(x)-column(y)).join('')+c;});
  }
  // Excel requires cells ordered by column; the template reserves every output cell.
- parts.set(path,Buffer.from(xml));return writePackage(parts);
+ parts.set(path,Buffer.from(xml));
+ // Excel may have recreated the calculation cache since the template was installed.
+ // Overwriting a user formula in an output cell must not leave a dangling chain entry.
+ if(parts.delete("xl/calcChain.xml")){
+  const rels="xl/_rels/workbook.xml.rels",types="[Content_Types].xml";
+  parts.set(rels,Buffer.from(parts.get(rels)!.toString().replace(/<(?:[A-Za-z_]\w*:)?Relationship\b(?=[^>]*\bType="[^"]*\/calcChain")[^>]*\/>/g,"")));
+  parts.set(types,Buffer.from(parts.get(types)!.toString().replace(/<(?:[A-Za-z_]\w*:)?Override\b(?=[^>]*\bPartName="\/xl\/calcChain\.xml")[^>]*\/>/g,"")));
+ }
+ return writePackage(parts);
 }

@@ -34,6 +34,8 @@ De resultaatversie is gekoppeld aan invoerdigest, koersgegevens en rekenmethode.
 
 Voor persoonlijk OneDrive gebruikt de server een uitgestelde upload met `If-Match` bij zowel sessieaanmaak als de definitieve commit. Nieuwe invoer, een nieuwere berekening, een 412-conflict of een vergrendeling mag niet worden overschreven. Resultaten blijven dan wachten; bestuurders zien de fout en de laatste schrijftijd. Alleen de dagelijkse taak, een bestandsmelding of de bestuurderscontrole herneemt dit; een ledenbezoek niet. De dagelijkse onderhoudstaak vernieuwt de Microsoft-subscriptie en controleert gemiste wijzigingen. Microsoft-meldingen zijn niet gegarandeerd direct.
 
+Na het vervangen van formules op Risico wordt een eventueel aanwezige `calcChain.xml`, inclusief pakketverwijzingen, verwijderd. Dit is alleen Excels optionele rekencache; de echte formules op andere tabbladen blijven behouden. Daardoor verwijst een later teruggeschreven bestand niet naar verwijderde Risico-formules. De template wordt ook zonder deze verouderde cache opgeleverd. `scripts/verify-xlsx-results.mjs` controleert dit, plus gedeelde tekstwaarden en XML-naamruimtevarianten na opslaan in Excel.
+
 ## Koersbudget
 
 - Eén gedeelde productietaak: `15 5 * * *` UTC; Vercel Hobby mag binnen het uitvoeringsuur starten.
