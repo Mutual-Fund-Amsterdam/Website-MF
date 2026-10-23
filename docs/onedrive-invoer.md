@@ -2,6 +2,8 @@
 
 ## Eenmalige inrichting
 
+Voor een verenigingsadres zonder Microsoft-account kan eerst een afzonderlijk gratis Microsoft-account met dat bestaande e-mailadres worden geregistreerd. Upload de gecontroleerde master naar de OneDrive van dat account; alleen een gedeelde link naar een bestand dat privébezit blijft verandert het eigendom niet. Houd de bestaande master aan totdat de nieuwe locatie is gecontroleerd. Voor de appregistratie is daarnaast een eigen Entra-beheeromgeving nodig; Microsoft kan daarvoor een Azure-account met identiteitscontrole vragen.
+
 1. Registreer bij Microsoft Entra een webapp die persoonlijke Microsoft-accounts ondersteunt.
 2. Registreer exact `https://www.mutualfund.nl/api/portal/onedrive/callback` als web-redirect-URI. Gebruik voor een afzonderlijke testomgeving diens eigen HTTPS-adres en appregistratie.
 3. Gebruik gedelegeerde `Files.Read` en `offline_access`. De koppeling downloadt het bestand; zij gebruikt niet de Excel workbook-API en schrijft niet terug in de master.
