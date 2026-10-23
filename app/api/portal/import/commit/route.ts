@@ -1,7 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { allowAttempt, configured, getMemberSession, publishPending, sameOrigin } from "@/lib/portal/store";
+import {writeOneDriveResults} from "@/lib/portal/onedrive";
 
 export const runtime = "nodejs";
+export const maxDuration = 300;
 
 export async function POST(request: Request) {
   const headers = { "Cache-Control": "no-store" };
@@ -16,6 +18,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const snapshot = await publishPending(String(body.id ?? ""));
     if (!snapshot) return NextResponse.json({ error: "De voorvertoning is verlopen. Upload opnieuw." }, { status: 410, headers });
+    after(async()=>{await writeOneDriveResults();});
     return NextResponse.json({ ok: true, importedAt: snapshot.importedAt }, { headers });
   } catch {
     return NextResponse.json({ error: "Publiceren lukt nu niet. Probeer opnieuw." }, { status: 503, headers });

@@ -4,6 +4,9 @@ import { fetchDailyQuotes,refreshWindow } from "@/lib/portal/marketstack";
 import { claimDailyRefresh, configured, getDailyQuotes, getSnapshot, recordFundDailyValues, saveDailyQuotes, reserveMarketstackCalls } from "@/lib/portal/store";
 import {recordOperation} from "@/lib/portal/store";
 import {maintainOneDrive} from "@/lib/portal/onedrive";
+import {writeOneDriveResults} from "@/lib/portal/onedrive";
+import {refreshRiskReport,claimRiskHistoryCredit} from "@/lib/portal/store";
+import {fillRiskHistory} from "@/lib/portal/risk-history";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -35,10 +38,13 @@ export async function GET(request: Request) {
     try { quotes.eurUsdHistory = await fetchEurUsdHistory(previous?.eurUsdHistory); } catch { quotes.eurUsdHistory = previous?.eurUsdHistory; }
     try { quotes.estrHistory = await fetchEstrHistory(previous?.estrHistory); } catch { quotes.estrHistory = previous?.estrHistory; }
     quotes.fxHistory={...previous?.fxHistory,USD:quotes.eurUsdHistory??[]};
-    const currencies=[...new Set((snapshot.ledger?.broker??[]).map(e=>e.currency).filter(c=>c&&c!=="EUR"&&c!=="USD"))];
+    const currencies=[...new Set([...snapshot.positions.map(p=>p.currency),...snapshot.cash.flatMap(c=>[...(c.brokerCad?["CAD"]:[]),...Object.keys(c.extraBalances??{})]),...(snapshot.ledger?.broker??[]).map(e=>e.currency)].filter(c=>c&&c!=="EUR"&&c!=="USD"))];
     await Promise.all(currencies.map(async c=>{try{quotes.fxHistory![c]=await fetchCurrencyHistory(c,previous?.fxHistory?.[c]);}catch{/* Retain prior observations; missing data never becomes zero. */}}));
     await saveDailyQuotes(quotes);
+    credits+=await fillRiskHistory(snapshot,quotes,process.env.MARKETSTACK_API_KEY,id=>claimRiskHistoryCredit(id,now),()=>saveDailyQuotes(quotes),now);
     await recordFundDailyValues(snapshot, quotes);
+    await refreshRiskReport(snapshot,quotes);
+    await writeOneDriveResults();
     await recordOperation({kind:"daily-result",cause:"daily",runId,result:"voltooid",detail:`${credits} credits gereserveerd`});
     return NextResponse.json({ updated: Object.keys(quotes.prices).length, fetchedAt: quotes.fetchedAt }, { headers });
   } catch {
