@@ -102,3 +102,10 @@
 .historyPeriods button[aria-pressed="true"] { background:#5893b1; color:#232320; border-color:#5893b1; }
 .historyTooltip { padding:12px; background:#232320; border:1px solid #666; color:#e9e5da; font-size:12px; max-width:290px; }
 .historyTooltip p { margin:6px 0; }
+.composition button { border:0; padding:0; min-width:2px; cursor:pointer; background:var(--accent); }
+.composition button:nth-child(2) { background:var(--board-gold); }
+.composition button:nth-child(3) { background:var(--ink-muted); }
+.legend button { display:inline-flex; align-items:center; gap:8px; font:inherit; font-size:.78rem; color:var(--ink-muted); border:0; padding:0; background:transparent; cursor:pointer; }
+.legend button:nth-child(2) i { background:var(--board-gold); }
+.legend button:nth-child(3) i { background:var(--ink-muted); }
+.compositionTooltip { font-size:.8rem; color:var(--ink); border:1px solid var(--line); padding:10px 12px; }

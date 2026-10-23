@@ -12,17 +12,34 @@ export type ModelSplit={symbol:string;date:string;factor:number};
 /** Some provider series change their price basis a few days before the legal ex-date.
  * Bind a correction only to a disclosed split and a matching observed price discontinuity. */
 export function modelSplits(snapshot:Snapshot,quotes:DailyQuotes):ModelSplit[]{
- return disclosed.map(action=>{
+ const result=disclosed.map(action=>{
   const meta=quotes.historicalInstruments?.find(p=>p.ticker===action.symbol)??snapshot.positions.find(p=>p.ticker===action.symbol);
   const rows=meta?quotes.history?.[`${meta.exchange}:${meta.ticker.toUpperCase()}`]??[]:[];
   const candidates=rows.slice(1).map((p,i)=>({date:p.date,ratio:p.close/rows[i].close,previous:rows[i].date})).filter(p=>Math.abs(Date.parse(p.date)-Date.parse(action.date))<=7*86400000&&Date.parse(p.date)-Date.parse(p.previous)<=7*86400000&&Math.abs(Math.log(p.ratio*action.factor))<Math.log(1.4));
   candidates.sort((a,b)=>Math.abs(Date.parse(a.date)-Date.parse(action.date))-Math.abs(Date.parse(b.date)-Date.parse(action.date)));
   return {symbol:action.symbol,date:candidates[0]?.date??action.date,factor:action.factor};
  });
+ // Proper total-return closes also identify historical price-basis changes for
+ // older instruments. These inferred factors are model inputs, not ledger approvals.
+ const instruments=new Map([...snapshot.positions,...(quotes.historicalInstruments??[])].map(p=>[`${p.ticker}:${p.currency}`,p]));
+ const factors=[2,3,4,5,10,15,20,25,50,100,1/2,1/3,1/4,1/5,1/10,1/15,1/20,1/25,1/50,1/100];
+ for(const meta of instruments.values()){
+  const rows=quotes.history?.[`${meta.exchange}:${meta.ticker.toUpperCase()}`]??[];
+  for(let i=1;i<rows.length;i++){
+   const a=rows[i-1],b=rows[i];if(!a.adjustedClose||!b.adjustedClose||Date.parse(b.date)-Date.parse(a.date)>7*86400000)continue;
+   const raw=b.close/a.close,implied=(b.adjustedClose/a.adjustedClose)/raw;
+   const factor=factors.find(f=>Math.abs(implied/f-1)<.01&&Math.abs(Math.log(raw*f))<Math.log(1.4));
+   if(factor&&!result.some(s=>s.symbol===meta.ticker&&Math.abs(Date.parse(s.date)-Date.parse(b.date))<=7*86400000))result.push({symbol:meta.ticker,date:b.date,factor});
+  }
+ }
+ return result;
 }
 
 export function splitSafeReturn(before:{close:number;adjustedClose?:number},after:{close:number;adjustedClose?:number},factor=1):number{
  const raw=after.close/before.close,adjusted=(after.adjustedClose??after.close)/(before.adjustedClose??before.close);
+ // Legacy and current feeds can use different cumulative adjustment bases.
+ // A basis change without a corresponding raw-price event is not a market return.
+ if(factor===1&&Math.abs(Math.log(adjusted/raw))>Math.log(1.4)&&Math.abs(Math.log(raw))<Math.log(1.4))return raw;
  // A real adjusted total-return series already includes the split. Do not adjust twice.
  return factor!==1&&Math.abs(Math.log(raw*factor))<Math.log(1.4)&&Math.abs(Math.log(adjusted/raw))<.02?adjusted*factor:adjusted;
 }

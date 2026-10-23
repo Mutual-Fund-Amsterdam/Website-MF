@@ -27,7 +27,7 @@ export async function fetchDailyQuotes(positions:Position[],key:string,previous:
   if(!body||typeof body!=="object"||!("data" in body)||!Array.isArray(body.data))throw new Error("Geen geldige koerslijst.");
   return body.data as Record<string,unknown>[];
  };
- const point=(r:Record<string,unknown>):PricePoint|null=>{const date=String(r.date??"").slice(0,10),close=Number(r.close);return /^\d{4}-\d{2}-\d{2}$/.test(date)&&date<today&&Number.isFinite(close)&&close>0?{date,close}:null;};
+ const point=(r:Record<string,unknown>):PricePoint|null=>{const date=String(r.date??"").slice(0,10),close=Number(r.close),adjustedClose=Number(r.adj_close);return /^\d{4}-\d{2}-\d{2}$/.test(date)&&date<today&&Number.isFinite(close)&&close>0?{date,close,...(adjustedClose>0&&Number.isFinite(adjustedClose)?{adjustedClose}:{})}:null;};
  const prices:Record<string,DailyQuote>={...previous?.prices},history:Record<string,PricePoint[]>={...previous?.history};
  for(const [mic,group] of groups){
   const lookup=new Map(group.map(p=>[symbolFor(p,mic).toUpperCase(),p]));

@@ -23,10 +23,11 @@ export async function POST(request:Request){
   for(const p of plan.pending.slice(0,3)){
    await reserveMarketstackCalls(1,true);attempted++;
    // Persist attempts before sending. A failed or interrupted request is not replayed.
-   quotes.dailyHistoryWindows={...quotes.dailyHistoryWindows,[`${p.ticker}:${p.currency}`]:plan.window};
+   quotes.dailyHistoryWindows={...quotes.dailyHistoryWindows,[`${p.ticker}:${p.currency}|${p.historyWindow}`]:p.historyWindow};
    quotes.historyUpdatedAt=new Date().toISOString();await saveDailyQuotes(quotes);
    try{
-    const fresh=await fetchHistoryInstrument(p,process.env.MARKETSTACK_API_KEY,plan.from,plan.to),id=quoteKey(fresh.instrument);
+    const {historyFrom,historyTo,historyWindow,...instrument}=p;
+    const fresh=await fetchHistoryInstrument(instrument,process.env.MARKETSTACK_API_KEY,historyFrom,historyTo,historyTo<"2024-10-01"),id=quoteKey(fresh.instrument);
     if(p.exchange==="INDX"){
      const points=[...new Map([...(quotes.benchmark?.points??[]),...fresh.points].map(p=>[p.date,p])).values()].sort((a,b)=>a.date.localeCompare(b.date));
      quotes.benchmark={name:"S&P 500",points,latest:points.at(-1)??null};

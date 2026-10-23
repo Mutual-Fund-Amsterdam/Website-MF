@@ -29,11 +29,17 @@ try{
  assert.equal(splitSafeReturn({close:100,adjustedClose:100},{close:25,adjustedClose:25},4),1,'Mislabelled raw closes around a disclosed split must not create a loss');
  assert.equal(splitSafeReturn({close:100,adjustedClose:25},{close:25,adjustedClose:25},4),1,'A correctly adjusted close is not adjusted twice');
  assert.equal(splitSafeReturn({close:100},{close:25}),.25,'A genuine loss without a disclosed split is preserved');
+ assert.equal(splitSafeReturn({close:100,adjustedClose:25},{close:101,adjustedClose:101}),1.01,'Changing a feed adjustment basis does not invent a return');
  const splitSnapshot=structuredClone(snapshot);splitSnapshot.ledger.broker[0]={...splitSnapshot.ledger.broker[0],quantity:40,date:dates.at(-1)};
  const model=modelHoldingsAt(splitSnapshot,1,dates[0],[{symbol:'TEST',date:dates[2],factor:4}]);assert.equal(model.get('TEST').quantity,10,'Historical quantities reverse a split as well as trades');
  let requests=0;
  globalThis.fetch=async url=>{requests++;const u=new URL(url);assert.equal(u.searchParams.get('limit'),'1000');assert.equal(u.searchParams.get('symbols'),'TEST.XAMS');return Response.json({pagination:{total:2},data:[{symbol:'TEST.XAMS',exchange:'XAMS',price_currency:'EUR',date:dates[0],close:50,adj_close:49},{symbol:'TEST.XAMS',exchange:'XNYS',price_currency:'USD',date:dates[1],close:100}]});};
  const loaded=await fetchHistoryInstrument(snapshot.positions[0],'fixture',dates[0],dates.at(-1));assert.equal(loaded.points.length,1);assert.equal(loaded.points[0].adjustedClose,49);assert.equal(requests,1);
  const plan=historyPlan(snapshot,quotes);const marked={...quotes,dailyHistoryWindows:{'TEST:EUR':plan.window,'GSPC.INDX:USD':plan.window}};assert.equal(historyPlan(snapshot,marked).pending.length,0,'A completed or attempted window is not repeatedly fetched');
+ const longer=structuredClone(snapshot);longer.ledger.bank[0].date='2022-10-21';
+ const longPlan=historyPlan(longer,quotes);assert.equal(longPlan.from,'2022-10-14');
+ assert.ok(longPlan.pending.every(p=>(Date.parse(p.historyTo)-Date.parse(p.historyFrom))/86400000<901),'Each download is bounded below 1000 daily rows');
+ const completed={...quotes,dailyHistoryWindows:Object.fromEntries(longPlan.pending.map(p=>[`${p.ticker}:${p.currency}|${p.historyWindow}`,p.historyWindow]))};
+ assert.equal(historyPlan(longer,completed).pending.length,0,'Stored segmented windows are not downloaded again');
 }finally{globalThis.fetch=originalFetch;}
 console.log('Passed: anchored daily moves, fixed meeting baseline and periods, deposit neutrality, split handling, band bounds, provider identity, bounded calls and no repeated downloads.');
