@@ -10,7 +10,8 @@ import { StockCharts } from "./market-chart";
 import FundChart from "./fund-chart";
 import FeedbackForm from "./feedback-form";
 import {dailyChange, fundPerformance, realisedRisk,reconstructedRisk} from "@/lib/portal/performance";
-import {meetingComparison} from "@/lib/portal/comparison";
+import {historicalComparison} from "@/lib/portal/comparison";
+import {estimatedFundHistory} from "@/lib/portal/estimated-history";
 import MemberChart from "./member-chart";
 import LogoutButton from "./logout-button";
 import styles from "./page.module.css";
@@ -85,7 +86,7 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
       <section className={styles.panel}><p className="eyebrow">Risico</p><h2>Indicatoren.</h2>{risk?.asOf && <p className={styles.muted}>Per {date(risk.asOf)}</p>}<div className={styles.riskGrid}><div><span>Sharpe 12M</span><strong>{risk?.sharpe?.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) ?? "—"}</strong></div><div><span>Beta t.o.v. S&amp;P 500</span><strong>{risk?.beta?.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) ?? "—"}</strong></div><div><span>Volatiliteit 12M</span><strong>{risk?.volatility !== null && risk?.volatility !== undefined ? pct(risk.volatility) : "—"}</strong></div><div><span>{snapshot.ledger ? "Maximale daling 12M" : "Maximale daling historie"}</span><strong>{risk?.maxDrawdown !== null && risk?.maxDrawdown !== undefined ? pct(risk.maxDrawdown) : "—"}</strong></div></div>{risk.volatility === null && <p className={styles.muted}>{snapshot.ledger ? "Voor de 12M-statistieken ontbreekt een volledige, gecontroleerde dagreeks." : "Voor de 12M-statistieken ontbreken voldoende vergelijkbare maandafsluitingen."}</p>}<div className={styles.riskSignals}>{cashShare !== null && <p>Cashgewicht: <b>{pct(cashShare)}</b>{cashShare > 0.2 ? " · boven signaleringsgrens 20%" : ""}</p>}{largestSector && view.stockValue !== null && <p>Grootste sector: <b>{largestSector.name} ({pct(largestSector.value / view.stockValue)})</b>{largestSector.value / view.stockValue > 0.35 ? " · boven signaleringsgrens 35%" : ""}</p>}{largestPosition && view.fundValue !== null && <p>Grootste positie: <b>{largestPosition.position.name} ({pct(largestPosition.valueEur! / view.fundValue)})</b></p>}</div></section>
     </div>
 
-    <FundChart comparison={meetingComparison(performance,quotes)} fund={fund}/>
+    <FundChart comparison={historicalComparison(estimatedFundHistory(snapshot,quotes,fund),quotes)} fund={fund}/>
     <StockCharts key={query.aandeel ?? "eerste"} stocks={stockSeries} initialSelected={query.aandeel}/>
     {admin && <p className={styles.admin}><Link href="/beheer/import">Nieuwe Excelversie importeren →</Link> · <Link href="/beheer/reconstructie">Historische reconstructie →</Link></p>}
     <FeedbackForm fund={fund}/>

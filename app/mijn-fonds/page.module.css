@@ -97,3 +97,8 @@
 @media(max-width:850px){.cards,.grid,.chartGrid{grid-template-columns:1fr}.top{flex-wrap:wrap}}
 @media(max-width:550px){.riskGrid{grid-template-columns:1fr}.switcher{flex-wrap:wrap}}
 @media(max-width:550px){.beastHeader{align-items:flex-start;flex-direction:column;padding-bottom:8px}.beastHeader > div{width:100%}.beastHeader button{flex:1}}
+.historyPeriods { display:flex; flex-wrap:wrap; gap:8px; margin:20px 0; }
+.historyPeriods button { border:1px solid rgba(233,229,218,.22); background:transparent; color:inherit; padding:8px 12px; cursor:pointer; font:inherit; }
+.historyPeriods button[aria-pressed="true"] { background:#5893b1; color:#232320; border-color:#5893b1; }
+.historyTooltip { padding:12px; background:#232320; border:1px solid #666; color:#e9e5da; font-size:12px; max-width:290px; }
+.historyTooltip p { margin:6px 0; }

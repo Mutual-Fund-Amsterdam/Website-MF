@@ -84,7 +84,8 @@ async function hydrateLedger(snapshot:Snapshot):Promise<Snapshot>{
 
 export async function getDailyQuotes(): Promise<DailyQuotes | null> {
   const quotes=await redis().get<DailyQuotes>(QUOTES_KEY);if(!quotes)return null;
-  if(quoteCache?.at===quotes.fetchedAt&&quoteCache.until>Date.now())return quoteCache.quotes;
+  const quoteVersion=quotes.fetchedAt+":"+(quotes.historyUpdatedAt??"");
+  if(quoteCache?.at===quoteVersion&&quoteCache.until>Date.now())return quoteCache.quotes;
   if(quotes.historyKeys){
     const pairs=await Promise.all(quotes.historyKeys.map(async key=>[key,await redis().get<NonNullable<DailyQuotes["history"]>[string]>(`${PREFIX}history:${createHash("sha256").update(key).digest("hex")}`)] as const));
     quotes.history=Object.fromEntries(pairs.map(([key,value])=>[key,value??[]]));
@@ -93,7 +94,7 @@ export async function getDailyQuotes(): Promise<DailyQuotes | null> {
     const fx=await Promise.all(quotes.fxHistoryKeys.map(async c=>[c,await redis().get<NonNullable<DailyQuotes["fxHistory"]>[string]>(`${PREFIX}fx-history:${c}`)] as const));
     quotes.fxHistory=Object.fromEntries(fx.map(([c,p])=>[c,p??[]]));
   }
-  quoteCache={at:quotes.fetchedAt,until:Date.now()+300000,quotes};return quotes;
+  quoteCache={at:quoteVersion,until:Date.now()+300000,quotes};return quotes;
 }
 
 export async function saveDailyQuotes(quotes: DailyQuotes): Promise<void> {
@@ -108,12 +109,21 @@ export async function reserveMarketstackCalls(cost:number,historical=false):Prom
   if(!Number.isSafeInteger(cost)||cost<1||cost>100)throw new Error("Ongeldige koersaanvraag.");
   const month=new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Amsterdam",year:"numeric",month:"2-digit"}).format(new Date());
   const opening=/^(\d{4}-\d{2}):(\d+)$/.exec(process.env.MARKETSTACK_USAGE_BASELINE??"");
-  if(historical&&(!opening||opening[1]>month))throw new Error("Leg eerst de beginstand van het maandverbruik vast voordat de historische uitbreiding start.");
-  const baseline=opening?.[1]===month?Number(opening[2]):0;
+  const recorded=await redis().get<number>(`${PREFIX}marketstack-baseline:${month}`);
+  if(historical&&(!opening||opening[1]>month)&&recorded===null)throw new Error("Leg eerst de beginstand van het maandverbruik vast voordat de historische uitbreiding start.");
+  const baseline=Math.max(opening?.[1]===month?Number(opening[2]):0,recorded??0);
   const key=`${PREFIX}marketstack-usage:${month}`;const used=baseline+await redis().incrby(key,cost);
   const limit=historical?8000:10000;
   if(used>limit){await redis().incrby(key,-cost);throw new Error("Marketstack-maandbudget bereikt; geen aanvraag verstuurd.");}
   return used;
+}
+
+export async function historyBatchLock():Promise<boolean>{return await redis().set(`${PREFIX}history-batch-lock`,true,{nx:true,ex:90})==="OK";}
+export async function releaseHistoryBatch():Promise<void>{await redis().del(`${PREFIX}history-batch-lock`);}
+export async function setHistoryUsageBaseline(value:number):Promise<void>{
+ if(!Number.isSafeInteger(value)||value<0||value>7800)throw Error("Ongeldige beginstand.");
+ const month=new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Amsterdam",year:"numeric",month:"2-digit"}).format(new Date());
+ await redis().set(`${PREFIX}marketstack-baseline:${month}`,value,{nx:true});
 }
 
 export async function getFundDailyValues(): Promise<FundValuePoint[]> {

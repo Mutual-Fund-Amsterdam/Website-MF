@@ -1,23 +1,30 @@
 "use client";
-import {CartesianGrid,Line,LineChart,ReferenceLine,ResponsiveContainer,Tooltip,XAxis,YAxis} from "recharts";
-import type {MeetingComparison} from "@/lib/portal/comparison";
+import {useState} from "react";
+import {Area,CartesianGrid,ComposedChart,Line,ReferenceLine,ResponsiveContainer,Tooltip,XAxis,YAxis} from "recharts";
+import {chartPeriod,type FundChartPeriod,type MeetingComparison} from "@/lib/portal/comparison";
 import styles from "./page.module.css";
 
 export default function FundChart({comparison,fund}: {comparison:MeetingComparison;fund:number}){
- const rows=comparison.points;
+ const [period,setPeriod]=useState<FundChartPeriod>("fund-year");
+ const rows=chartPeriod(comparison.points,period,comparison.start);
+ const chartRows=rows.map(p=>({...p,timestamp:Date.parse(p.date)}));
  const pct=(v:number)=>`${(v*100).toLocaleString("nl-NL",{maximumFractionDigits:2})}%`;
  const date=(v:string)=>new Intl.DateTimeFormat("nl-NL",{dateStyle:"medium"}).format(new Date(v+"T12:00:00"));
- return <section className={styles.panel}><p className="eyebrow">Sinds de eerste meeting</p><h2>Fondsrendement.</h2>
+ return <section className={styles.panel}><p className="eyebrow">Historische ontwikkeling</p><h2>Fondsrendement.</h2>
+  <div className={styles.historyPeriods} role="group" aria-label="Periode fondsgrafiek">{([["fund-year","Dit fondsjaar"],["6m","6 maanden"],["1y","1 jaar"],["2y","2 jaar"],["all","Alles"]] as const).map(([id,label])=><button key={id} type="button" aria-pressed={id===period} onClick={()=>setPeriod(id)}>{label}</button>)}</div>
   <div className={styles.memberLegend}><span><i/>Fonds {fund}</span><span><i/>S&amp;P 500 (EUR)</span></div>
-  {rows.length>0?<div className={styles.fundChart}><ResponsiveContainer width="100%" height="100%"><LineChart data={rows}>
+  {rows.length>0?<div className={styles.fundChart}><ResponsiveContainer width="100%" height="100%"><ComposedChart data={chartRows}>
    <CartesianGrid stroke="rgba(233,229,218,.1)" vertical={false}/>
-   <XAxis dataKey="date" stroke="#a3a096" minTickGap={45} tickFormatter={date}/>
+   <XAxis dataKey="timestamp" type="number" domain={["dataMin","dataMax"]} stroke="#a3a096" minTickGap={45} tickFormatter={v=>date(new Date(v).toISOString().slice(0,10))}/>
    <YAxis orientation="right" width={90} stroke="#a3a096" tickFormatter={pct} domain={[(min:number)=>Math.min(-.01,min),(max:number)=>Math.max(.01,max)]}/>
    <ReferenceLine y={0} stroke="#c7c4bc" strokeDasharray="5 5" label={{value:"0%",fill:"#c7c4bc",position:"insideTopLeft"}}/>
-   <Tooltip labelFormatter={v=>date(String(v))} contentStyle={{background:"#232320",border:"1px solid #666"}} formatter={(v,n)=>[typeof v==="number"?pct(v):"—",n]}/>
-   <Line dataKey="fund" name={`Fonds ${fund}`} stroke="#5893b1" dot={{r:3}} isAnimationActive={false}/>
-   <Line dataKey="benchmark" name="S&P 500 (EUR)" stroke="#c6a15b" dot={{r:3}} isAnimationActive={false}/>
-  </LineChart></ResponsiveContainer></div>:<p className={styles.muted}>De vergelijking verschijnt zodra voor de startmeeting zowel een fondswaarde als een S&amp;P 500-waarde in EUR beschikbaar is.</p>}
-  <p className={styles.chartCaption}>0% op {date(comparison.start)}.{rows.length>0?` Laatste fondsmeting: ${date(rows.at(-1)!.date)}.`:""}{comparison.referenceDate&&comparison.referenceDate!==comparison.start?` Beginstand fonds: laatst bekende administratie van ${date(comparison.referenceDate)}; het fondsverloop is indicatief.`:""}{comparison.benchmarkMissing?" De S&P 500-lijn volgt zodra de bijbehorende slotkoersen beschikbaar zijn.":" Beide lijnen gebruiken dezelfde meetdatums."}{rows.length===1?" Er is nog geen tweede fondsmeting na het startpunt.":""}</p>
+   <ReferenceLine x={Date.parse(comparison.start)} stroke="#c7c4bc" strokeDasharray="3 5"/>
+   <Tooltip content={({active,payload})=>{if(!active||!payload?.length)return null;const p=payload[0].payload as MeetingComparison['points'][number];return <div className={styles.historyTooltip}><b>{date(p.date)}</b><p>Fonds {fund}: {pct(p.fund)}{p.estimated?" · schatting":" · administratie"}</p><p>S&amp;P 500: {p.benchmark===null?"—":pct(p.benchmark)}</p>{p.estimated&&p.band&&<><p>Scenario’s: {pct(p.band[0])} tot {pct(p.band[1])}</p><small>Dagbeweging met eigen koersdata: {Math.round((p.priceCoverage??0)*100)}%</small></>}</div>;}}/>
+   <Area type="linear" dataKey="band" name="Schattingsband" stroke="none" fill="#5893b1" fillOpacity={.18} isAnimationActive={false} legendType="none" tooltipType="none"/>
+   <Line type="linear" dataKey="fund" name={`Fonds ${fund}`} stroke="#5893b1" dot={rows.length<5?{r:3}:false} isAnimationActive={false} connectNulls={false}/>
+   <Line type="linear" dataKey="benchmark" name="S&P 500 (EUR)" stroke="#c6a15b" dot={rows.length<5?{r:3}:false} isAnimationActive={false} connectNulls={false}/>
+  </ComposedChart></ResponsiveContainer></div>:<p className={styles.muted}>Voor deze periode zijn nog geen fondswaarden beschikbaar.</p>}
+  <p className={styles.chartCaption}>0% op {date(comparison.start)} bij alle periodes.{rows.length>0?` Laatste fondsmeting: ${date(rows.at(-1)!.date)}.`:""}</p>
+  {comparison.dailyFrom&&<details className={styles.chartCaption}><summary>Over de historische schatting</summary><p>Dagelijkse schatting vanaf {date(comparison.dailyFrom)}, aangesloten op de administratiemetingen. Bij ontbrekende koersen vergelijken de scenario’s een gelijkblijvende waarde met de S&amp;P 500-beweging; de lijn ligt ertussen. De band is geen statistisch betrouwbaarheidsinterval. Oudere punten zijn administratiemetingen.{comparison.benchmarkMissing?" Op dagen zonder passende indexkoers is de benchmark onderbroken.":""}</p></details>}
  </section>;
 }
