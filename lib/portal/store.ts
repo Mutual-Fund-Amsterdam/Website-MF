@@ -202,7 +202,7 @@ async function publishPendingLocked(id: string): Promise<Snapshot | null> {
   if(previous?.digest===snapshot.digest){await client.del(key);return previous;}
   if (previous) {
     const previousHeader=await storeLedger(previous,previous.digest);
-    await client.set(`${PREFIX}archive:${previous.digest}`, previousHeader, { ex: 30 * 24 * 60 * 60 });
+    await client.set(`${PREFIX}archive:${previous.digest}`, previousHeader);
   }
   const header=await storeLedger(snapshot,snapshot.digest);
   const quotes = await getDailyQuotes();
@@ -218,10 +218,30 @@ async function publishPendingLocked(id: string): Promise<Snapshot | null> {
   }
   if (quotes) await recordFundDailyValues(snapshot, quotes);
   else if(snapshot.ledger)await recordReconstruction(snapshot,null);
+  await refreshRiskReport(snapshot,quotes);
   await client.set(CURRENT_KEY, header);
   hydratedCache=null;
   await client.del(key);
   return snapshot;
+}
+
+/** Both imports and the single daily quote job publish exactly the same risk results. */
+export async function refreshRiskReport(snapshot:Snapshot,quotes:DailyQuotes|null){
+ const {calculateRiskReport}=await import("./risk-report");
+ const daily=snapshot.ledger?await redis().get<FundValuePoint[]>(`${PREFIX}reconstruction:${snapshot.digest}:verified`)??[]:await getFundDailyValues();
+ const report=calculateRiskReport(snapshot,quotes,daily);
+ await integrationSet(`risk:${snapshot.digest}`,report);
+ await integrationSet("onedrive-results-pending",true);
+ return report;
+}
+
+export async function claimRiskHistoryCredit(instrument:string,now=new Date()):Promise<boolean>{
+ const month=now.toISOString().slice(0,7),id=createHash("sha256").update(instrument).digest("hex"),attempt=`${PREFIX}risk-history-attempt:${month}:${id}`;
+ if(await redis().set(attempt,true,{nx:true})!=="OK")return false;
+ const used=await redis().incrby(`${PREFIX}risk-history-budget:${month}`,1);
+ if(used>100){await redis().incrby(`${PREFIX}risk-history-budget:${month}`,-1);await redis().del(attempt);return false;}
+ try{await reserveMarketstackCalls(1,true,{runId:`daily:${now.toISOString().slice(0,10)}`,cause:"risk-history"});return true;}
+ catch{await redis().incrby(`${PREFIX}risk-history-budget:${month}`,-1);await redis().del(attempt);return false;}
 }
 
 type Session = { memberKey: string; snapshotDigest: string; loginDigest?:string };

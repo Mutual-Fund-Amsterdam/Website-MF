@@ -10,6 +10,6 @@ export async function GET(){
  const state=randomBytes(32).toString("base64url"),verifier=randomBytes(48).toString("base64url");
  await integrationSet(`oauth:${state}`,{verifier,member:s.member.key},600);
  (await cookies()).set("mf_onedrive_state",state,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:600});
- const u=new URL("https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize");u.search=new URLSearchParams({client_id:process.env.ONEDRIVE_CLIENT_ID!,response_type:"code",redirect_uri:callbackUrl(),response_mode:"query",scope:"offline_access Files.Read",state,code_challenge:createHash("sha256").update(verifier).digest("base64url"),code_challenge_method:"S256",prompt:"select_account"}).toString();
+ const u=new URL("https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize");u.search=new URLSearchParams({client_id:process.env.ONEDRIVE_CLIENT_ID!,response_type:"code",redirect_uri:callbackUrl(),response_mode:"query",scope:"offline_access Files.ReadWrite",login_hint:"voorzitter@mutualfund.nl",state,code_challenge:createHash("sha256").update(verifier).digest("base64url"),code_challenge_method:"S256",prompt:"select_account"}).toString();
  return NextResponse.redirect(u);
 }

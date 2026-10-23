@@ -13,7 +13,7 @@ const store={
 const workbook={parseWorkbook:async bytes=>{if(invalid)throw Error('Ongeldige invoer');return {digest:bytes.toString()};}};
 const source=await fs.readFile(new URL('../lib/portal/onedrive.ts',import.meta.url),'utf8');
 const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
-const module={exports:{}};new Function('require','module','exports',compiled)(p=>p==='server-only'?{}:p==='./store'?store:p==='./workbook'?workbook:require(p),module,module.exports);
+const module={exports:{}};new Function('require','module','exports',compiled)(p=>p==='server-only'?{}:p==='./store'?store:p==='./workbook'?workbook:p==='./xlsx-results'?{patchRiskResults:()=>{throw Error('No risk report in this fixture');}}:require(p),module,module.exports);
 const drive=module.exports,oldFetch=globalThis.fetch;
 const oldEnv={...process.env};process.env.ONEDRIVE_CLIENT_ID='fixture-client';process.env.ONEDRIVE_CLIENT_SECRET='fixture-secret';process.env.MF_SITE_URL='https://fixture.example';
 globalThis.fetch=async (input,init={})=>{

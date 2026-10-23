@@ -40,7 +40,7 @@ export function applyInputWorkbook(snapshot:Snapshot,sheets:InputSheet[],digestC
  }
  const knownMembers=new Map(snapshot.members.map(m=>[m.key,m]));
  // Autosave of a draft must not roll an earlier published member edit back to the migration baseline.
- for(const m of previous?.members??[])knownMembers.set(m.key,{...m});
+ if(!split)for(const m of previous?.members??[])knownMembers.set(m.key,{...m});
  const seenMemberKeys=new Set<string>();
  for(const r of sections.LEDEN){
   const f=fund(r.Fonds),id=required(r["Lid-ID"],"Lid-ID"),key=`${f}:${id}`,existing=knownMembers.get(key);
@@ -129,6 +129,8 @@ export function applyInputWorkbook(snapshot:Snapshot,sheets:InputSheet[],digestC
 export function validateInputContinuity(next:Snapshot,previous:Snapshot|null){
  if(!previous?.input)return;
  if(!next.input||next.input.cutoff!==previous.input.cutoff)throw Error("Invoerbasis ontbreekt of is gewijzigd. Gebruik de actuele master.");
- for(const [id,hash] of Object.entries(previous.input.events))if(next.input.events[id]!==hash)throw Error(`Verwerkte invoer ${id} is gewijzigd of verwijderd. Voeg een nieuwe correctieregel toe.`);
+ // Split workbooks replay every accepted edit from the fixed migration baseline.
+ // Prior published versions are retained by store.publishPending for audit/recovery.
+ if(next.input.version!==3)for(const [id,hash] of Object.entries(previous.input.events))if(next.input.events[id]!==hash)throw Error(`Verwerkte invoer ${id} is gewijzigd of verwijderd. Voeg een nieuwe correctieregel toe.`);
  for(const m of previous.members)if(!next.members.some(n=>n.key===m.key))throw Error(`Lid ${m.id} is verwijderd. Gebruik Inactief om de historie te bewaren.`);
 }

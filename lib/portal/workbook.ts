@@ -263,6 +263,8 @@ export async function parseWorkbook(bytes: Buffer, pepper: string, previous?:Sna
   }
   if (members.some((member) => (member.sourceValue ?? 0) < 0)) warnings.push("Er zijn negatieve ledenwaarden in de bronadministratie; controleer deze vóór publicatie.");
   // Autosave formatting and incomplete drafts must not create a new financial version.
+  // In the split master Risico is output only: formatting/writeback must not create input versions.
+  if(snapshot.input?.version===3)snapshot.risk=undefined;
   if(snapshot.input)snapshot.digest=createHash("sha256").update(JSON.stringify({...snapshot,digest:undefined,importedAt:undefined})).digest("hex");
   return snapshot;
 }

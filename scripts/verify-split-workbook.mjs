@@ -16,7 +16,9 @@ s=run({Aandelen:[cat(),cat('BBB')],'Aan- en verkopen':[stock({Ticker:'BBB'})]});
 const bare=cat('NEW');delete bare.ISIN;delete bare.Koerscode;delete bare['TradingView-code'];s=run({Aandelen:[cat(),bare],'Aan- en verkopen':[stock({Ticker:'NEW'})]});assert.equal(s.positions.at(-1).marketSymbol,'NEW.XAMS');assert.equal(s.positions.at(-1).tradingViewSymbol,'EURONEXT:NEW');assert.equal(s.positions.at(-1).isin,'');
 s=run({Cash:[{'Invoer-ID':'C1',Fonds:1,Rekening:'Broker',Valuta:'EUR',Datum:'2026-10-22',Saldo:850}],'Aan- en verkopen':[stock()]});assert.equal(s.cash[0].brokerEur,850);
 s=run({Cash:[{'Invoer-ID':'C1',Fonds:1,Rekening:'Broker',Valuta:'EUR',Datum:'2026-10-22',Saldo:900}],'Aan- en verkopen':[stock({Datum:'2026-10-23'})]});assert.equal(s.cash[0].brokerEur,699);
-const prev=run({'Aan- en verkopen':[stock()]});validateInputContinuity(run({'Aan- en verkopen':[stock()],Cash:[{'Invoer-ID':'C1',Fonds:1,Rekening:'Broker',Valuta:'EUR',Datum:'2026-10-22',Saldo:850}]}),prev);assert.throws(()=>validateInputContinuity(run({'Aan- en verkopen':[stock({Aantal:3})]}),prev),/gewijzigd/);
+const prev=run({'Aan- en verkopen':[stock()]});validateInputContinuity(run({'Aan- en verkopen':[stock()],Cash:[{'Invoer-ID':'C1',Fonds:1,Rekening:'Broker',Valuta:'EUR',Datum:'2026-10-22',Saldo:850}]}),prev);
+const corrected=run({'Aan- en verkopen':[stock({Aantal:3})]},prev);validateInputContinuity(corrected,prev);assert.equal(corrected.positions[0].quantity,13);assert.equal(corrected.cash[0].brokerEur,699);
+const withdrawn=run({Ledenmutaties:[flow()]});const undone=run({},withdrawn);validateInputContinuity(undone,withdrawn);assert.equal(undone.members[0].withdrawals,0);assert.equal(undone.members[0].deposits,1000);assert.equal(undone.totalUnitsByFund[1],10);
 const renamed=cat();renamed.Aandeel='Nieuwe naam';validateInputContinuity(run({Aandelen:[renamed],'Aan- en verkopen':[stock()]}),prev);
 assert.throws(()=>run({Leden:[]}),/ontbreekt op Leden|ontbreekt op Toegang/);
 assert.throws(()=>run({Leden:[{...member,'Lid-ID':'B'}]}),/toegang in/);
@@ -27,4 +29,4 @@ const b={'Invoer-ID':'L2','Lid-ID':'B',Naam:'Nieuw lid',Fonds:1,Status:'Actief'}
 s=run({Leden:[member,b],Toegang:[access,ba],Ledenmutaties:[flow({'Lid-ID':'B',Handeling:'Storting','Bedrag EUR':500})]});assert.equal(s.members.length,2);assert.equal(s.members.find(m=>m.id==='B').participation,1/3);
 s=run({Aandelen:[cat(),cat('GBPTEST','GBP')],Cash:[{'Invoer-ID':'GBP',Fonds:1,Rekening:'Broker',Valuta:'GBP',Datum:'2026-10-21',Saldo:500}],'Aan- en verkopen':[stock({Ticker:'GBPTEST'})]});assert.equal(s.cash[0].extraBalances.GBP.amount,299);assert.equal(s.positions.at(-1).currency,'GBP');
 assert.throws(()=>run({Aandelen:[cat(),cat('GBPTEST','GBP')],'Aan- en verkopen':[stock({Ticker:'GBPTEST'})]}),/brokersaldo/);
-console.log('Separate inputs: complete/incomplete rows, metadata lookup, trades, new stock/member, withdrawals, cash checkpoint dates, 30-currency cash, immutable transactions, editable balance and no duplicate replay passed. No requests made.');
+console.log('Separate inputs: validation, metadata, trades, new stock/member, withdrawals, cash checkpoints, 30 currencies, direct financial corrections, removed withdrawal recovery and duplicate replay passed. No requests made.');

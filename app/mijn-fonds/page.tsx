@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getDailyQuotes, getFundDailyValues, getMemberSession } from "@/lib/portal/store";
+import { getDailyQuotes, getFundDailyValues, getMemberSession, integrationGet } from "@/lib/portal/store";
 import { quoteKey } from "@/lib/portal/marketstack";
 import { portfolioView } from "@/lib/portal/portfolio";
 import { memberHistory } from "@/lib/portal/member-history";
@@ -9,12 +9,13 @@ import type { FundNumber } from "@/lib/portal/types";
 import { StockCharts } from "./market-chart";
 import FundChart from "./fund-chart";
 import FeedbackForm from "./feedback-form";
-import {dailyChange, fundPerformance, realisedRisk,reconstructedRisk} from "@/lib/portal/performance";
+import {dailyChange} from "@/lib/portal/performance";
 import {comparisonModes} from "@/lib/portal/comparison";
 import {estimatedFundHistory} from "@/lib/portal/estimated-history";
 import MemberChart from "./member-chart";
 import Composition from "./composition";
-import {indicativeRisk} from "@/lib/portal/model-risk";
+import {calculateRiskReport,type RiskReport} from "@/lib/portal/risk-report";
+import RiskIndicators from "./risk-indicators";
 import LogoutButton from "./logout-button";
 import styles from "./page.module.css";
 
@@ -47,10 +48,9 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
   const personalPoint = history.at(-1);
   const personalValue = personalPoint?.value ?? (ownFund ? member.sourceValue : null);
   const personalResult = personalPoint ? personalPoint.value - personalPoint.netInleg : null;
-  const performance = fundPerformance(snapshot, fund, dailyFundValues.filter(p=>p.coverage==="verified"), quotes);
-  const verifiedRisk = snapshot.ledger ? reconstructedRisk(fund,dailyFundValues,quotes) : realisedRisk(performance, quotes?.estrHistory);
-  const riskIndicative = verifiedRisk.volatility === null;
-  const risk = riskIndicative ? indicativeRisk(reconstructed,quotes) : verifiedRisk;
+  const savedRisk=await integrationGet<RiskReport>(`risk:${snapshot.digest}`);
+  const riskReport=savedRisk&&savedRisk.quotesAt===quotes?.fetchedAt?savedRisk:calculateRiskReport(snapshot,quotes,dailyFundValues);
+  const risk=riskReport.funds[fund];
   const stockShare = view.fundValue && view.stockValue !== null ? view.stockValue / view.fundValue : null;
   const cashShare = view.fundValue && view.cashValue !== null ? view.cashValue / view.fundValue : null;
   const otherShare = view.fundValue && view.otherValue ? view.otherValue / view.fundValue : 0;
@@ -88,7 +88,7 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
 
     <div className={styles.grid}>
       <section className={styles.panel}><p className="eyebrow">Spreiding</p><h2>Sectoren.</h2>{view.sectors.length ? <><div className={styles.sectorList}>{view.sectors.map((sector) => <div key={sector.name}><div><span>{sector.name}</span><b>{view.stockValue ? pct(sector.value / view.stockValue) : "—"}</b></div><progress max={view.stockValue ?? 1} value={sector.value}/></div>)}</div></> : <div className={styles.compEmpty}>Sectorverdeling verschijnt zodra koersen beschikbaar zijn.</div>}</section>
-      <section className={styles.panel}><p className="eyebrow">Risico</p><h2>Indicatoren.</h2>{risk?.asOf && <p className={styles.muted}>{riskIndicative ? "Indicatief · 12 maanden · " : ""}Per {date(risk.asOf)}</p>}<div className={styles.riskGrid}><div><span>Sharpe 12M</span><strong>{risk?.sharpe?.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) ?? "—"}</strong></div><div><span>Beta t.o.v. S&amp;P 500</span><strong>{risk?.beta?.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) ?? "—"}</strong></div><div><span>Volatiliteit 12M</span><strong>{risk?.volatility !== null && risk?.volatility !== undefined ? pct(risk.volatility) : "—"}</strong></div><div><span>Maximale daling 12M</span><strong>{risk?.maxDrawdown !== null && risk?.maxDrawdown !== undefined ? pct(risk.maxDrawdown) : "—"}</strong></div></div>{risk.volatility === null && <p className={styles.muted}>Nog onvoldoende vergelijkbare daggegevens voor 12 maanden.</p>}<div className={styles.riskSignals}>{cashShare !== null && <p>Cashgewicht: <b>{pct(cashShare)}</b>{cashShare > 0.2 ? " · boven signaleringsgrens 20%" : ""}</p>}{largestSector && view.stockValue !== null && <p>Grootste sector: <b>{largestSector.name} ({pct(largestSector.value / view.stockValue)})</b>{largestSector.value / view.stockValue > 0.35 ? " · boven signaleringsgrens 35%" : ""}</p>}{largestPosition && view.fundValue !== null && <p>Grootste positie: <b>{largestPosition.position.name} ({pct(largestPosition.valueEur! / view.fundValue)})</b></p>}</div></section>
+      <section className={styles.panel}><p className="eyebrow">Risico</p><h2>Indicatoren.</h2><RiskIndicators risk={risk}/><div className={styles.riskSignals}>{cashShare !== null && <p>Cashgewicht: <b>{pct(cashShare)}</b>{cashShare > 0.2 ? " · boven signaleringsgrens 20%" : ""}</p>}{largestSector && view.stockValue !== null && <p>Grootste sector: <b>{largestSector.name} ({pct(largestSector.value / view.stockValue)})</b>{largestSector.value / view.stockValue > 0.35 ? " · boven signaleringsgrens 35%" : ""}</p>}{largestPosition && view.fundValue !== null && <p>Grootste positie: <b>{largestPosition.position.name} ({pct(largestPosition.valueEur! / view.fundValue)})</b></p>}</div></section>
     </div>
 
     <FundChart comparisons={comparisonModes(reconstructed,quotes,fund===2?"2022-09-21":"2022-10-21")} fund={fund}/>

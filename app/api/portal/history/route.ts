@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {getMemberSession,getDailyQuotes,saveDailyQuotes,sameOrigin,reserveMarketstackCalls,setHistoryUsageBaseline,historyBatchLock,releaseHistoryBatch} from "@/lib/portal/store";
+import {getMemberSession,getDailyQuotes,saveDailyQuotes,sameOrigin,reserveMarketstackCalls,setHistoryUsageBaseline,historyBatchLock,releaseHistoryBatch,refreshRiskReport,recordFundDailyValues} from "@/lib/portal/store";
 import {historyPlan,fetchHistoryInstrument} from "@/lib/portal/history-backfill";
 import {refreshWindow,quoteKey} from "@/lib/portal/marketstack";
 import {fetchCurrencyHistory} from "@/lib/portal/ecb";
@@ -39,6 +39,7 @@ export async function POST(request:Request){
    }catch{quotes.historyBackfillIssues=[...new Set([...(quotes.historyBackfillIssues??[]),`${p.ticker}: ontbrekende daghistorie`])];}
    quotes.historyUpdatedAt=new Date().toISOString();await saveDailyQuotes(quotes);
   }
+  await recordFundDailyValues(session.snapshot,quotes);await refreshRiskReport(session.snapshot,quotes);
   return NextResponse.json({attempted,loaded,remaining:historyPlan(session.snapshot,quotes).pending.length},{headers});
  }catch{return NextResponse.json({error:"Historische batch gestopt; controleer koersbudget."},{status:400,headers});}
  finally{await releaseHistoryBatch();}
