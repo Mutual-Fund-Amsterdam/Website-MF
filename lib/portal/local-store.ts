@@ -45,15 +45,20 @@ export function createLocalStore(pepper: string) {
 
   return {
     async get<T>(key: string): Promise<T | null> { return (await read(key))?.value as T ?? null; },
-    async set(key: string, value: unknown, options?: { ex?: number }): Promise<"OK"> {
-      await locked(key, () => write(key, { value, expiresAt: options?.ex ? Date.now() + options.ex * 1000 : null }));
-      return "OK";
+    async set(key: string, value: unknown, options?: { ex?: number; nx?: boolean }): Promise<"OK"|null> {
+      return locked(key, async()=>{
+        if(options?.nx&&await read(key))return null;
+        await write(key,{value,expiresAt:options?.ex?Date.now()+options.ex*1000:null});return "OK";
+      });
     },
     async del(key: string): Promise<number> {
       return locked(key, async () => { try { await unlink(fileFor(key)); return 1; } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return 0; throw error; } });
     },
     async incr(key: string): Promise<number> {
       return locked(key, async () => { const entry = await read(key); const value = Number(entry?.value ?? 0) + 1; await write(key, { value, expiresAt: entry?.expiresAt ?? null }); return value; });
+    },
+    async incrby(key: string, amount: number): Promise<number> {
+      return locked(key, async () => { const entry = await read(key); const value = Number(entry?.value ?? 0) + amount; await write(key, { value, expiresAt: entry?.expiresAt ?? null }); return value; });
     },
     async expire(key: string, seconds: number): Promise<number> {
       return locked(key, async () => { const entry = await read(key); if (!entry) return 0; await write(key, { value: entry.value, expiresAt: Date.now() + seconds * 1000 }); return 1; });

@@ -14,7 +14,7 @@ export function memberHistory(member: Member, snapshot: Snapshot, daily: FundVal
   for (const event of events) if (event.date >= first && !dates.has(event.date)) {
     dates.set(event.date, { nav: event.nav, priority: 2 });
   }
-  for (const point of daily) if (point.fund === member.fund && point.date >= first) {
+  for (const point of daily) if (point.fund === member.fund && point.date >= first && (!snapshot.ledger || point.coverage === "verified")) {
     dates.set(point.date, { nav: point.nav, priority: 3 });
   }
   let eventIndex = 0;

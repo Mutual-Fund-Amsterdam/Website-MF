@@ -1,7 +1,7 @@
 export type FundNumber = 1 | 2 | 3;
 export type MemberTransaction = { fund: FundNumber; memberId: string; date: string; amount: number; nav: number; units: number; source: string };
 export type FundHistoryPoint = { fund: FundNumber; date: string; nav: number; totalUnits: number };
-export type FundValuePoint = { fund: FundNumber; date: string; nav: number; fundValue: number };
+export type FundValuePoint = { fund: FundNumber; date: string; nav: number; fundValue: number; coverage?: "verified" | "indicative" };
 export type RiskMetrics = { asOf: string | null; sharpe: number | null; volatility: number | null; beta: number | null; maxDrawdown: number | null };
 
 export type Member = {
@@ -50,8 +50,18 @@ export type DailyQuotes = {
   prices: Record<string, DailyQuote>;
   history?: Record<string, PricePoint[]>;
   historyBackfilled?: string[];
+  historyKeys?: string[];
+  historyResolution?: "daily";
+  historyAttemptedAt?: Record<string,string>;
+  historyBackfillIssues?: string[];
   benchmark?: { name: "S&P 500"; points: PricePoint[]; latest: PricePoint | null };
   fx?: Partial<Record<"USD" | "CAD", FxRate>>;
+  eurUsdHistory?: PricePoint[];
+  estrHistory?: PricePoint[];
+  fxHistory?: Record<string, PricePoint[]>;
+  fxHistoryKeys?: string[];
+  historicalInstruments?: Position[];
+  callBudget?: { month: string; used: number; limit: number; reserve: number };
 };
 
 export type Cash = {
@@ -79,6 +89,8 @@ export type Snapshot = {
   totalUnitsByFund?: Record<FundNumber, number>;
   risk?: Partial<Record<FundNumber, RiskMetrics>>;
   warnings: string[];
+  ledger?: import("./ledger").ReconstructionLedger;
+  ledgerStorage?: import("./ledger").LedgerStorage;
 };
 
 export type ImportSummary = {

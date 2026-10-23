@@ -1,5 +1,7 @@
 import { createHash, createHmac } from "node:crypto";
 import readExcelFile from "read-excel-file/node";
+import { auditLedger, validateLedger } from "./ledger.ts";
+import type { BankEvent, BrokerEvent, MemberCheck, ReconstructionLedger } from "./ledger";
 import type { Cash, FundHistoryPoint, FundNumber, ImportSummary, Member, MemberTransaction, Position, RiskMetrics, Snapshot } from "./types";
 
 type Cell = string | number | boolean | Date | null;
@@ -49,6 +51,34 @@ function fundNumber(input: Cell | undefined): FundNumber | null {
 function allowedFunds(raw: string, own: FundNumber): FundNumber[] {
   const funds = raw.split(/[;,]/).map((piece) => Number(piece.trim())).filter((number): number is FundNumber => number === 1 || number === 2 || number === 3);
   return [...new Set<FundNumber>([own, ...funds])].sort() as FundNumber[];
+}
+
+function parseLedger(sheets: Sheet[]): ReconstructionLedger | undefined {
+  const bankSheet=sheets.find(s=>s.sheet==="Bankmutaties"),brokerSheet=sheets.find(s=>s.sheet==="Brokertransacties");
+  if(!bankSheet&&!brokerSheet)return undefined;
+  if(!bankSheet||!brokerSheet)throw new Error("Bankmutaties en Brokertransacties moeten samen aanwezig zijn.");
+  const read=(sheet:Sheet,callback:(r:Cell[],h:Headers)=>void)=>{const {headers,firstDataRow}=table(sheet,"Bron-ID");for(const row of sheet.data.slice(firstDataRow)){if(cellText(value(row,headers,"Bron-ID")))callback(row,headers);}};
+  const bank:BankEvent[]=[],broker:BrokerEvent[]=[],members:MemberCheck[]=[];
+  read(bankSheet,(row,h)=>{
+    const fund=fundNumber(value(row,h,"Fonds")),date=cellDate(value(row,h,"Boekdatum")),amount=cellNumber(value(row,h,"Bedrag EUR"));
+    if(!fund||!date||amount===null)throw new Error("Ongeldige bankmutatie: fonds, boekdatum en bedrag zijn verplicht.");
+    if(Math.abs(amount*100-Math.round(amount*100))>1e-6)throw new Error("Bankbedrag heeft meer dan twee decimalen.");
+    bank.push({id:cellText(value(row,h,"Bron-ID")),fund,date,valueDate:cellDate(value(row,h,"Valutadatum"))??date,amountCents:Math.round(amount*100),kind:cellText(value(row,h,"Categorie")),description:cellText(value(row,h,"Omschrijving")),counterparty:cellText(value(row,h,"Tegenrekening")),memberId:cellText(value(row,h,"Lid-ID")),matchId:cellText(value(row,h,"Tegenboeking-ID")),status:cellText(value(row,h,"Beoordeling")),source:cellText(value(row,h,"Bronbestand")),sourceHash:cellText(value(row,h,"Bronhash")),sourceRow:cellNumber(value(row,h,"Bronregel"))??-1});
+  });
+  read(brokerSheet,(row,h)=>{
+    const fund=fundNumber(value(row,h,"Fonds")),date=cellDate(value(row,h,"Datum"));if(!fund||!date)throw new Error("Ongeldige brokerregel: fonds en datum zijn verplicht.");
+    broker.push({id:cellText(value(row,h,"Bron-ID")),fund,date,broker:cellText(value(row,h,"Broker")),kind:cellText(value(row,h,"Type")),symbol:cellText(value(row,h,"Ticker")),description:cellText(value(row,h,"Omschrijving")),quantity:cellNumber(value(row,h,"Aantal")),price:cellNumber(value(row,h,"Prijs")),currency:cellText(value(row,h,"Valuta")),grossEur:cellNumber(value(row,h,"Bruto EUR")),commissionEur:cellNumber(value(row,h,"Kosten EUR")),netEur:cellNumber(value(row,h,"Netto EUR")),nativeCash:cellNumber(value(row,h,"Cash native")),assetClass:cellText(value(row,h,"Instrument")),exchange:cellText(value(row,h,"Beurs")),status:cellText(value(row,h,"Beoordeling")),source:cellText(value(row,h,"Bronbestand")),sourceHash:cellText(value(row,h,"Bronhash")),sourceRow:cellNumber(value(row,h,"Bronregel"))??-1,processing:cellText(value(row,h,"Verwerking")),newSymbol:cellText(value(row,h,"Nieuwe ticker")),factor:cellNumber(value(row,h,"Factor")),cashCurrency:cellText(value(row,h,"Cashvaluta")),cashDelta:cellNumber(value(row,h,"Cashmutatie")),settlementDate:cellDate(value(row,h,"Afwikkeldatum"))??undefined});
+  });
+  const overview=sheets.find(s=>s.sheet==="Overzicht");
+  const headerRow=overview?.data.findIndex(r=>r.some(c=>cellText(c)==="Bronwaarde EUR"))??-1;
+  if(overview&&headerRow>=0){
+    const headers=new Map<string,number>();overview.data[headerRow].forEach((c,i)=>headers.set(cellText(c),i));
+    for(const row of overview.data.slice(headerRow+1)){
+      const id=cellText(value(row,headers,"Lid-ID")),fund=fundNumber(value(row,headers,"Fonds"));if(!id&&!fund)break;if(!id||!fund)continue;
+      members.push({id,fund,sourceValue:cellNumber(value(row,headers,"Bronwaarde EUR")),sourceFirstEntry:cellDate(value(row,headers,"Instap bron")),sourceId:cellText(value(row,headers,"Bronlid-ID"))});
+    }
+  }
+  const ledger={bank,broker,members};validateLedger(ledger);return ledger;
 }
 
 export function normalizeMemberId(id: string): string {
@@ -217,6 +247,14 @@ export async function parseWorkbook(bytes: Buffer, pepper: string): Promise<Snap
 
   const overview = get("Overzicht");
   const snapshot: Snapshot = { schema: 1, digest: createHash("sha256").update(bytes).digest("hex"), importedAt: new Date().toISOString(), requestedDate: cellDate(overview?.data[4]?.[1]), members, positions, cash, transactions, fundHistory, totalUnitsByFund, risk, warnings };
+  snapshot.ledger=parseLedger(sheets);
+  const ledgerAudit=auditLedger(snapshot);
+  if(ledgerAudit){
+    if(ledgerAudit.bank.some(c=>c.differenceCents!==0))throw new Error("ING-beginsaldo en mutaties sluiten niet aan op het eindsaldo.");
+    warnings.push(`Broncontrole: ${ledgerAudit.bankRows} ING-mutaties, ${ledgerAudit.brokerRows} brokerregels en ${ledgerAudit.issues.length} controlepunten. Masterbedragen zijn niet automatisch vervangen.`);
+    const memberFailures=ledgerAudit.issues.filter(i=>i.category==="Leden").length;
+    if(memberFailures)warnings.push(`${memberFailures} leden wijken af van de oorspronkelijke administratie.`);
+  }
   const totals = summarize(snapshot).participationTotals;
   for (const fund of [1, 2, 3] as const) {
     if (Math.abs(totals[fund] - 1) > 0.005) warnings.push(`Participaties van fonds ${fund} tellen op tot ${(totals[fund] * 100).toFixed(2)}% in plaats van 100%; controleer ontbrekende of uitgeschreven deelnemers.`);

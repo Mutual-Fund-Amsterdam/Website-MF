@@ -81,7 +81,12 @@
 .tradingViewCredit { color: var(--ink-muted); font-size: .68rem; padding: 6px 0 0; align-self: flex-end; }
 .periods button { background: transparent; border: 0; padding: 5px 9px; color: var(--ink-muted); cursor: pointer; font-size: .7rem; }
 .periods button:hover, .periods .activePeriod { color: var(--accent); background: rgba(88,147,177,.13); }
-.chartArea { height: 250px; width: 100%; }
+.chartArea { height: 420px; width: 100%; }
+.fundChart { height: 380px; width: 100%; }
+.feedback { text-align: right; margin-top: 28px; }
+.feedback form { text-align: left; max-width: 540px; margin: 16px 0 0 auto; padding: 20px; border: 1px solid var(--line); }
+.feedback label { display: block; color: var(--ink-muted); }
+.feedback textarea { display: block; width: 100%; margin: 12px 0; background: var(--bg-elevated); color: var(--ink); border: 1px solid var(--line); padding: 12px; }
 .chartEmpty { display: grid; place-items: center; min-height: 250px; border: 1px dashed var(--line); color: var(--ink-muted); font-size: .78rem; text-align: center; padding: 15px; }
 .chartCaption { margin-top: 12px; color: var(--ink-muted); font-size: .67rem; }
 .stockTabs { display: flex; gap: 7px; overflow-x: auto; padding: 20px 0 2px; }
