@@ -12,13 +12,13 @@ const events = [
   {
     number: "01",
     title: "Trainingen en workshops",
-    text: "Een DCF leer je pas echt bouwen door zelf aan de knoppen te zitten. Daarom organiseren we praktische sessies over waardering, financiële modellen en tools als FactSet. Leden werken mee, stellen vragen en nemen een model mee dat ze later opnieuw kunnen gebruiken.",
+    text: "Een DCF leer je pas echt bouwen door zelf aan de knoppen te zitten. Daarom organiseren we praktische sessies over waardering en financiële modellen. Leden werken mee, stellen vragen en nemen een model mee dat ze later opnieuw kunnen gebruiken.",
     image: eventImages.workshop,
   },
   {
     number: "02",
     title: "Inhousedagen",
-    text: "Bij PwC waardeerden onze leden Nike in een valuation case, waarbij we het opnamen tegen Bona Fide. Ook stonden de Waterland Investment Services Caseday, de IEX Media Caseday en de IBS Capital Allies Inhousedag op het programma. Je werkt aan een echte case, spreekt het team en krijgt een eerlijk beeld van het werk.",
+    text: "Bij PwC waardeerden onze leden Nike in een valuation case, waarbij we het opnamen tegen Bona Fide. Ook stonden de IEX Media Caseday en de IBS Capital Allies Inhousedag op het programma. Je werkt aan een echte case, spreekt het team en krijgt een eerlijk beeld van het werk.",
     image: eventImages.companyDay,
   },
   {

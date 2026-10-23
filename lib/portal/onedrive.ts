@@ -3,7 +3,7 @@ import {createCipheriv,createDecipheriv,createHash,randomBytes} from "node:crypt
 import {parseWorkbook} from "./workbook";
 import {getSnapshot,integrationGet,integrationSet,integrationLock,integrationUnlock,pepper,publishPending,recordOperation,savePending} from "./store";
 
-const folderPath="Mutual Fund/Website invoer";
+const folderPath="Website invoer";
 const masterName="Website invoer - MASTER.xlsx";
 const graphRoot="https://graph.microsoft.com/v1.0";
 type Credentials={refreshToken:string;accessToken:string;expiresAt:number};

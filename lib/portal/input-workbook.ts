@@ -1,5 +1,6 @@
 import {createHash} from "node:crypto";
 import type {Snapshot,FundNumber,MemberTransaction,Position} from "./types";
+import {INPUT_CURRENCIES,isSplitWorkbook,splitInputSheet,splitCatalog} from "./split-workbook.ts";
 
 export type InputCell=string|number|boolean|Date|null;
 export type InputSheet={sheet:string;data:InputCell[][]};
@@ -25,12 +26,18 @@ function rows(sheet:InputSheet,section:string):Row[]{
 
 /** Every parse replays the dated inputs from the immutable migration baseline. */
 export function applyInputWorkbook(snapshot:Snapshot,sheets:InputSheet[],digestCode:(id:string,code:string)=>string,previous?:Snapshot|null):Snapshot{
- const sheet=sheets.find(s=>s.sheet==="Invoer");if(!sheet)return snapshot;
+ const split=isSplitWorkbook(sheets),sheet=splitInputSheet(sheets)??sheets.find(s=>s.sheet==="Invoer");if(!sheet)return snapshot;
  if(text(sheet.data[0]?.[1])!=="MF-INVOER-2")throw Error("Ongeldige versie van tabblad Invoer.");
  const cutoff=date(sheet.data[2]?.[1]);
  const fingerprints:Record<string,string>={},seen=new Set<string>();
  const sections=Object.fromEntries(["LEDEN","AANDELEN","LEDENMUTATIES","SALDI"].map(s=>[s,rows(sheet,s)]));
- for(const [section,entries] of Object.entries(sections))for(const r of entries){const id=text(r["Invoer-ID"]);if(seen.has(id))throw Error(`Dubbel Invoer-ID ${id}.`);seen.add(id);if(section!=="LEDEN")fingerprints[id]=createHash("sha256").update(JSON.stringify(Object.entries(r).filter(([k])=>!["__row","Controle","Cashmutatie"].includes(k)).map(([k,v])=>[k,text(v)]))).digest("hex");}
+ for(const [section,entries] of Object.entries(sections))for(const r of entries){
+  const id=text(r["Invoer-ID"]);if(seen.has(id))throw Error(`Dubbel Invoer-ID ${id}.`);seen.add(id);
+  if(section!=="LEDEN"&&!(split&&section==="SALDI")){
+   const keys=split?(section==="AANDELEN"?["Invoer-ID","Datum","Fonds","Handeling","Ticker","Aantal","Prijs","Valuta","Broker","Kosten","Beurs"]:["Invoer-ID","Datum","Fonds","Lid-ID","Handeling","Bedrag EUR","Boekingsprijs","Naar fonds","Naar lid-ID","Boekingsprijs nieuw fonds"]):null;
+   fingerprints[id]=createHash("sha256").update(JSON.stringify(keys?keys.map(k=>[k,text(r[k])]):Object.entries(r).filter(([k])=>!["__row","Controle","Cashmutatie"].includes(k)).map(([k,v])=>[k,text(v)]))).digest("hex");
+  }
+ }
  const knownMembers=new Map(snapshot.members.map(m=>[m.key,m]));
  // Autosave of a draft must not roll an earlier published member edit back to the migration baseline.
  for(const m of previous?.members??[])knownMembers.set(m.key,{...m});
@@ -44,27 +51,29 @@ export function applyInputWorkbook(snapshot:Snapshot,sheets:InputSheet[],digestC
   knownMembers.set(key,{...(existing??{participation:0,firstEntry:null,lastTransaction:null,sourceValue:null,deposits:0,withdrawals:0}),key,id,fund:f,name:required(r.Naam,"Naam"),role,active:status==="Actief",allowedFunds:[...new Set([f,...allowed])].sort(),loginDigest:digestCode(id,required(r["Persoonlijke code"],"Persoonlijke code"))});
  }
  snapshot.members=[...knownMembers.values()];
+ if(split)for(const m of snapshot.members)if(!seenMemberKeys.has(m.key))throw Error(`Lid ${m.id} ontbreekt op Leden. Bewaar de rij en kies Inactief bij vertrek; gebruik Ledenmutaties voor een fondswissel.`);
  const loginIds=snapshot.members.filter(m=>m.active).map(m=>m.id.normalize("NFKC").toLowerCase());
  if(new Set(loginIds).size!==loginIds.length)throw Error("Dubbel actief Lid-ID in Invoer.");
  if(!snapshot.members.some(m=>m.active&&m.role==="Hoofdbestuurder"))throw Error("Er moet minstens één actieve hoofdbestuurder blijven.");
  type Movement={fund:FundNumber;date:string;account:string;currency:string;amount:number};const movements:Movement[]=[];
  const positions=new Map(snapshot.positions.map(p=>[`${p.fund}|${p.exchange}|${p.ticker.toUpperCase()}`,{...p}]));
  const ordered=(section:string)=>sections[section].sort((a,b)=>date(a.Datum).localeCompare(date(b.Datum))||Number(a.__row)-Number(b.__row));
- const eventDate=(r:Row)=>{const d=date(r.Datum);if(d<=cutoff)throw Error(`Datum moet na de basisdatum ${cutoff} liggen (rij ${r.__row}).`);if(d>new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Amsterdam"}).format(new Date()))throw Error("Toekomstige mutaties blijven Concept.");return d;};
+ const eventDate=(r:Row)=>{const d=date(r.Datum);if(d<=cutoff)throw Error(`Datum moet na de basisdatum ${cutoff} liggen (rij ${r.__row}).`);if(d>new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Amsterdam"}).format(new Date()))throw Error("Vul alleen uitgevoerde mutaties in; de datum ligt in de toekomst.");return d;};
  for(const r of ordered("AANDELEN")){
   const d=eventDate(r),f=fund(r.Fonds),ticker=required(r.Ticker,"Ticker").toUpperCase(),exchange=required(r.Beurs,"Beurs"),id=`${f}|${exchange}|${ticker}`,old=positions.get(id);
   const kind=required(r.Handeling,"Handeling"),buy=kind==="Koop";if(!buy&&kind!=="Verkoop")throw Error("Kies Koop of Verkoop.");
   const q=positive(r.Aantal,"aantal"),price=positive(r.Prijs,"prijs"),cost=positive(r.Kosten,"kosten",true),currency=required(r.Valuta,"Valuta").toUpperCase(),broker=required(r.Broker,"Broker");
-  if(!["EUR","USD","CAD"].includes(currency)||!["IBKR","Saxo"].includes(broker))throw Error("Ongeldige valuta of broker in Invoer.");
+  if(!INPUT_CURRENCIES.includes(currency)||!["IBKR","Saxo"].includes(broker))throw Error("Ongeldige valuta of broker in Invoer.");
   if(old&&old.currency!==currency)throw Error("Valuta wijkt af van de bestaande positie.");
   const quantity=(old?.quantity??0)+(buy?q:-q);if(quantity<-.00000001)throw Error(`Verkoop van ${ticker} is groter dan de positie.`);
   const p:Position=old??{fund:f,ticker,exchange,quantity:0,name:required(r.Aandeel,"Aandeel"),currency,isin:required(r.ISIN,"ISIN"),marketSymbol:required(r.Koerscode,"Koerscode"),tradingViewSymbol:required(r["TradingView-code"],"TradingView-code"),sector:required(r.Sector,"Sector")};
   positions.set(id,{...p,quantity:Math.max(0,quantity)});
   const settlement=date(r.Afwikkeldatum??r.Datum);if(settlement!==d)throw Error("Afwikkeling op een andere dag vereist eerst beoordeling van de openstaande afwikkeling.");
-  const delta=(buy?-1:1)*q*price-cost;movements.push({fund:f,date:d,account:"Broker",currency,amount:delta});
+  const delta=(buy?-1:1)*q*price-cost;if(!Number.isFinite(delta))throw Error("Transactiebedrag is te groot of ongeldig.");movements.push({fund:f,date:d,account:"Broker",currency,amount:delta});
   if(snapshot.ledger)snapshot.ledger.broker.push({id:`invoer:${text(r["Invoer-ID"])}`,fund:f,date:d,broker,kind:buy?"Buy":"Sell",symbol:ticker,description:`${kind} ${ticker}`,quantity:buy?q:-q,price,currency,grossEur:currency==="EUR"?(buy?-1:1)*q*price:null,commissionEur:currency==="EUR"?-cost:null,netEur:currency==="EUR"?delta:null,nativeCash:delta,assetClass:"STK",exchange,status:"Goedgekeurd",source:"Invoer",sourceHash:fingerprints[text(r["Invoer-ID"])],sourceRow:Number(r.__row),cashCurrency:currency,cashDelta:delta,settlementDate:settlement});
  }
  snapshot.positions=[...positions.values()].filter(p=>p.quantity>1e-8);
+ if(split){const catalog=new Map(splitCatalog(sheets).map(r=>[text(r.Ticker).toUpperCase(),r]));for(const p of snapshot.positions){const a=catalog.get(p.ticker);if(!a)throw Error(`Aandeel ${p.ticker} ontbreekt op Aandelen.`);if(text(a.Valuta)!==p.currency||text(a.Beurs)!==p.exchange)throw Error(`Beurs of valuta van bestaande positie ${p.ticker} is gewijzigd. Gebruik een aparte ticker voor een andere notering.`);p.name=required(a.Aandeel,"Aandeel");p.isin=required(a.ISIN,"ISIN");p.marketSymbol=required(a.Koerscode,"Koerscode");p.tradingViewSymbol=required(a["TradingView-code"],"TradingView-code");p.sector=required(a.Sector,"Sector");}}
  const newEvents:MemberTransaction[]=[];
  const navAt=(f:FundNumber,d:string,raw:InputCell|undefined)=>{const explicit=num(raw);const nav=Number.isFinite(explicit)?explicit:snapshot.fundHistory?.find(p=>p.fund===f&&p.date===d)?.nav;if(!nav||nav<=0)throw Error(`Boekingsprijs ontbreekt voor fonds ${f} op ${d}. Vul de gecontroleerde boekingsprijs in.`);return nav;};
  for(const r of ordered("LEDENMUTATIES")){
@@ -93,13 +102,27 @@ export function applyInputWorkbook(snapshot:Snapshot,sheets:InputSheet[],digestC
   }
  }
  const checkpoints=new Map<string,{date:string;amount:number}>(),checkpointDates=new Set<string>();
- for(const r of sections.SALDI){const f=fund(r.Fonds),d=date(r.Datum),account=required(r.Rekening,"Rekening"),currency=required(r.Valuta,"Valuta"),amount=num(r.Saldo);if(d<cutoff||d>new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Amsterdam"}).format(new Date()))throw Error("Saldodatum moet vanaf de basisdatum en uiterlijk vandaag liggen.");if(!Number.isFinite(amount)||!["ING","Broker","Overig"].includes(account)||!["EUR","USD","CAD"].includes(currency)||(account!=="Broker"&&currency!=="EUR"))throw Error("Ongeldig saldo, rekening of valuta in Invoer.");const key=`${f}|${account}|${currency}`,old=checkpoints.get(key);if(checkpointDates.has(`${key}|${d}`))throw Error("Dubbele saldocontrole op dezelfde datum.");checkpointDates.add(`${key}|${d}`);if(!old||old.date<d)checkpoints.set(key,{date:d,amount});}
+ for(const r of sections.SALDI){
+  const f=fund(r.Fonds),d=date(r.Datum),account=required(r.Rekening,"Rekening"),currency=required(r.Valuta,"Valuta"),amount=num(r.Saldo);
+  const base=snapshot.cash.find(c=>c.fund===f),baseDate=account==="ING"?base?.ingAsOf:account==="Overig"?base?.otherAsOf:base?.brokerAsOf;
+  if(d<(split?(baseDate??cutoff):cutoff)||d>new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Amsterdam"}).format(new Date()))throw Error("Saldodatum ligt vóór de bestaande stand of in de toekomst.");
+  if(!Number.isFinite(amount)||!["ING","Broker","Overig"].includes(account)||!INPUT_CURRENCIES.includes(currency)||(account!=="Broker"&&currency!=="EUR"))throw Error("Ongeldig saldo, rekening of valuta op Cash.");
+  const key=`${f}|${account}|${currency}`,old=checkpoints.get(key);if(checkpointDates.has(`${key}|${d}`)||(split&&old))throw Error("Gebruik op Cash één rij per fonds, rekening en valuta. Werk die rij bij met het nieuwe saldo en de datum.");checkpointDates.add(`${key}|${d}`);if(!old||old.date<d)checkpoints.set(key,{date:d,amount});
+ }
  for(const c of snapshot.cash){
   const specs=[['ING','EUR','ingEur','ingAsOf'],['Broker','EUR','brokerEur','brokerAsOf'],['Broker','USD','brokerUsd','brokerAsOf'],['Broker','CAD','brokerCad','brokerAsOf'],['Overig','EUR','otherEur','otherAsOf']] as const;
   const baseDates={...c};for(const [account,currency,amountKey,dateKey] of specs){const cp=checkpoints.get(`${c.fund}|${account}|${currency}`),base=cp?.amount??c[amountKey],asOf=cp?.date??baseDates[dateKey];const changes=movements.filter(m=>m.fund===c.fund&&m.account===account&&m.currency===currency&&(!asOf||m.date>asOf));if(changes.length&&base===null)throw Error("Beginsaldo ontbreekt voor een geldmutatie.");c[amountKey]=base===null?null:Math.round((base+changes.reduce((s,m)=>s+m.amount,0))*100)/100;c[dateKey]=[c[dateKey],cp?.date,...changes.map(m=>m.date)].filter((x):x is string=>!!x).sort().at(-1)??null;}
+  for(const currency of INPUT_CURRENCIES.filter(v=>!["EUR","USD","CAD"].includes(v))){
+   const cp=checkpoints.get(`${c.fund}|Broker|${currency}`),prior=c.extraBalances?.[currency];
+   const changes=movements.filter(m=>m.fund===c.fund&&m.currency===currency&&(!cp||m.date>cp.date));
+   if(!cp&&!prior&&!changes.length)continue;
+   if(!cp&&!prior)throw Error(`Vul eerst het brokersaldo in ${currency} in op Cash voor fonds ${c.fund}.`);
+   const after=cp?.date??prior!.date,amount=(cp?.amount??prior!.amount)+changes.filter(m=>m.date>after).reduce((s,m)=>s+m.amount,0);
+   c.extraBalances={...c.extraBalances,[currency]:{amount:Math.round(amount*100)/100,date:[after,...changes.map(m=>m.date)].sort().at(-1)!}};
+  }
  }
  if(snapshot.cash.some(c=>[c.ingEur,c.brokerEur,c.brokerUsd,c.brokerCad,c.otherEur].some(v=>v!==null&&!Number.isFinite(v)))||snapshot.members.some(m=>m.participation!==null&&!Number.isFinite(m.participation))||snapshot.positions.some(p=>!Number.isFinite(p.quantity))||Object.values(snapshot.totalUnitsByFund??{}).some(v=>!Number.isFinite(v)))throw Error("Ongeldig berekend bedrag of aantal. Controleer Invoer.");
- snapshot.input={version:2,cutoff,events:fingerprints};
+ snapshot.input={version:split?3:2,cutoff,events:fingerprints};
  return snapshot;
 }
 

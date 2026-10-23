@@ -740,7 +740,8 @@ img {
   cursor: default;
 }
 
-.video-frame iframe {
+.video-frame iframe,
+.video-frame video {
   position: absolute;
   z-index: 1;
   inset: 0;
@@ -748,6 +749,7 @@ img {
   height: 100%;
   border: 0;
   pointer-events: none;
+  object-fit: cover;
 }
 
 .intro-copy {
