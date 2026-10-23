@@ -104,7 +104,7 @@ export function summarize(snapshot: Snapshot): ImportSummary {
 export async function parseWorkbook(bytes: Buffer, pepper: string, previous?:Snapshot|null): Promise<Snapshot> {
   if (bytes.length > 2_000_000) throw new Error("Het Excelbestand is groter dan 2 MB.");
   const sheets = await readExcelFile(bytes) as Sheet[];
-  const get = (...names: string[]) => sheets.find((item) => names.includes(item.sheet));
+  const get = (...names: string[]) => names.map(name=>sheets.find(item=>item.sheet===name)).find(Boolean);
   const accessSheet = get("Leden & toegang", "Toegang");
   const participationSheet = get("Participaties (check)", "Participaties");
   const positionsSheet = get("Posities");

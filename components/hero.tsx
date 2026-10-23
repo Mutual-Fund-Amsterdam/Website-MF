@@ -50,11 +50,11 @@ export function Hero() {
         <aside className="relative z-10 lg:pl-4">
           <div className="pointer-events-none absolute -inset-3 border border-gold/20" />
           <div className="pointer-events-none relative aspect-video w-full overflow-hidden border border-gold/30 bg-navy shadow-[0_28px_70px_rgba(14,32,57,0.16)]">
-            <iframe
+            <video
               className="h-full w-full scale-[1.03]"
-              src="https://www.youtube.com/embed/5cAZ-VM_MpQ?autoplay=1&mute=1&controls=0&loop=1&playlist=5cAZ-VM_MpQ&playsinline=1&rel=0&disablekb=1"
+              src="/videos/mf-laatste-versie.mp4"
               title="Sfeerimpressie van Mutual Fund"
-              allow="autoplay; encrypted-media; picture-in-picture"
+              autoPlay muted loop playsInline preload="metadata"
               tabIndex={-1}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-navy/25 via-transparent to-cream/5" />

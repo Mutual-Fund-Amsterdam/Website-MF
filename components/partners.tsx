@@ -10,7 +10,7 @@ const partnerLogos = [
   { name: 'FactSet', src: '/partners/logos/factset.webp', url: 'https://www.factset.com' },
   { name: 'Photon Capital', src: '/partners/logos/photon-capital.webp', url: 'https://photoncapital.com' },
   { name: 'SilverCross Investment Management', src: '/partners/logos/silvercross.webp', url: 'https://silvercross-im.com' },
-  { name: 'DUFAS', src: '/partners/logos/dufas.webp', url: 'https://dufas.nl' },
+  { name: 'Female X Finance', src: '/partners/logos/female-x-finance.svg', url: 'https://www.femalexfinance.com/' },
   { name: 'Add Value Fund', src: '/partners/logos/add-value-fund.webp', url: 'https://addvaluefund.nl' },
   { name: 'B&R Beurs', src: '/partners/logos/bnr-beurs.webp', url: 'https://bnrbeurs.nl' },
 ]
@@ -30,8 +30,8 @@ export function Partners() {
         {/* We hebben nu maar 1 balk, dus ze kunnen elkaar nooit meer inhalen! */}
         <div className="animate-marquee gap-16 px-8 items-center">
           {duplicatedLogos.map((logo, i) => (
-            <a 
-              key={i} 
+            <a
+              key={i}
               href={logo.url}
               target="_blank"
               rel="noopener noreferrer"

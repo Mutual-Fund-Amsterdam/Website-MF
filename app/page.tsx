@@ -32,11 +32,14 @@ export default function Home() {
       <section className="section intro-section">
         <div className="container intro-grid">
           <div className="video-frame">
-            <iframe
-              src="https://www.youtube-nocookie.com/embed/5cAZ-VM_MpQ?autoplay=1&mute=1&controls=0&loop=1&playlist=5cAZ-VM_MpQ&playsinline=1&rel=0&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0"
+            <video
+              src="/videos/mf-laatste-versie.mp4"
               title="Mutual Fund — beleggen met passie"
-              allow="autoplay; encrypted-media"
-              loading="lazy"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
               tabIndex={-1}
             />
           </div>

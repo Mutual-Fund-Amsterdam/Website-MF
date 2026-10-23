@@ -19,7 +19,6 @@ export function sectorOf(position: Position): string {
 
 export function euroValue(amount: number, currency: string, quotes: DailyQuotes | null): number | null {
   if (currency === "EUR") return amount;
-  if (currency !== "USD" && currency !== "CAD") return null;
   const rate = quotes?.fx?.[currency]?.perEuro;
   const age = quotes?.fx?.[currency]?.date ? Date.now() - Date.parse(`${quotes.fx[currency]!.date}T00:00:00Z`) : Infinity;
   return rate && rate > 0 && age >= 0 && age <= 8 * 86_400_000 ? amount / rate : null;
@@ -41,8 +40,9 @@ export function portfolioView(positions: Position[], cash: Cash | undefined, quo
   const cad = cash?.brokerCad;
   const usdEur = usd === null || usd === undefined || usd === 0 ? 0 : euroValue(usd, "USD", quotes);
   const cadEur = cad === null || cad === undefined || cad === 0 ? 0 : euroValue(cad, "CAD", quotes);
-  const cashComplete = ing !== null && ing !== undefined && brokerEur !== null && brokerEur !== undefined && usdEur !== null && cadEur !== null;
-  const cashValue = cashComplete ? ing! + brokerEur! + usdEur! + cadEur! : null;
+  const extras=Object.entries(cash?.extraBalances??{}).map(([currency,b])=>b.amount===0?0:euroValue(b.amount,currency,quotes));
+  const cashComplete = ing !== null && ing !== undefined && brokerEur !== null && brokerEur !== undefined && usdEur !== null && cadEur !== null&&extras.every(v=>v!==null);
+  const cashValue = cashComplete ? ing! + brokerEur! + usdEur! + cadEur!+extras.reduce<number>((s,v)=>s+(v??0),0) : null;
   const otherValue = cash?.otherEur ?? 0;
   const fundValue = stockValue !== null && cashValue !== null ? stockValue + cashValue + otherValue : null;
   const sectors = new Map<string, number>();

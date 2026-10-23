@@ -25,9 +25,9 @@ export const partners = [
     href: "https://www.erasmussociety.nl/",
   },
   {
-    name: "DUFAS",
-    logo: "/partners/logos/dufas.webp",
-    href: "https://www.dufas.nl/",
+    name: "Female X Finance",
+    logo: "/partners/logos/female-x-finance.svg",
+    href: "https://www.femalexfinance.com/",
   },
   {
     name: "IBS Capital Allies",
@@ -43,11 +43,6 @@ export const partners = [
     name: "LYNX",
     logo: "/partners/logos/lynx-official.png",
     href: "https://www.lynx.nl/",
-  },
-  {
-    name: "Farringdon",
-    logo: null,
-    href: "https://www.farringdoncapital.com/",
   },
   {
     name: "Photon Capital",

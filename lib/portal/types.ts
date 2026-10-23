@@ -35,7 +35,7 @@ export type Position = {
 };
 
 export type PricePoint = { date: string; close: number; adjustedClose?: number };
-export type FxRate = { currency: "USD" | "CAD"; perEuro: number; date: string };
+export type FxRate = { currency: string; perEuro: number; date: string };
 
 export type DailyQuote = {
   symbol: string;
@@ -57,7 +57,7 @@ export type DailyQuotes = {
   historyUpdatedAt?: string;
   dailyHistoryWindows?: Record<string,string>;
   benchmark?: { name: "S&P 500"; points: PricePoint[]; latest: PricePoint | null };
-  fx?: Partial<Record<"USD" | "CAD", FxRate>>;
+  fx?: Partial<Record<string, FxRate>>;
   eurUsdHistory?: PricePoint[];
   estrHistory?: PricePoint[];
   fxHistory?: Record<string, PricePoint[]>;
@@ -67,6 +67,7 @@ export type DailyQuotes = {
 };
 
 export type Cash = {
+  extraBalances?: Record<string,{amount:number;date:string}>;
   fund: FundNumber;
   ingEur: number | null;
   ingAsOf: string | null;
@@ -79,7 +80,7 @@ export type Cash = {
 };
 
 export type Snapshot = {
-  input?: {version:2;cutoff:string;events:Record<string,string>};
+  input?: {version:2|3;cutoff:string;events:Record<string,string>};
   schema: 1;
   digest: string;
   importedAt: string;
