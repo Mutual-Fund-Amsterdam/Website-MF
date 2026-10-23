@@ -19,15 +19,18 @@ function read(sheets:InputSheet[],name:string,key:string):Row[]{
  return rows;
 }
 
-export function splitCatalog(sheets:InputSheet[]){return read(sheets,"Aandelen","Ticker");}
+export function splitCatalog(sheets:InputSheet[]):Row[]{
+ const venues:Record<string,[string,string]>={"Euronext Amsterdam":["XAMS","EURONEXT"],"Euronext Paris":["XPAR","EURONEXT"],Nasdaq:["XNAS","NASDAQ"],"New York Stock Exchange":["XNYS","NYSE"],"NYSE American":["XASE","AMEX"],"Toronto Stock Exchange":["XTSE","TSX"],"Vienna Stock Exchange":["XWBO","VIE"]};
+ return read(sheets,"Aandelen","Ticker").map(a=>{const v=venues[text(a.Beurs)],ticker=text(a.Ticker).toUpperCase();return {...a,Koerscode:text(a.Koerscode)||(v?`${ticker}.${v[0]}`:""),"TradingView-code":text(a["TradingView-code"])||(v?`${v[1]}:${ticker}`:"")};});
+}
 
 /** The visible workbook is a simple set of tables; the dated replay remains shared with v2. */
 export function splitInputSheet(sheets:InputSheet[]):InputSheet|null{
  if(!isSplitWorkbook(sheets))return null;
- const cover=sheets.find(s=>s.sheet==="Uitleg")!,members=read(sheets,"Leden","Lid-ID"),access=read(sheets,"Toegang","Lid-ID"),catalog=read(sheets,"Aandelen","Ticker");
+ const cover=sheets.find(s=>s.sheet==="Uitleg")!,members=read(sheets,"Leden","Lid-ID"),access=read(sheets,"Toegang","Lid-ID"),catalog=splitCatalog(sheets);
  const ids=new Set<string>(),accessById=new Map<string,Row>(),instruments=new Map<string,Row>();
  for(const a of access){const id=text(a["Lid-ID"]);if(!id||accessById.has(id))throw Error(`Lid-ID ontbreekt of komt dubbel voor op Toegang rij ${a.__row}.`);accessById.set(id,a);}
- for(const a of catalog){const ticker=text(a.Ticker).toUpperCase();if(!ticker||instruments.has(ticker))throw Error(`Ticker ontbreekt of komt dubbel voor op Aandelen rij ${a.__row}.`);if(!INPUT_CURRENCIES.includes(text(a.Valuta)))throw Error(`Valuta ontbreekt of is ongeldig bij ${ticker}.`);for(const k of ["Aandeel","Beurs","ISIN","Koerscode","TradingView-code","Sector"])if(!text(a[k]))throw Error(`Vul ${k} in bij ${ticker} op Aandelen.`);instruments.set(ticker,a);}
+ for(const a of catalog){const ticker=text(a.Ticker).toUpperCase();if(!ticker||instruments.has(ticker))throw Error(`Ticker ontbreekt of komt dubbel voor op Aandelen rij ${a.__row}.`);if(!INPUT_CURRENCIES.includes(text(a.Valuta)))throw Error(`Valuta ontbreekt of is ongeldig bij ${ticker}.`);for(const k of ["Aandeel","Beurs","Koerscode","TradingView-code","Sector"])if(!text(a[k]))throw Error(`Vul ${k} in bij ${ticker} op Aandelen.`);instruments.set(ticker,a);}
  const combined=members.map(m=>{
   const id=text(m["Lid-ID"]);if(!id||ids.has(id))throw Error(`Lid-ID ontbreekt of komt dubbel voor op Leden rij ${m.__row}.`);ids.add(id);
   const a=accessById.get(id);if(!a)throw Error(`Vul de toegang in voor lid ${id}.`);
