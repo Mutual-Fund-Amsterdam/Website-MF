@@ -13,6 +13,7 @@ assert.throws(()=>run({'Aan- en verkopen':[stock({Kosten:null})]}),/kosten/);
 assert.throws(()=>run({'Aan- en verkopen':[stock({Handeling:'Verkoop',Aantal:11})]}),/groter/);
 assert.throws(()=>run({'Aan- en verkopen':[stock({Ticker:'BBB'})]}),/eerst toe/);
 s=run({Aandelen:[cat(),cat('BBB')],'Aan- en verkopen':[stock({Ticker:'BBB'})]});assert.equal(s.positions.find(p=>p.ticker==='BBB').quantity,2);
+const bare=cat('NEW');delete bare.ISIN;delete bare.Koerscode;delete bare['TradingView-code'];s=run({Aandelen:[cat(),bare],'Aan- en verkopen':[stock({Ticker:'NEW'})]});assert.equal(s.positions.at(-1).marketSymbol,'NEW.XAMS');assert.equal(s.positions.at(-1).tradingViewSymbol,'EURONEXT:NEW');assert.equal(s.positions.at(-1).isin,'');
 s=run({Cash:[{'Invoer-ID':'C1',Fonds:1,Rekening:'Broker',Valuta:'EUR',Datum:'2026-10-22',Saldo:850}],'Aan- en verkopen':[stock()]});assert.equal(s.cash[0].brokerEur,850);
 s=run({Cash:[{'Invoer-ID':'C1',Fonds:1,Rekening:'Broker',Valuta:'EUR',Datum:'2026-10-22',Saldo:900}],'Aan- en verkopen':[stock({Datum:'2026-10-23'})]});assert.equal(s.cash[0].brokerEur,699);
 const prev=run({'Aan- en verkopen':[stock()]});validateInputContinuity(run({'Aan- en verkopen':[stock()],Cash:[{'Invoer-ID':'C1',Fonds:1,Rekening:'Broker',Valuta:'EUR',Datum:'2026-10-22',Saldo:850}]}),prev);assert.throws(()=>validateInputContinuity(run({'Aan- en verkopen':[stock({Aantal:3})]}),prev),/gewijzigd/);
