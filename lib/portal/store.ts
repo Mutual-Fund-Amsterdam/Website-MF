@@ -8,6 +8,7 @@ import { codeDigest, normalizeMemberId } from "./workbook";
 import { portfolioView } from "./portfolio";
 import { createLocalStore } from "./local-store";
 import { auditLedger, reconstructDays, verifiedValues } from "./ledger";
+import {fetchEurUsdHistory,fetchEstrHistory} from "./ecb";
 import type { BankEvent, BrokerEvent, LedgerStorage, ReconstructionDay } from "./ledger";
 
 const PREFIX = `mf:portal:${process.env.VERCEL_ENV ?? "development"}:`;
@@ -186,6 +187,16 @@ export async function publishPending(id: string): Promise<Snapshot | null> {
   }
   const header=await storeLedger(snapshot,snapshot.digest);
   const quotes = await getDailyQuotes();
+  // Initialise missing free reference series on administrator import, never on a member visit.
+  // This does not request stock/index data or spend Marketstack credits.
+  if(quotes&&(!quotes.eurUsdHistory?.length||!quotes.estrHistory?.length)){
+    const [usd,estr]=await Promise.all([
+      quotes.eurUsdHistory?.length?Promise.resolve(quotes.eurUsdHistory):fetchEurUsdHistory().catch(()=>quotes.eurUsdHistory),
+      quotes.estrHistory?.length?Promise.resolve(quotes.estrHistory):fetchEstrHistory().catch(()=>quotes.estrHistory),
+    ]);
+    quotes.eurUsdHistory=usd;quotes.estrHistory=estr;
+    if(usd?.length||estr?.length)await saveDailyQuotes(quotes);
+  }
   if (quotes) await recordFundDailyValues(snapshot, quotes);
   else if(snapshot.ledger)await recordReconstruction(snapshot,null);
   await client.set(CURRENT_KEY, header);
