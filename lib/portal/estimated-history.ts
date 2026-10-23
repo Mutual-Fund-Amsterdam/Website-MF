@@ -1,5 +1,6 @@
 import type {DailyQuotes, FundNumber, PricePoint, Snapshot} from "./types";
-import {bankControl, bankValue, holdingsAt} from "./ledger.ts";
+import {bankControl, bankValue} from "./ledger.ts";
+import {modelSplits,modelHoldingsAt,splitSafeReturn} from "./history-splits.ts";
 
 export type EstimatedFundPoint = {date:string; nav:number; lowNav:number; highNav:number; flatNav?:number; marketNav?:number; estimated:boolean; priceCoverage:number};
 const DAY=86400000;
@@ -30,6 +31,7 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
  const benchmark=quotes.benchmark?.points??[];
  const eurIndex=(date:string)=>{const p=latest(benchmark,date,4),r=fx(quotes,"USD",date);return p&&r?p.close/r:null;};
  const broker=snapshot.ledger.broker.filter(e=>e.fund===fund&&e.quantity&&["Buy","Sell","Ankerpositie"].includes(e.kind));
+ const splits=modelSplits(snapshot,quotes);
  const allDates=new Set<string>(anchors.filter(p=>p.date>=from).map(p=>p.date));
  for(const p of benchmark)if(p.date>=from&&p.date<=end)allDates.add(p.date);
  for(const rows of Object.values(quotes.history??{}))for(const p of rows)if(p.date>=from&&p.date<=end)allDates.add(p.date);
@@ -46,7 +48,7 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
    const old=interval[j-1],date=interval[j],t=(Date.parse(old)-Date.parse(left.date))/(Date.parse(right.date)-Date.parse(left.date));
    const approximateAssets=left.nav*left.totalUnits*(1-t)+right.nav*right.totalUnits*t;
    const cash=Math.max(0,bankValue(snapshot.ledger,fund,old)??0);
-   const holdings=holdingsAt(snapshot.ledger,fund,old).holdings;
+   const holdings=modelHoldingsAt(snapshot,fund,old,splits);
    let knownValue=0,unknownValue=0,pnl=0;
    for(const h of holdings.values()){
     if(h.quantity<=0)continue;
@@ -57,7 +59,14 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
     const exposure=before&&rateBefore?h.quantity*before.close/rateBefore:cost;
     if(h.assetClass!=="stock"||!before||!after||!rateBefore||!rateAfter||after.date<=before.date){unknownValue+=exposure;continue;}
     // Adjusted closes supply a total-return move without a false split/dividend jump.
-    const ratio=(after.adjustedClose??after.close)/(before.adjustedClose??before.close)*rateBefore/rateAfter;
+    const factor=splits.filter(s=>s.symbol===h.symbol&&s.date>before.date&&s.date<=after.date).reduce((f,s)=>f*s.factor,1);
+    const rawRatio=after.close/before.close;
+    // A feed can alternate old/new price bases around a disclosed split. An
+    // unmatched discontinuity is missing data, not a sudden investment gain/loss.
+    if(factor===1&&(rawRatio>1.8||rawRatio<1/1.8)&&splits.some(s=>s.symbol===h.symbol&&Math.abs(Date.parse(after.date)-Date.parse(s.date))<=7*DAY)){
+     unknownValue+=cost||exposure;continue;
+    }
+    const ratio=splitSafeReturn(before,after,factor)*rateBefore/rateAfter;
     if(!Number.isFinite(ratio)||ratio<=0){unknownValue+=exposure;continue;}
     knownValue+=exposure;pnl+=exposure*(ratio-1);
    }
