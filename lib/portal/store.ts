@@ -7,15 +7,19 @@ import type { DailyQuotes, FundNumber, FundValuePoint, Member, Snapshot } from "
 import { codeDigest, normalizeMemberId } from "./workbook";
 import { portfolioView } from "./portfolio";
 import { createLocalStore } from "./local-store";
+import { auditLedger, reconstructDays, verifiedValues } from "./ledger";
+import type { BankEvent, BrokerEvent, LedgerStorage, ReconstructionDay } from "./ledger";
 
 const PREFIX = `mf:portal:${process.env.VERCEL_ENV ?? "development"}:`;
 const CURRENT_KEY = `${PREFIX}current`;
 const QUOTES_KEY = `${PREFIX}daily-quotes`;
 const FUND_DAILY_KEY = `${PREFIX}fund-daily-values`;
-const COOKIE_NAME = "__Host-mf_session";
+const COOKIE_NAME = process.env.NODE_ENV === "production" ? "__Host-mf_session" : "mf_preview_session";
 const SESSION_SECONDS = 12 * 60 * 60;
 let redisClient: Redis | null = null;
 let localClient: ReturnType<typeof createLocalStore> | null = null;
+let hydratedCache: {digest:string;until:number;snapshot:Snapshot}|null=null;
+let quoteCache:{at:string;until:number;quotes:DailyQuotes}|null=null;
 
 function localPreview(): boolean {
   return process.env.MF_LOCAL_PREVIEW === "1" && !process.env.VERCEL;
@@ -49,23 +53,100 @@ function redis(): Redis | ReturnType<typeof createLocalStore> {
 }
 
 export async function getSnapshot(): Promise<Snapshot | null> {
-  return redis().get<Snapshot>(CURRENT_KEY);
+  const snapshot=await redis().get<Snapshot>(CURRENT_KEY);
+  if(!snapshot)return null;
+  if(hydratedCache?.digest===snapshot.digest&&hydratedCache.until>Date.now())return hydratedCache.snapshot;
+  const hydrated=await hydrateLedger(snapshot);
+  hydratedCache={digest:snapshot.digest,until:Date.now()+300000,snapshot:hydrated};
+  return hydrated;
+}
+
+async function storeLedger(snapshot:Snapshot,id:string,ex?:number):Promise<Snapshot>{
+  if(!snapshot.ledger)return snapshot;
+  const descriptor:LedgerStorage={digest:id,bankChunks:Math.ceil(snapshot.ledger.bank.length/100),brokerChunks:Math.ceil(snapshot.ledger.broker.length/100),members:snapshot.ledger.members};
+  const writes:Promise<unknown>[]=[];
+  for(const kind of ["bank","broker"] as const){
+    const rows=snapshot.ledger[kind];
+    for(let i=0;i<rows.length;i+=100)writes.push(redis().set(`${PREFIX}ledger:${id}:${kind}:${i/100}`,rows.slice(i,i+100),ex?{ex}:undefined));
+  }
+  await Promise.all(writes);
+  return {...snapshot,ledger:undefined,ledgerStorage:descriptor};
+}
+async function hydrateLedger(snapshot:Snapshot):Promise<Snapshot>{
+  const d=snapshot.ledgerStorage;if(!d)return snapshot;
+  if(!/^[a-f0-9]{48,64}$/.test(d.digest)||d.bankChunks>100||d.brokerChunks>200)throw new Error("Ongeldige bronopslag.");
+  const bank=await Promise.all(Array.from({length:d.bankChunks},(_,i)=>redis().get<BankEvent[]>(`${PREFIX}ledger:${d.digest}:bank:${i}`)));
+  const broker=await Promise.all(Array.from({length:d.brokerChunks},(_,i)=>redis().get<BrokerEvent[]>(`${PREFIX}ledger:${d.digest}:broker:${i}`)));
+  if(bank.some(r=>!r)||broker.some(r=>!r))throw new Error("Een deel van de bronimport ontbreekt. Importeer opnieuw.");
+  return {...snapshot,ledger:{bank:bank.flatMap(r=>r!),broker:broker.flatMap(r=>r!),members:d.members}};
 }
 
 export async function getDailyQuotes(): Promise<DailyQuotes | null> {
-  return redis().get<DailyQuotes>(QUOTES_KEY);
+  const quotes=await redis().get<DailyQuotes>(QUOTES_KEY);if(!quotes)return null;
+  if(quoteCache?.at===quotes.fetchedAt&&quoteCache.until>Date.now())return quoteCache.quotes;
+  if(quotes.historyKeys){
+    const pairs=await Promise.all(quotes.historyKeys.map(async key=>[key,await redis().get<NonNullable<DailyQuotes["history"]>[string]>(`${PREFIX}history:${createHash("sha256").update(key).digest("hex")}`)] as const));
+    quotes.history=Object.fromEntries(pairs.map(([key,value])=>[key,value??[]]));
+  }
+  if(quotes.fxHistoryKeys){
+    const fx=await Promise.all(quotes.fxHistoryKeys.map(async c=>[c,await redis().get<NonNullable<DailyQuotes["fxHistory"]>[string]>(`${PREFIX}fx-history:${c}`)] as const));
+    quotes.fxHistory=Object.fromEntries(fx.map(([c,p])=>[c,p??[]]));
+  }
+  quoteCache={at:quotes.fetchedAt,until:Date.now()+300000,quotes};return quotes;
 }
 
 export async function saveDailyQuotes(quotes: DailyQuotes): Promise<void> {
-  await redis().set(QUOTES_KEY, quotes);
+  const keys=Object.keys(quotes.history??{});
+  await Promise.all(keys.map(key=>redis().set(`${PREFIX}history:${createHash("sha256").update(key).digest("hex")}`,quotes.history![key])));
+  const currencies=Object.keys(quotes.fxHistory??{});
+  await Promise.all(currencies.map(c=>redis().set(`${PREFIX}fx-history:${c}`,quotes.fxHistory![c])));
+  await redis().set(QUOTES_KEY, {...quotes,history:undefined,historyKeys:keys,fxHistory:undefined,fxHistoryKeys:currencies});quoteCache=null;
+}
+
+export async function reserveMarketstackCalls(cost:number,historical=false):Promise<number>{
+  if(!Number.isSafeInteger(cost)||cost<1||cost>100)throw new Error("Ongeldige koersaanvraag.");
+  const month=new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Amsterdam",year:"numeric",month:"2-digit"}).format(new Date());
+  const opening=/^(\d{4}-\d{2}):(\d+)$/.exec(process.env.MARKETSTACK_USAGE_BASELINE??"");
+  if(historical&&(!opening||opening[1]>month))throw new Error("Leg eerst de beginstand van het maandverbruik vast voordat de historische uitbreiding start.");
+  const baseline=opening?.[1]===month?Number(opening[2]):0;
+  const key=`${PREFIX}marketstack-usage:${month}`;const used=baseline+await redis().incrby(key,cost);
+  const limit=historical?8000:10000;
+  if(used>limit){await redis().incrby(key,-cost);throw new Error("Marketstack-maandbudget bereikt; geen aanvraag verstuurd.");}
+  return used;
 }
 
 export async function getFundDailyValues(): Promise<FundValuePoint[]> {
-  return await redis().get<FundValuePoint[]>(FUND_DAILY_KEY) ?? [];
+  const legacy=await redis().get<FundValuePoint[]>(FUND_DAILY_KEY)??[];
+  const snapshot=await redis().get<Snapshot>(CURRENT_KEY);
+  if(!snapshot?.ledgerStorage&&!snapshot?.ledger)return legacy;
+  const reconstructed=await redis().get<FundValuePoint[]>(`${PREFIX}reconstruction:${snapshot.digest}:verified`)??[];
+  return [...legacy.filter(p=>p.coverage==="verified"),...reconstructed];
+}
+
+export async function getReconstructionDays(snapshot:Snapshot,fund:FundNumber):Promise<ReconstructionDay[]>{
+  const years=await redis().get<string[]>(`${PREFIX}reconstruction:${snapshot.digest}:${fund}:years`)??[];
+  const pages=await Promise.all(years.map(y=>redis().get<ReconstructionDay[]>(`${PREFIX}reconstruction:${snapshot.digest}:${fund}:${y}`)));
+  return pages.flatMap(p=>p??[]).sort((a,b)=>a.date.localeCompare(b.date));
+}
+export async function recordReconstruction(snapshot:Snapshot,quotes:DailyQuotes|null):Promise<void>{
+  if(!snapshot.ledger)return;
+  const days=reconstructDays(snapshot,quotes);
+  for(const fund of [1,2,3] as const){
+    const rows=days.filter(p=>p.fund===fund);const years=[...new Set(rows.map(p=>p.date.slice(0,4)))];
+    await Promise.all(years.map(y=>redis().set(`${PREFIX}reconstruction:${snapshot.digest}:${fund}:${y}`,rows.filter(p=>p.date.startsWith(y)))));
+    await redis().set(`${PREFIX}reconstruction:${snapshot.digest}:${fund}:years`,years);
+  }
+  await redis().set(`${PREFIX}reconstruction:${snapshot.digest}:verified`,verifiedValues(days));
+  await redis().set(`${PREFIX}reconstruction:${snapshot.digest}:audit`,auditLedger(snapshot));
 }
 
 export async function recordFundDailyValues(snapshot: Snapshot, quotes: DailyQuotes): Promise<void> {
-  const date = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Amsterdam", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(quotes.fetchedAt));
+  if(snapshot.ledger){await recordReconstruction(snapshot,quotes);return;}
+  const dates=snapshot.positions.map(p=>quotes.prices[`${p.exchange}:${p.ticker.toUpperCase()}`]?.date).filter((d):d is string=>Boolean(d));
+  if(dates.length!==snapshot.positions.length||!dates.length)return;
+  const date=[...dates].sort()[0];
+  const aligned:DailyQuotes={...quotes,prices:{...quotes.prices}};
+  for(const p of snapshot.positions){const key=`${p.exchange}:${p.ticker.toUpperCase()}`;const point=quotes.history?.[key]?.find(r=>r.date===date);if(!point)return;aligned.prices[key]={...quotes.prices[key],...point};}
   const old = await getFundDailyValues();
   const values = old.filter((point) => point.date !== date);
   for (const fund of [1, 2, 3] as const) {
@@ -73,29 +154,21 @@ export async function recordFundDailyValues(snapshot: Snapshot, quotes: DailyQuo
     if (!totalUnits || totalUnits <= 0) continue;
     const positions = snapshot.positions.filter((item) => item.fund === fund);
     const cash = snapshot.cash.find((item) => item.fund === fund);
-    const fundValue = portfolioView(positions, cash, quotes).fundValue;
-    if (fundValue !== null) values.push({ fund, date, nav: fundValue / totalUnits, fundValue });
+    const fundValue = portfolioView(positions, cash, aligned).fundValue;
+    if (fundValue !== null) values.push({ fund, date, nav: fundValue / totalUnits, fundValue,coverage:"indicative" });
   }
   await redis().set(FUND_DAILY_KEY, values.sort((a, b) => a.date.localeCompare(b.date)).slice(-3 * 3653));
 }
 
 export async function claimDailyRefresh(date: string): Promise<boolean> {
   const key = `${PREFIX}quotes-refresh:${date}`;
-  if (localPreview()) {
-    if (await redis().get(key)) return false;
-    await redis().set(key, "running", { ex: 36 * 60 * 60 });
-    return true;
-  }
-  return (await (redis() as Redis).set(key, "running", { nx: true, ex: 36 * 60 * 60 })) === "OK";
-}
-
-export async function releaseDailyRefresh(date: string): Promise<void> {
-  await redis().del(`${PREFIX}quotes-refresh:${date}`);
+  return (await redis().set(key, "running", { nx: true, ex: 36 * 60 * 60 })) === "OK";
 }
 
 export async function savePending(snapshot: Snapshot): Promise<string> {
   const id = randomBytes(24).toString("hex");
-  await redis().set(`${PREFIX}pending:${id}`, snapshot, { ex: 10 * 60 });
+  const header=await storeLedger(snapshot,id,10*60);
+  await redis().set(`${PREFIX}pending:${id}`, header, { ex: 10 * 60 });
   return id;
 }
 
@@ -103,15 +176,20 @@ export async function publishPending(id: string): Promise<Snapshot | null> {
   if (!/^[a-f0-9]{48}$/.test(id)) return null;
   const client = redis();
   const key = `${PREFIX}pending:${id}`;
-  const snapshot = await client.get<Snapshot>(key);
-  if (!snapshot) return null;
+  const stored = await client.get<Snapshot>(key);
+  if (!stored) return null;
+  const snapshot=await hydrateLedger(stored);
   const previous = await getSnapshot();
   if (previous) {
-    await client.set(`${PREFIX}archive:${previous.digest}`, previous, { ex: 30 * 24 * 60 * 60 });
+    const previousHeader=await storeLedger(previous,previous.digest);
+    await client.set(`${PREFIX}archive:${previous.digest}`, previousHeader, { ex: 30 * 24 * 60 * 60 });
   }
-  await client.set(CURRENT_KEY, snapshot);
+  const header=await storeLedger(snapshot,snapshot.digest);
   const quotes = await getDailyQuotes();
   if (quotes) await recordFundDailyValues(snapshot, quotes);
+  else if(snapshot.ledger)await recordReconstruction(snapshot,null);
+  await client.set(CURRENT_KEY, header);
+  hydratedCache=null;
   await client.del(key);
   return snapshot;
 }
@@ -163,7 +241,7 @@ export async function findMember(id: string, code: string, snapshot: Snapshot): 
   return snapshot.members.find((member) => normalizeMemberId(member.id) === normalizedId && member.active && member.loginDigest === digest) ?? null;
 }
 
-export async function allowAttempt(request: Request, kind: "login" | "import"): Promise<boolean> {
+export async function allowAttempt(request: Request, kind: "login" | "import" | "feedback"): Promise<boolean> {
   const header = request.headers.get("x-vercel-forwarded-for") ?? request.headers.get("x-forwarded-for") ?? "unknown";
   const ip = header.split(",")[0]?.trim() || "unknown";
   const hash = createHash("sha256").update(`${pepper()}:${ip}`).digest("hex");
@@ -171,6 +249,23 @@ export async function allowAttempt(request: Request, kind: "login" | "import"): 
   const count = await redis().incr(key);
   if (count === 1) await redis().expire(key, 15 * 60);
   return count <= (kind === "login" ? 8 : 20);
+}
+
+export type FundFeedback = { id: number; fund: FundNumber; memberId: string; name: string; text: string; createdAt: string };
+export async function saveFeedback(member: Member, fund: FundNumber, text: string): Promise<void> {
+  if (!member.allowedFunds.includes(fund) || !text.trim() || text.length > 3000) throw new Error("Ongeldige feedback.");
+  const id = await redis().incr(`${PREFIX}feedback-count`);
+  await redis().set(`${PREFIX}feedback:${id}`, {id, fund, memberId: member.id, name: member.name, text: text.trim(), createdAt: new Date().toISOString()} satisfies FundFeedback);
+}
+export async function getFeedback(member: Member): Promise<FundFeedback[]> {
+  if (member.role.toLowerCase() !== "hoofdbestuurder") throw new Error("Geen toegang.");
+  const count = await redis().get<number>(`${PREFIX}feedback-count`) ?? 0;
+  const rows: FundFeedback[] = [];
+  for (let end=count; end>0; end-=50) {
+    const batch=await Promise.all(Array.from({length:Math.min(50,end)},(_,i)=>redis().get<FundFeedback>(`${PREFIX}feedback:${end-i}`)));
+    rows.push(...batch.filter((p):p is FundFeedback=>p!==null));
+  }
+  return rows;
 }
 
 export async function clearAttempts(request: Request, kind: "login" | "import"): Promise<void> {

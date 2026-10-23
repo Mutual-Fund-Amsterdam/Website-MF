@@ -6,7 +6,11 @@ import { quoteKey } from "@/lib/portal/marketstack";
 import { portfolioView } from "@/lib/portal/portfolio";
 import { memberHistory } from "@/lib/portal/member-history";
 import type { FundNumber } from "@/lib/portal/types";
-import { BenchmarkChart, StockCharts } from "./market-chart";
+import { StockCharts } from "./market-chart";
+import FundChart from "./fund-chart";
+import FeedbackForm from "./feedback-form";
+import {dailyChange, fundPerformance, realisedRisk,reconstructedRisk} from "@/lib/portal/performance";
+import {meetingComparison} from "@/lib/portal/comparison";
 import MemberChart from "./member-chart";
 import LogoutButton from "./logout-button";
 import styles from "./page.module.css";
@@ -38,7 +42,8 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
   const excelValue = ownFund ? member.sourceValue : null;
   const personalResult = personalValue !== null && member.deposits !== null && member.withdrawals !== null ? personalValue + member.withdrawals - member.deposits : null;
   const history = ownFund ? memberHistory(member, snapshot, dailyFundValues) : [];
-  const risk = snapshot.risk?.[fund];
+  const performance = fundPerformance(snapshot, fund, dailyFundValues.filter(p=>p.coverage==="verified"), quotes);
+  const risk = snapshot.ledger ? reconstructedRisk(fund,dailyFundValues,quotes) : realisedRisk(performance, quotes?.estrHistory);
   const stockShare = view.fundValue && view.stockValue !== null ? view.stockValue / view.fundValue : null;
   const cashShare = view.fundValue && view.cashValue !== null ? view.cashValue / view.fundValue : null;
   const otherShare = view.fundValue && view.otherValue ? view.otherValue / view.fundValue : 0;
@@ -59,9 +64,12 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
     {ownFund && <MemberChart points={history}/>}
 
     <section className={styles.panel}><div className={styles.sectionHeader}><div><p className="eyebrow">Fonds {fund}</p><h2>Portefeuille.</h2></div><span className={styles.dataTag}>{positions.length} posities</span></div>
-      <p className={styles.muted}>Koersen opgehaald: {dateTime(quotes?.fetchedAt) ?? "nog niet beschikbaar"}.</p>
+      <p className={styles.muted}>Koersen opgehaald: {dateTime(quotes?.fetchedAt) ?? "nog niet beschikbaar"}.<br/><small>Groen = koersstijging, rood = koersdaling t.o.v. vorige handelsdag.</small></p>
       <div className={styles.tableScroll}><div className={styles.table}><div className={`${styles.row} ${styles.head}`}><span>Aandeel</span><span>Aantal</span><span>Slotkoers</span><span>Waarde</span><span>Fondsgewicht</span></div>
-        {view.valued.map(({ position, quote, valueEur }, index) => <div className={styles.row} key={`${quoteKey(position)}-${index}`}><span className={styles.stockName}><Link href={`/mijn-fonds?fonds=${fund}&aandeel=${encodeURIComponent(quoteKey(position))}#koersverloop`}>{position.name}</Link><small>{position.ticker} · {position.exchange}</small></span><span>{position.quantity.toLocaleString("nl-NL")}</span><span>{quote ? `${quote.currency} ${quote.close.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}<small>{quote ? date(quote.date) : "Koers ontbreekt"}</small></span><span>{valueEur !== null ? eur(valueEur) : "—"}</span><span>{valueEur !== null && view.fundValue ? pct(valueEur / view.fundValue) : "—"}</span></div>)}
+        {view.valued.map(({ position, quote, valueEur }, index) => {
+          const change=quote?dailyChange(quotes?.history?.[quoteKey(position)]??[],quote.date,quote.close):null;
+          return <div className={styles.row} key={`${quoteKey(position)}-${index}`}><span className={styles.stockName}><Link href={`/mijn-fonds?fonds=${fund}&aandeel=${encodeURIComponent(quoteKey(position))}#koersverloop`}>{position.name}</Link><small>{position.ticker} · {position.exchange}</small></span><span>{position.quantity.toLocaleString("nl-NL")}</span><span className={change!==null&&change>0?styles.positive:change!==null&&change<0?styles.negative:""}>{quote ? `${quote.currency} ${quote.close.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}{change!==null&&<small style={{color:"inherit"}}>{change>0?"+":""}{pct(change)}</small>}<small>{quote ? date(quote.date) : "Koers ontbreekt"}</small></span><span>{valueEur !== null ? eur(valueEur) : "—"}</span><span>{valueEur !== null && view.fundValue ? pct(valueEur / view.fundValue) : "—"}</span></div>;
+        })}
       </div></div>
       {view.missing.length > 0 && <p className={styles.notice}>Voor {view.missing.length} {view.missing.length === 1 ? "positie" : "posities"} ontbreekt een passende koers of wisselkoers. Daarom zijn fondswegingen en de actuele fondswaarde nog niet volledig berekend.</p>}
     </section>
@@ -73,11 +81,12 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
 
     <div className={styles.grid}>
       <section className={styles.panel}><p className="eyebrow">Spreiding</p><h2>Sectoren.</h2>{view.sectors.length ? <><div className={styles.sectorList}>{view.sectors.map((sector) => <div key={sector.name}><div><span>{sector.name}</span><b>{view.stockValue ? pct(sector.value / view.stockValue) : "—"}</b></div><progress max={view.stockValue ?? 1} value={sector.value}/></div>)}</div></> : <div className={styles.compEmpty}>Sectorverdeling verschijnt zodra koersen beschikbaar zijn.</div>}</section>
-      <section className={styles.panel}><p className="eyebrow">Risico</p><h2>Indicatoren.</h2>{risk?.asOf && <p className={styles.muted}>Per {date(risk.asOf)}</p>}<div className={styles.riskGrid}><div><span>Sharpe 12M</span><strong>{risk?.sharpe?.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) ?? "—"}</strong></div><div><span>Beta t.o.v. S&amp;P 500</span><strong>{risk?.beta?.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) ?? "—"}</strong></div><div><span>Volatiliteit 12M</span><strong>{risk?.volatility !== null && risk?.volatility !== undefined ? pct(risk.volatility) : "—"}</strong></div><div><span>Maximale daling historie</span><strong>{risk?.maxDrawdown !== null && risk?.maxDrawdown !== undefined ? pct(risk.maxDrawdown) : "—"}</strong></div></div><div className={styles.riskSignals}>{cashShare !== null && <p>Cashgewicht: <b>{pct(cashShare)}</b>{cashShare > 0.2 ? " · boven signaleringsgrens 20%" : ""}</p>}{largestSector && view.stockValue !== null && <p>Grootste sector: <b>{largestSector.name} ({pct(largestSector.value / view.stockValue)})</b>{largestSector.value / view.stockValue > 0.35 ? " · boven signaleringsgrens 35%" : ""}</p>}{largestPosition && view.fundValue !== null && <p>Grootste positie: <b>{largestPosition.position.name} ({pct(largestPosition.valueEur! / view.fundValue)})</b></p>}</div></section>
+      <section className={styles.panel}><p className="eyebrow">Risico</p><h2>Indicatoren.</h2>{risk?.asOf && <p className={styles.muted}>Per {date(risk.asOf)}</p>}<div className={styles.riskGrid}><div><span>Sharpe 12M</span><strong>{risk?.sharpe?.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) ?? "—"}</strong></div><div><span>Beta t.o.v. S&amp;P 500</span><strong>{risk?.beta?.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) ?? "—"}</strong></div><div><span>Volatiliteit 12M</span><strong>{risk?.volatility !== null && risk?.volatility !== undefined ? pct(risk.volatility) : "—"}</strong></div><div><span>{snapshot.ledger ? "Maximale daling 12M" : "Maximale daling historie"}</span><strong>{risk?.maxDrawdown !== null && risk?.maxDrawdown !== undefined ? pct(risk.maxDrawdown) : "—"}</strong></div></div>{risk.volatility === null && <p className={styles.muted}>{snapshot.ledger ? "Voor de 12M-statistieken ontbreekt een volledige, gecontroleerde dagreeks." : "Voor de 12M-statistieken ontbreken voldoende vergelijkbare maandafsluitingen."}</p>}<div className={styles.riskSignals}>{cashShare !== null && <p>Cashgewicht: <b>{pct(cashShare)}</b>{cashShare > 0.2 ? " · boven signaleringsgrens 20%" : ""}</p>}{largestSector && view.stockValue !== null && <p>Grootste sector: <b>{largestSector.name} ({pct(largestSector.value / view.stockValue)})</b>{largestSector.value / view.stockValue > 0.35 ? " · boven signaleringsgrens 35%" : ""}</p>}{largestPosition && view.fundValue !== null && <p>Grootste positie: <b>{largestPosition.position.name} ({pct(largestPosition.valueEur! / view.fundValue)})</b></p>}</div></section>
     </div>
 
-    <section className={styles.panel}><p className="eyebrow">Historie</p><h2>Fondsontwikkeling.</h2><div className={styles.empty}>In the making</div></section>
-    <div className={styles.chartGrid}><BenchmarkChart points={quotes?.benchmark?.points ?? []}/><StockCharts key={query.aandeel ?? "eerste"} stocks={stockSeries} initialSelected={query.aandeel}/></div>
-    {admin && <p className={styles.admin}><Link href="/beheer/import">Nieuwe Excelversie importeren →</Link></p>}
+    <FundChart comparison={meetingComparison(performance,quotes)} fund={fund}/>
+    <StockCharts key={query.aandeel ?? "eerste"} stocks={stockSeries} initialSelected={query.aandeel}/>
+    {admin && <p className={styles.admin}><Link href="/beheer/import">Nieuwe Excelversie importeren →</Link> · <Link href="/beheer/reconstructie">Historische reconstructie →</Link></p>}
+    <FeedbackForm fund={fund}/>
   </div></main>;
 }

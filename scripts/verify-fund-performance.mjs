@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import {fundPerformance,dailyChange,realisedRisk,reconstructedRisk} from '../lib/portal/performance.ts';
+const snapshot={fundHistory:[{fund:1,date:'2025-01-31',nav:100,totalUnits:100},{fund:1,date:'2025-02-28',nav:100,totalUnits:110},{fund:1,date:'2025-03-31',nav:110,totalUnits:110}]};
+const points=fundPerformance(snapshot,1,[],{benchmark:{points:[{date:'2025-01-31',close:100},{date:'2025-02-28',close:110},{date:'2025-03-31',close:121}]},eurUsdHistory:[{date:'2025-01-31',close:1},{date:'2025-02-28',close:1.1},{date:'2025-03-31',close:1.1}]});
+assert.equal(points[1].fundReturn,0,'Deposit must not create a return');
+assert.equal(points[1].value,11000,'Fund value includes deposit');
+assert.ok(Math.abs(points[1].benchmarkReturn)<1e-10,'Benchmark converted to EUR');
+assert.ok(Math.abs(points[2].fundReturn-.1)<1e-10);
+assert.ok(Math.abs(points[2].benchmarkReturn-.1)<1e-10);
+assert.equal(dailyChange([{date:'2025-01-01',close:100},{date:'2025-01-02',close:110}],'2025-01-02',110),.10000000000000009);
+assert.equal(dailyChange([],'2025-01-02',110),null);
+const riskPoints=Array.from({length:13},(_,i)=>{const date=new Date(Date.UTC(2025,i+1,0)).toISOString().slice(0,10);const nav=100*(1+.01*i+.002*(i%2));return {date,nav,value:nav*100,fundReturn:nav/100-1,benchmarkReturn:nav/100-1};});
+const rates=Array.from({length:400},(_,i)=>({date:new Date(Date.UTC(2025,0,1)+i*86400000).toISOString().slice(0,10),close:2.44}));
+const risk=realisedRisk(riskPoints,rates,'2026-02-01');
+assert.ok(Math.abs(risk.beta-1)<1e-8,'Identical fund and benchmark have beta one');
+assert.ok(risk.volatility>0);assert.ok(Number.isFinite(risk.sharpe));assert.equal(risk.maxDrawdown,0);
+assert.equal(realisedRisk(riskPoints.slice(0,3),rates,'2026-02-01').volatility,null,'Insufficient history is missing');
+assert.equal(realisedRisk(riskPoints,[],'2026-02-01').sharpe,null,'Missing risk-free history is missing');
+console.log('Passed: external cashflows, EUR benchmark, price colours, matched beta, volatility, Sharpe and missing-data cases.');
+const daily=[],benchmark=[],fx=[],estr=[];
+for(let i=0;i<365;i++){
+ const date=new Date(Date.UTC(2025,0,1)+i*86400000).toISOString().slice(0,10);
+ estr.push({date,close:2});fx.push({date,close:1});
+ if([0,6].includes(new Date(date).getUTCDay()))continue;
+ const nav=100*Math.exp(i*.0001+.01*Math.sin(i/12));daily.push({fund:1,date,nav,fundValue:nav*10,coverage:'verified'});benchmark.push({date,close:nav});
+}
+const dq={prices:{},benchmark:{points:benchmark},eurUsdHistory:fx,estrHistory:estr};
+const dailyRisk=reconstructedRisk(1,daily,dq);assert.ok(Math.abs(dailyRisk.beta-1)<1e-8);assert.ok(dailyRisk.volatility>0);assert.ok(Number.isFinite(dailyRisk.sharpe));assert.ok(dailyRisk.maxDrawdown<0);
+assert.equal(reconstructedRisk(1,daily.filter((p,i)=>i!==100),dq).volatility,null,'A missing trading day prevents comparable 12M risk');
+assert.equal(reconstructedRisk(1,daily.map(p=>({...p,coverage:'indicative'})),dq).volatility,null);
+assert.equal(reconstructedRisk(1,daily,{...dq,estrHistory:[]}).sharpe,null);
+const override=fundPerformance({...snapshot,ledger:{}},1,[{fund:1,date:'2025-02-28',nav:101,fundValue:11110,coverage:'verified'}],null);
+assert.equal(override.find(p=>p.date==='2025-02-28').nav,101,'Verified reconstruction overrides old administrative point');
+console.log('Passed daily risk: common trading dates, beta=1, actual volatility/drawdown, ECB-rate requirement, unverified and missing-day suppression; verified history priority.');
