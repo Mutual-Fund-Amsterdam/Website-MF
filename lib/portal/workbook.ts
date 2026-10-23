@@ -1,5 +1,6 @@
 import { createHash, createHmac } from "node:crypto";
 import readExcelFile from "read-excel-file/node";
+import {applyInputWorkbook} from "./input-workbook.ts";
 import { auditLedger, validateLedger } from "./ledger.ts";
 import type { BankEvent, BrokerEvent, MemberCheck, ReconstructionLedger } from "./ledger";
 import type { Cash, FundHistoryPoint, FundNumber, ImportSummary, Member, MemberTransaction, Position, RiskMetrics, Snapshot } from "./types";
@@ -100,7 +101,7 @@ export function summarize(snapshot: Snapshot): ImportSummary {
   return { members, positions, cashDates, participationTotals, warnings: snapshot.warnings };
 }
 
-export async function parseWorkbook(bytes: Buffer, pepper: string): Promise<Snapshot> {
+export async function parseWorkbook(bytes: Buffer, pepper: string, previous?:Snapshot|null): Promise<Snapshot> {
   if (bytes.length > 2_000_000) throw new Error("Het Excelbestand is groter dan 2 MB.");
   const sheets = await readExcelFile(bytes) as Sheet[];
   const get = (...names: string[]) => sheets.find((item) => names.includes(item.sheet));
@@ -248,6 +249,7 @@ export async function parseWorkbook(bytes: Buffer, pepper: string): Promise<Snap
   const overview = get("Overzicht");
   const snapshot: Snapshot = { schema: 1, digest: createHash("sha256").update(bytes).digest("hex"), importedAt: new Date().toISOString(), requestedDate: cellDate(overview?.data[4]?.[1]), members, positions, cash, transactions, fundHistory, totalUnitsByFund, risk, warnings };
   snapshot.ledger=parseLedger(sheets);
+  applyInputWorkbook(snapshot,sheets,(id,code)=>codeDigest(id,code,pepper),previous);
   const ledgerAudit=auditLedger(snapshot);
   if(ledgerAudit){
     if(ledgerAudit.bank.some(c=>c.differenceCents!==0))throw new Error("ING-beginsaldo en mutaties sluiten niet aan op het eindsaldo.");
@@ -260,5 +262,7 @@ export async function parseWorkbook(bytes: Buffer, pepper: string): Promise<Snap
     if (Math.abs(totals[fund] - 1) > 0.005) warnings.push(`Participaties van fonds ${fund} tellen op tot ${(totals[fund] * 100).toFixed(2)}% in plaats van 100%; controleer ontbrekende of uitgeschreven deelnemers.`);
   }
   if (members.some((member) => (member.sourceValue ?? 0) < 0)) warnings.push("Er zijn negatieve ledenwaarden in de bronadministratie; controleer deze vóór publicatie.");
+  // Autosave formatting and incomplete drafts must not create a new financial version.
+  if(snapshot.input)snapshot.digest=createHash("sha256").update(JSON.stringify({...snapshot,digest:undefined,importedAt:undefined})).digest("hex");
   return snapshot;
 }

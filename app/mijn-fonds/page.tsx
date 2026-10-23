@@ -10,7 +10,7 @@ import { StockCharts } from "./market-chart";
 import FundChart from "./fund-chart";
 import FeedbackForm from "./feedback-form";
 import {dailyChange, fundPerformance, realisedRisk,reconstructedRisk} from "@/lib/portal/performance";
-import {historicalComparison} from "@/lib/portal/comparison";
+import {comparisonModes} from "@/lib/portal/comparison";
 import {estimatedFundHistory} from "@/lib/portal/estimated-history";
 import MemberChart from "./member-chart";
 import Composition from "./composition";
@@ -39,7 +39,7 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
   const view = portfolioView(positions, cash, quotes);
   const admin = member.role.toLowerCase() === "hoofdbestuurder";
   const ownFund = fund === member.fund;
-  const participationTotal = snapshot.members.filter((item) => item.fund === fund && item.active).reduce((sum, item) => sum + (item.participation ?? 0), 0);
+  const participationTotal = snapshot.members.filter((item) => item.fund === fund).reduce((sum, item) => sum + (item.participation ?? 0), 0);
   const participationReconciled = Math.abs(participationTotal - 1) <= 0.005;
   const reconstructed = estimatedFundHistory(snapshot, quotes, fund);
   const history = ownFund ? memberHistory(member, snapshot, dailyFundValues, reconstructed) : [];
@@ -91,9 +91,9 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
       <section className={styles.panel}><p className="eyebrow">Risico</p><h2>Indicatoren.</h2>{risk?.asOf && <p className={styles.muted}>{riskIndicative ? "Indicatief · 12 maanden · " : ""}Per {date(risk.asOf)}</p>}<div className={styles.riskGrid}><div><span>Sharpe 12M</span><strong>{risk?.sharpe?.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) ?? "—"}</strong></div><div><span>Beta t.o.v. S&amp;P 500</span><strong>{risk?.beta?.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) ?? "—"}</strong></div><div><span>Volatiliteit 12M</span><strong>{risk?.volatility !== null && risk?.volatility !== undefined ? pct(risk.volatility) : "—"}</strong></div><div><span>Maximale daling 12M</span><strong>{risk?.maxDrawdown !== null && risk?.maxDrawdown !== undefined ? pct(risk.maxDrawdown) : "—"}</strong></div></div>{risk.volatility === null && <p className={styles.muted}>Nog onvoldoende vergelijkbare daggegevens voor 12 maanden.</p>}<div className={styles.riskSignals}>{cashShare !== null && <p>Cashgewicht: <b>{pct(cashShare)}</b>{cashShare > 0.2 ? " · boven signaleringsgrens 20%" : ""}</p>}{largestSector && view.stockValue !== null && <p>Grootste sector: <b>{largestSector.name} ({pct(largestSector.value / view.stockValue)})</b>{largestSector.value / view.stockValue > 0.35 ? " · boven signaleringsgrens 35%" : ""}</p>}{largestPosition && view.fundValue !== null && <p>Grootste positie: <b>{largestPosition.position.name} ({pct(largestPosition.valueEur! / view.fundValue)})</b></p>}</div></section>
     </div>
 
-    <FundChart comparison={historicalComparison(reconstructed,quotes)} fund={fund}/>
+    <FundChart comparisons={comparisonModes(reconstructed,quotes,fund===2?"2022-09-21":"2022-10-21")} fund={fund}/>
     <StockCharts key={query.aandeel ?? "eerste"} stocks={stockSeries} initialSelected={query.aandeel}/>
-    {admin && <p className={styles.admin}><Link href="/beheer/import">Nieuwe Excelversie importeren →</Link> · <Link href="/beheer/reconstructie">Historische reconstructie →</Link></p>}
+    {admin && <p className={styles.admin}><Link href="/beheer/import">Nieuwe Excelversie importeren →</Link> · <Link href="/beheer/reconstructie">Historische reconstructie →</Link> · <Link href="/beheer/koppelingen">OneDrive en koersverbruik →</Link></p>}
     <FeedbackForm fund={fund}/>
   </div></main>;
 }

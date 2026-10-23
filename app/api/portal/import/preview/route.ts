@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     if (!(file instanceof File) || !file.name.toLowerCase().endsWith(".xlsx") || file.size > 2_000_000) {
       return NextResponse.json({ error: "Kies een .xlsx-bestand van maximaal 2 MB." }, { status: 400, headers });
     }
-    const snapshot = await parseWorkbook(Buffer.from(await file.arrayBuffer()), pepper());
+    const snapshot = await parseWorkbook(Buffer.from(await file.arrayBuffer()), pepper(),session.snapshot);
     const id = await savePending(snapshot);
     return NextResponse.json({ id, digest: snapshot.digest, summary: summarize(snapshot) }, { headers });
   } catch (error) {

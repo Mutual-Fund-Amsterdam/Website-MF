@@ -13,6 +13,15 @@ export function compareFundReturns(points:PerformancePoint[],baseline=FUND_RETUR
 
 export type MeetingComparison={start:string;referenceDate:string|null;benchmarkMissing:boolean;dailyFrom?:string|null;points:{date:string;fund:number;benchmark:number|null;band?:[number,number];estimated?:boolean;priceCoverage?:number}[]};
 
+export function comparisonModes(points:EstimatedFundPoint[],quotes:DailyQuotes|null,earliest="2022-09-21"){
+ const first=points.find(p=>p.date>=earliest&&p.nav>0&&quotes?.benchmark?.points.some(b=>b.date===p.date)&&quotes?.eurUsdHistory?.some(f=>f.date<=p.date&&f.close>0&&Date.parse(p.date)-Date.parse(f.date)<=7*86400000));
+ const year=historicalComparison(points,quotes,FUND_RETURN_BASELINE);
+ year.points=year.points.filter(p=>p.date>=FUND_RETURN_BASELINE);
+ const historical=first?historicalComparison(points,quotes,first.date):{start:points[0]?.date??FUND_RETURN_BASELINE,referenceDate:null,benchmarkMissing:true,points:[]} satisfies MeetingComparison;
+ historical.points=historical.points.filter(p=>p.date>=historical.start);
+ return {year,historical};
+}
+
 /** A display window never resets the meeting's 0% baseline. */
 export function historicalComparison(points:EstimatedFundPoint[],quotes:DailyQuotes|null,start=FUND_RETURN_BASELINE):MeetingComparison{
  const base=points.find(p=>p.date===start)??points.filter(p=>p.date<start).at(-1);

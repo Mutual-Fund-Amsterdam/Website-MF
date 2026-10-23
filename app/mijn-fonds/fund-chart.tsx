@@ -4,15 +4,18 @@ import {CartesianGrid,ComposedChart,Line,ReferenceLine,ResponsiveContainer,Toolt
 import {chartPeriod,type FundChartPeriod,type MeetingComparison} from "@/lib/portal/comparison";
 import styles from "./page.module.css";
 
-export default function FundChart({comparison,fund}: {comparison:MeetingComparison;fund:number}){
+export default function FundChart({comparisons,fund}: {comparisons:{year:MeetingComparison;historical:MeetingComparison};fund:number}){
+ const [mode,setMode]=useState<"year"|"historical">("year");
+ const comparison=comparisons[mode];
  const [period,setPeriod]=useState<FundChartPeriod>("all");
- const rows=chartPeriod(comparison.points,period,comparison.start);
+ const rows=mode==="year"?comparison.points:chartPeriod(comparison.points,period,comparison.start);
  const chartRows=rows.map(p=>({...p,timestamp:Date.parse(p.date)}));
  const pct=(v:number)=>`${(v*100).toLocaleString("nl-NL",{maximumFractionDigits:2})}%`;
  const date=(v:string)=>new Intl.DateTimeFormat("nl-NL",{dateStyle:"medium"}).format(new Date(v+"T12:00:00"));
  return <section className={styles.panel}><p className="eyebrow">Historische ontwikkeling</p><h2>Fondsrendement.</h2>
-  <p className={styles.chartCaption}>Baseline (0%): eerste meeting, {new Intl.DateTimeFormat("nl-NL",{dateStyle:"long"}).format(new Date(comparison.start+"T12:00:00"))}.</p>
-  <div className={styles.historyPeriods} role="group" aria-label="Periode fondsgrafiek">{([["fund-year","Dit fondsjaar"],["6m","6 maanden"],["1y","1 jaar"],["2y","2 jaar"],["all","Alles"]] as const).map(([id,label])=><button key={id} type="button" aria-pressed={id===period} onClick={()=>setPeriod(id)}>{label}</button>)}</div>
+  <p className={styles.chartCaption}>Baseline (0%): {mode==="year"?"eerste meeting, ":"historische start, "}{new Intl.DateTimeFormat("nl-NL",{dateStyle:"long"}).format(new Date(comparison.start+"T12:00:00"))}.</p>
+  <div className={styles.historyPeriods} role="group" aria-label="Vergelijking">{([["year","Dit fondsjaar"],["historical","Historisch tegenover S&P 500"]] as const).map(([id,label])=><button type="button" key={id} aria-pressed={mode===id} onClick={()=>setMode(id)}>{label}</button>)}</div>
+  {mode==="historical"&&<div className={styles.historyPeriods} role="group" aria-label="Periode fondsgrafiek">{([["6m","6 maanden"],["1y","1 jaar"],["2y","2 jaar"],["all","Alles"]] as const).map(([id,label])=><button key={id} type="button" aria-pressed={id===period} onClick={()=>setPeriod(id)}>{label}</button>)}</div>}
   <div className={styles.memberLegend}><span><i/>Fonds {fund}</span><span><i/>S&amp;P 500 (EUR)</span></div>
   {rows.length>0?<div className={styles.fundChart}><ResponsiveContainer width="100%" height="100%"><ComposedChart data={chartRows}>
    <CartesianGrid stroke="rgba(233,229,218,.1)" vertical={false}/>
