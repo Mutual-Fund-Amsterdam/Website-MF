@@ -13,6 +13,8 @@ import {dailyChange, fundPerformance, realisedRisk,reconstructedRisk} from "@/li
 import {historicalComparison} from "@/lib/portal/comparison";
 import {estimatedFundHistory} from "@/lib/portal/estimated-history";
 import MemberChart from "./member-chart";
+import Composition from "./composition";
+import {indicativeRisk} from "@/lib/portal/model-risk";
 import LogoutButton from "./logout-button";
 import styles from "./page.module.css";
 
@@ -39,13 +41,16 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
   const ownFund = fund === member.fund;
   const participationTotal = snapshot.members.filter((item) => item.fund === fund && item.active).reduce((sum, item) => sum + (item.participation ?? 0), 0);
   const participationReconciled = Math.abs(participationTotal - 1) <= 0.005;
-  const history = ownFund ? memberHistory(member, snapshot, dailyFundValues) : [];
+  const reconstructed = estimatedFundHistory(snapshot, quotes, fund);
+  const history = ownFund ? memberHistory(member, snapshot, dailyFundValues, reconstructed) : [];
   // The summary and chart must use the same valuation and cashflow cutoff.
   const personalPoint = history.at(-1);
   const personalValue = personalPoint?.value ?? (ownFund ? member.sourceValue : null);
   const personalResult = personalPoint ? personalPoint.value - personalPoint.netInleg : null;
   const performance = fundPerformance(snapshot, fund, dailyFundValues.filter(p=>p.coverage==="verified"), quotes);
-  const risk = snapshot.ledger ? reconstructedRisk(fund,dailyFundValues,quotes) : realisedRisk(performance, quotes?.estrHistory);
+  const verifiedRisk = snapshot.ledger ? reconstructedRisk(fund,dailyFundValues,quotes) : realisedRisk(performance, quotes?.estrHistory);
+  const riskIndicative = verifiedRisk.volatility === null;
+  const risk = riskIndicative ? indicativeRisk(reconstructed,quotes) : verifiedRisk;
   const stockShare = view.fundValue && view.stockValue !== null ? view.stockValue / view.fundValue : null;
   const cashShare = view.fundValue && view.cashValue !== null ? view.cashValue / view.fundValue : null;
   const otherShare = view.fundValue && view.otherValue ? view.otherValue / view.fundValue : 0;
@@ -78,15 +83,15 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
 
     <div className={styles.grid}>
       <section className={styles.panel}><p className="eyebrow">Liquiditeit</p><h2>Cash.</h2><strong className={styles.bigNumber}>{view.cashValue !== null ? eur(view.cashValue) : "—"}</strong></section>
-      <section className={styles.panel}><p className="eyebrow">Verdeling</p><h2>Cash &amp; aandelen.</h2>{view.fundValue !== null && stockShare !== null && cashShare !== null ? <><div className={styles.composition} role="img" aria-label={`Aandelen ${pct(stockShare)}, cash ${pct(cashShare)}${otherShare ? `, overig ${pct(otherShare)}` : ""}`}><span style={{ width: `${stockShare * 100}%` }}/><span style={{ width: `${cashShare * 100}%` }}/>{otherShare > 0 && <span style={{ width: `${otherShare * 100}%` }}/>}</div><div className={styles.legend}><span><i/>Aandelen <b>{pct(stockShare)}</b></span><span><i/>Cash <b>{pct(cashShare)}</b></span>{otherShare > 0 && <span><i/>Overig <b>{pct(otherShare)}</b></span>}</div><p className={styles.muted}>Fondswaarde indicatief {eur(view.fundValue)}. Overige bezittingen staan apart van cash.</p></> : <div className={styles.compEmpty}>Verdeling verschijnt zodra alle koersen en wisselkoersen beschikbaar zijn.</div>}</section>
+      <section className={styles.panel}><p className="eyebrow">Verdeling</p><h2>Cash &amp; aandelen.</h2>{view.fundValue !== null && view.fundValue > 0 && stockShare !== null && cashShare !== null ? <Composition stocks={view.stockValue!} cash={view.cashValue!} other={view.otherValue??0} total={view.fundValue}/> : <div className={styles.compEmpty}>Verdeling verschijnt zodra alle koersen en wisselkoersen beschikbaar zijn.</div>}</section>
     </div>
 
     <div className={styles.grid}>
       <section className={styles.panel}><p className="eyebrow">Spreiding</p><h2>Sectoren.</h2>{view.sectors.length ? <><div className={styles.sectorList}>{view.sectors.map((sector) => <div key={sector.name}><div><span>{sector.name}</span><b>{view.stockValue ? pct(sector.value / view.stockValue) : "—"}</b></div><progress max={view.stockValue ?? 1} value={sector.value}/></div>)}</div></> : <div className={styles.compEmpty}>Sectorverdeling verschijnt zodra koersen beschikbaar zijn.</div>}</section>
-      <section className={styles.panel}><p className="eyebrow">Risico</p><h2>Indicatoren.</h2>{risk?.asOf && <p className={styles.muted}>Per {date(risk.asOf)}</p>}<div className={styles.riskGrid}><div><span>Sharpe 12M</span><strong>{risk?.sharpe?.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) ?? "—"}</strong></div><div><span>Beta t.o.v. S&amp;P 500</span><strong>{risk?.beta?.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) ?? "—"}</strong></div><div><span>Volatiliteit 12M</span><strong>{risk?.volatility !== null && risk?.volatility !== undefined ? pct(risk.volatility) : "—"}</strong></div><div><span>{snapshot.ledger ? "Maximale daling 12M" : "Maximale daling historie"}</span><strong>{risk?.maxDrawdown !== null && risk?.maxDrawdown !== undefined ? pct(risk.maxDrawdown) : "—"}</strong></div></div>{risk.volatility === null && <p className={styles.muted}>{snapshot.ledger ? "Voor de 12M-statistieken ontbreekt een volledige, gecontroleerde dagreeks." : "Voor de 12M-statistieken ontbreken voldoende vergelijkbare maandafsluitingen."}</p>}<div className={styles.riskSignals}>{cashShare !== null && <p>Cashgewicht: <b>{pct(cashShare)}</b>{cashShare > 0.2 ? " · boven signaleringsgrens 20%" : ""}</p>}{largestSector && view.stockValue !== null && <p>Grootste sector: <b>{largestSector.name} ({pct(largestSector.value / view.stockValue)})</b>{largestSector.value / view.stockValue > 0.35 ? " · boven signaleringsgrens 35%" : ""}</p>}{largestPosition && view.fundValue !== null && <p>Grootste positie: <b>{largestPosition.position.name} ({pct(largestPosition.valueEur! / view.fundValue)})</b></p>}</div></section>
+      <section className={styles.panel}><p className="eyebrow">Risico</p><h2>Indicatoren.</h2>{risk?.asOf && <p className={styles.muted}>{riskIndicative ? "Indicatief · 12 maanden · " : ""}Per {date(risk.asOf)}</p>}<div className={styles.riskGrid}><div><span>Sharpe 12M</span><strong>{risk?.sharpe?.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) ?? "—"}</strong></div><div><span>Beta t.o.v. S&amp;P 500</span><strong>{risk?.beta?.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) ?? "—"}</strong></div><div><span>Volatiliteit 12M</span><strong>{risk?.volatility !== null && risk?.volatility !== undefined ? pct(risk.volatility) : "—"}</strong></div><div><span>Maximale daling 12M</span><strong>{risk?.maxDrawdown !== null && risk?.maxDrawdown !== undefined ? pct(risk.maxDrawdown) : "—"}</strong></div></div>{risk.volatility === null && <p className={styles.muted}>Nog onvoldoende vergelijkbare daggegevens voor 12 maanden.</p>}<div className={styles.riskSignals}>{cashShare !== null && <p>Cashgewicht: <b>{pct(cashShare)}</b>{cashShare > 0.2 ? " · boven signaleringsgrens 20%" : ""}</p>}{largestSector && view.stockValue !== null && <p>Grootste sector: <b>{largestSector.name} ({pct(largestSector.value / view.stockValue)})</b>{largestSector.value / view.stockValue > 0.35 ? " · boven signaleringsgrens 35%" : ""}</p>}{largestPosition && view.fundValue !== null && <p>Grootste positie: <b>{largestPosition.position.name} ({pct(largestPosition.valueEur! / view.fundValue)})</b></p>}</div></section>
     </div>
 
-    <FundChart comparison={historicalComparison(estimatedFundHistory(snapshot,quotes,fund),quotes)} fund={fund}/>
+    <FundChart comparison={historicalComparison(reconstructed,quotes)} fund={fund}/>
     <StockCharts key={query.aandeel ?? "eerste"} stocks={stockSeries} initialSelected={query.aandeel}/>
     {admin && <p className={styles.admin}><Link href="/beheer/import">Nieuwe Excelversie importeren →</Link> · <Link href="/beheer/reconstructie">Historische reconstructie →</Link></p>}
     <FeedbackForm fund={fund}/>

@@ -18,7 +18,7 @@ function price(quotes:DailyQuotes,snapshot:Snapshot,symbol:string,currency:strin
 }
 /** A model spread, not a confidence interval: unpriced exposure flat vs moving with S&P 500.
  * Both paths are reconciled to reported NAVs; only real dated prices drive daily variation.
- * This separate series never changes member balances or verified risk statistics. */
+ * Intermediate days remain indicative; reported NAV anchors and ledger events are preserved. */
 export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,fund:FundNumber):EstimatedFundPoint[]{
  const anchors=(snapshot.fundHistory??[]).filter(p=>p.fund===fund&&p.nav>0&&p.totalUnits>0).sort((a,b)=>a.date.localeCompare(b.date));
  if(!anchors.length)return [];
@@ -26,19 +26,20 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
  if(!snapshot.ledger||!quotes)return reported;
  const bank=bankControl(snapshot.ledger,fund);
  const end=anchors.at(-1)!.date;
- const twoYears=new Date(end+"T12:00:00Z");twoYears.setUTCFullYear(twoYears.getUTCFullYear()-2);
- const from=[bank.from??end,twoYears.toISOString().slice(0,10),anchors[0].date].sort().at(-1)!;
+ const brokerStart=snapshot.ledger.broker.filter(e=>e.fund===fund&&["Brokeropening","Buy","Sell"].includes(e.kind)).map(e=>e.date).sort()[0];
+ const from=[bank.from??end,brokerStart??anchors[0].date,anchors[0].date].sort().at(-1)!;
  const benchmark=quotes.benchmark?.points??[];
  const eurIndex=(date:string)=>{const p=latest(benchmark,date,4),r=fx(quotes,"USD",date);return p&&r?p.close/r:null;};
  const broker=snapshot.ledger.broker.filter(e=>e.fund===fund&&e.quantity&&["Buy","Sell","Ankerpositie"].includes(e.kind));
  const splits=modelSplits(snapshot,quotes);
  const allDates=new Set<string>(anchors.filter(p=>p.date>=from).map(p=>p.date));
+ allDates.add(from);
  for(const p of benchmark)if(p.date>=from&&p.date<=end)allDates.add(p.date);
  for(const rows of Object.values(quotes.history??{}))for(const p of rows)if(p.date>=from&&p.date<=end)allDates.add(p.date);
  // The fixed meeting reference can be inside a reporting interval.
  if(from<="2026-09-16"&&end>="2026-09-16")allDates.add("2026-09-16");
  const dates=[...allDates].sort();
- const output=new Map<string,EstimatedFundPoint>(reported.filter(p=>p.date<from).map(p=>[p.date,p]));
+ const output=new Map<string,EstimatedFundPoint>();
  for(let i=0;i<anchors.length-1;i++){
   const left=anchors[i],right=anchors[i+1];if(right.date<from)continue;
   const interval=[left.date,...dates.filter(d=>d>left.date&&d<=right.date)];

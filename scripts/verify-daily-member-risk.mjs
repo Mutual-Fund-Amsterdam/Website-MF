@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import {memberHistory} from '../lib/portal/member-history.ts';
+import {indicativeRisk} from '../lib/portal/model-risk.ts';
+const member={id:'fictional',fund:1};
+const snapshot={ledger:{},transactions:[{fund:1,memberId:'fictional',date:'2026-09-16',amount:1000,nav:100,units:10},{fund:1,memberId:'fictional',date:'2026-09-20',amount:-200,nav:110,units:-200/110}],fundHistory:[{fund:1,date:'2026-09-16',nav:100},{fund:1,date:'2026-09-23',nav:105}]};
+const reconstructed=[{date:'2026-09-17',nav:102,estimated:true},{date:'2026-09-18',nav:99,estimated:true},{date:'2026-09-20',nav:108,estimated:true},{date:'2026-09-21',nav:104,estimated:true}];
+const own=memberHistory(member,snapshot,[],reconstructed);
+assert.equal(own.find(p=>p.date==='2026-09-17').value,1020);
+assert.equal(own.find(p=>p.date==='2026-09-18').value,990,'Daily price losses must appear in a member value');
+assert.equal(own.find(p=>p.date==='2026-09-20').netInleg,800);
+assert.ok(Math.abs(own.find(p=>p.date==='2026-09-20').value-900)<1e-8,'Withdrawal uses its actual booking NAV');
+assert.ok(Math.abs(own.at(-1).value-(10-200/110)*105)<1e-8,'Authoritative final NAV and units remain unchanged');
+assert.ok(own.find(p=>p.date==='2026-09-17').indicative);
+assert.equal(own.at(-1).indicative,undefined);
+const dates=[];for(let t=Date.parse('2025-10-06');t<=Date.parse('2026-10-06');t+=86400000){const d=new Date(t);if(d.getUTCDay()>0&&d.getUTCDay()<6)dates.push(d.toISOString().slice(0,10));}
+let nav=100;const history=dates.map((date,i)=>({date,nav:nav*=1+(i%3===0?-.003:.002),estimated:true}));
+const quotes={prices:{},benchmark:{points:history.map(p=>({date:p.date,close:p.nav}))},eurUsdHistory:dates.map(date=>({date,close:1})),estrHistory:dates.map(date=>({date,close:2.4}))};
+const risk=indicativeRisk(history,quotes);
+assert.ok(Math.abs(risk.beta-1)<1e-8,'Identical fund/benchmark returns have beta one');
+assert.ok(risk.volatility>0&&Number.isFinite(risk.sharpe)&&risk.maxDrawdown<0);
+assert.equal(risk.indicative,true);assert.equal(risk.asOf,'2026-10-06');
+assert.equal(indicativeRisk(history.slice(0,40),quotes).volatility,null,'Short history is not presented as 12M');
+assert.equal(indicativeRisk(history.filter((_,i)=>i!==60),quotes).beta,null,'A missing trading day is not bridged for daily risk');
+assert.equal(indicativeRisk(history,{...quotes,estrHistory:[]}).sharpe,null,'Missing risk-free data is never assumed zero');
+console.log('Passed: daily member movements, dated withdrawals, final source balance, matched indicative risk, sample length and missing-data gates.');
