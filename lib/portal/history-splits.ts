@@ -7,6 +7,8 @@ const disclosed=[
  {symbol:"IBKR",date:"2025-06-18",factor:4,source:"https://www.sec.gov/Archives/edgar/data/1381197/000138119725000078/ibkr-8k_20250630er.htm"},
  {symbol:"PANW",date:"2024-12-16",factor:2,source:"https://paloaltonetworks.gcs-web.com/investor-resources/investor-faqs"},
  {symbol:"AVTX",date:"2025-05-22",factor:.1,source:"https://avantium.com/wp-content/uploads/2026/03/Avantium-2025-Annual-report.pdf"},
+ {symbol:"MSTR",date:"2024-08-08",factor:10,source:"https://www.strategy.com/press/microstrategy-announces-10-for-1-stock-split_07-11-2024"},
+ {symbol:"NVDA",date:"2024-06-10",factor:10,source:"https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-first-quarter-fiscal-2025"},
 ];
 export type ModelSplit={symbol:string;date:string;factor:number};
 /** Some provider series change their price basis a few days before the legal ex-date.
