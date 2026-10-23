@@ -38,10 +38,11 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
   const ownFund = fund === member.fund;
   const participationTotal = snapshot.members.filter((item) => item.fund === fund && item.active).reduce((sum, item) => sum + (item.participation ?? 0), 0);
   const participationReconciled = Math.abs(participationTotal - 1) <= 0.005;
-  const personalValue = ownFund && member.participation !== null && view.fundValue !== null ? member.participation * view.fundValue : null;
-  const excelValue = ownFund ? member.sourceValue : null;
-  const personalResult = personalValue !== null && member.deposits !== null && member.withdrawals !== null ? personalValue + member.withdrawals - member.deposits : null;
   const history = ownFund ? memberHistory(member, snapshot, dailyFundValues) : [];
+  // The summary and chart must use the same valuation and cashflow cutoff.
+  const personalPoint = history.at(-1);
+  const personalValue = personalPoint?.value ?? (ownFund ? member.sourceValue : null);
+  const personalResult = personalPoint ? personalPoint.value - personalPoint.netInleg : null;
   const performance = fundPerformance(snapshot, fund, dailyFundValues.filter(p=>p.coverage==="verified"), quotes);
   const risk = snapshot.ledger ? reconstructedRisk(fund,dailyFundValues,quotes) : realisedRisk(performance, quotes?.estrHistory);
   const stockShare = view.fundValue && view.stockValue !== null ? view.stockValue / view.fundValue : null;
@@ -58,7 +59,7 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
     <div className={styles.cards}>
       <article><span>Totale fondswaarde</span><strong>{view.fundValue !== null ? eur(view.fundValue) : "—"}</strong><p>Fonds {fund}</p></article>
       <article><span>Jouw participatie</span><strong>{ownFund && member.participation !== null ? pct(member.participation) : "—"}</strong><p>{ownFund ? `In fonds ${fund}` : `Jouw deelname hoort bij fonds ${member.fund}`}</p></article>
-      <article><span>Jouw positie</span><strong>{personalValue !== null ? eur(personalValue) : excelValue !== null ? eur(excelValue) : "—"}</strong><p>{ownFund && member.deposits !== null && member.withdrawals !== null ? `Netto inleg ${eur(member.deposits - member.withdrawals)}${personalResult !== null ? ` · resultaat ${eur(personalResult)}` : ""}${participationReconciled ? "" : " · voorlopig"}` : excelValue !== null ? `Per ${date(snapshot.requestedDate)}` : "Nog geen waarde beschikbaar"}</p></article>
+      <article><span>Jouw positie</span><strong>{personalValue !== null ? eur(personalValue) : "—"}</strong><p>{personalPoint ? `Per ${date(personalPoint.date)} · netto inleg ${eur(personalPoint.netInleg)} · resultaat ${eur(personalResult!)}${participationReconciled ? "" : " · voorlopig"}` : personalValue !== null ? "Waarde uit de ledenadministratie" : "Nog geen waarde beschikbaar"}</p></article>
     </div>
 
     {ownFund && <MemberChart points={history}/>}
