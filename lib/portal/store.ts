@@ -235,12 +235,12 @@ export async function refreshRiskReport(snapshot:Snapshot,quotes:DailyQuotes|nul
  return report;
 }
 
-export async function claimRiskHistoryCredit(instrument:string,now=new Date()):Promise<boolean>{
+export async function claimRiskHistoryCredit(instrument:string,now=new Date(),context?:{runId:string;cause:string}):Promise<boolean>{
  const month=now.toISOString().slice(0,7),id=createHash("sha256").update(instrument).digest("hex"),attempt=`${PREFIX}risk-history-attempt:${month}:${id}`;
  if(await redis().set(attempt,true,{nx:true})!=="OK")return false;
  const used=await redis().incrby(`${PREFIX}risk-history-budget:${month}`,1);
  if(used>100){await redis().incrby(`${PREFIX}risk-history-budget:${month}`,-1);await redis().del(attempt);return false;}
- try{await reserveMarketstackCalls(1,true,{runId:`daily:${now.toISOString().slice(0,10)}`,cause:"risk-history"});return true;}
+ try{await reserveMarketstackCalls(1,true,context??{runId:`daily:${now.toISOString().slice(0,10)}`,cause:"risk-history"});return true;}
  catch{await redis().incrby(`${PREFIX}risk-history-budget:${month}`,-1);await redis().del(attempt);return false;}
 }
 
