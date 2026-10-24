@@ -1,6 +1,7 @@
 import type {DailyQuotes, FundNumber, PricePoint, Snapshot} from "./types";
 import {bankControl, bankValue} from "./ledger.ts";
 import {modelSplits,modelHoldingsAt,splitSafeReturn} from "./history-splits.ts";
+import {currentFundHistory} from "./current-fund-history";
 
 export type EstimatedFundPoint = {date:string; nav:number; lowNav:number; highNav:number; flatNav?:number; marketNav?:number; estimated:boolean; priceCoverage:number};
 const DAY=86400000;
@@ -20,9 +21,11 @@ function price(quotes:DailyQuotes,snapshot:Snapshot,symbol:string,currency:strin
  * Both paths are reconciled to reported NAVs; only real dated prices drive daily variation.
  * Intermediate days remain indicative; reported NAV anchors and ledger events are preserved. */
 export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,fund:FundNumber):EstimatedFundPoint[]{
- const anchors=(snapshot.fundHistory??[]).filter(p=>p.fund===fund&&p.nav>0&&p.totalUnits>0).sort((a,b)=>a.date.localeCompare(b.date));
+ const extension=quotes?currentFundHistory(snapshot,quotes,fund):[];
+ const modelDates=new Set(extension.map(p=>p.date));
+ const anchors=[...(snapshot.fundHistory??[]),...extension].filter(p=>p.fund===fund&&p.nav>0&&p.totalUnits>0).sort((a,b)=>a.date.localeCompare(b.date));
  if(!anchors.length)return [];
- const reported=anchors.map(p=>({date:p.date,nav:p.nav,lowNav:p.nav,highNav:p.nav,estimated:false,priceCoverage:1}));
+ const reported=anchors.map(p=>({date:p.date,nav:p.nav,lowNav:p.nav,highNav:p.nav,estimated:modelDates.has(p.date),priceCoverage:1}));
  if(!snapshot.ledger||!quotes)return reported;
  const bank=bankControl(snapshot.ledger,fund);
  const end=anchors.at(-1)!.date;
@@ -90,7 +93,7 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
    const a=left.nav*p.flat*Math.pow(target/flat,t),b=left.nav*p.market*Math.pow(target/market,t);
    const isAnchor=p.date===left.date||p.date===right.date;
    const nav=isAnchor?(p.date===left.date?left.nav:right.nav):Math.sqrt(a*b);
-   output.set(p.date,{date:p.date,nav,lowNav:isAnchor?nav:Math.min(a,b),highNav:isAnchor?nav:Math.max(a,b),flatNav:isAnchor?nav:a,marketNav:isAnchor?nav:b,estimated:!isAnchor,priceCoverage:Math.max(0,Math.min(1,p.coverage))});
+   output.set(p.date,{date:p.date,nav,lowNav:isAnchor?nav:Math.min(a,b),highNav:isAnchor?nav:Math.max(a,b),flatNav:isAnchor?nav:a,marketNav:isAnchor?nav:b,estimated:!isAnchor||modelDates.has(p.date),priceCoverage:Math.max(0,Math.min(1,p.coverage))});
   }
  }
  return [...output.values()].sort((a,b)=>a.date.localeCompare(b.date));

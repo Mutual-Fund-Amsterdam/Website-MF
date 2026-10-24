@@ -49,7 +49,7 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
   const personalValue = personalPoint?.value ?? (ownFund ? member.sourceValue : null);
   const personalResult = personalPoint ? personalPoint.value - personalPoint.netInleg : null;
   const savedRisk=await integrationGet<RiskReport>(`risk:${snapshot.digest}`);
-  const riskReport=savedRisk&&savedRisk.quotesAt===quotes?.fetchedAt?savedRisk:calculateRiskReport(snapshot,quotes,dailyFundValues);
+  const riskReport=savedRisk?.method==="risk-2"&&savedRisk.quotesAt===quotes?.fetchedAt?savedRisk:calculateRiskReport(snapshot,quotes,dailyFundValues);
   const risk=riskReport.funds[fund];
   const stockShare = view.fundValue && view.stockValue !== null ? view.stockValue / view.fundValue : null;
   const cashShare = view.fundValue && view.cashValue !== null ? view.cashValue / view.fundValue : null;
@@ -60,7 +60,7 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
 
   return <main id="main-content" className={`page-shell ${styles.main}`}><div className="container">
     <div className={styles.top}><div><p className="eyebrow">Ledenomgeving / fonds {fund}</p><h1>Welkom, {member.name.split(" ")[0]}.</h1></div><LogoutButton /></div>
-    {admin && <nav className={styles.boardNav} aria-label="Bestuur"><Link href="/beheer/import">Excel importeren</Link><Link href="/beheer/feedback">Ontvangen feedback van leden →</Link></nav>}
+    {admin && <nav className={styles.boardNav} aria-label="Bestuur"><a href="/beheer/import">Excel importeren</a><a href="/beheer/feedback">Ontvangen feedback van leden →</a></nav>}
     {member.allowedFunds.length > 1 && <nav className={styles.switcher} aria-label="Kies fonds">{member.allowedFunds.map((number) => <Link key={number} href={`/mijn-fonds?fonds=${number}`} aria-current={number === fund ? "page" : undefined}>Fonds {number}</Link>)}</nav>}
 
     <div className={styles.cards}>
@@ -94,7 +94,6 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
 
     <FundChart comparisons={comparisonModes(reconstructed,quotes,fund===2?"2022-09-21":"2022-10-21")} fund={fund}/>
     <StockCharts key={query.aandeel ?? "eerste"} stocks={stockSeries} initialSelected={query.aandeel}/>
-    {admin && <p className={styles.admin}><Link href="/beheer/import">Nieuwe Excelversie importeren →</Link> · <Link href="/beheer/feedback">Ontvangen feedback →</Link> · <Link href="/beheer/reconstructie">Historische reconstructie →</Link> · <Link href="/beheer/koppelingen">OneDrive en koersverbruik →</Link></p>}
     <FeedbackForm fund={fund}/>
   </div></main>;
 }

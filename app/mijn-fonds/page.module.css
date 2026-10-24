@@ -4,6 +4,10 @@
 .boardNav { display: flex; flex-wrap: wrap; gap: 12px; margin: 22px 0; }
 .boardNav a { padding: 12px 16px; border: 1px solid var(--line); color: var(--accent); }
 .boardNav a:hover, .boardNav a:focus-visible { border-color: var(--accent); }
+.riskBlock { margin-top: 28px; }
+.riskBlock + .riskBlock { border-top: 1px solid var(--line); padding-top: 24px; }
+.riskBlock h3 { color: var(--board-gold); font-size: 1.12rem; margin: 0 0 8px; }
+.betaReference { display: block; margin-top: 4px; font-size: .68rem; color: var(--ink-muted); }
 .muted { color: var(--ink-muted); line-height: 1.6; font-size: .9rem; }
 .switcher { display: flex; gap: 10px; margin: 38px 0; }
 .switcher a { padding: 10px 18px; border: 1px solid var(--line); color: var(--ink-muted); }
