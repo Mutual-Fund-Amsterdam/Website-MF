@@ -31,7 +31,8 @@ export function historicalDailyRisk(history:{date:string;nav:number}[],quotes:Da
  const cutoff=new Date(Date.parse(end)-365*day).toISOString().slice(0,10),navs=new Map(history.map(p=>[p.date,p.nav]));
  const expected=(quotes.benchmark?.points??[]).filter(p=>p.date>=cutoff&&p.date<=end);
  const rows=expected.map(p=>{const fx=datedFx(quotes,"USD",p.date);return {date:p.date,value:navs.get(p.date)??NaN,benchmark:fx?p.close/fx:NaN};});
- return returnRisk(rows,quotes.estrHistory??[]);
+ const valid=rows.filter(p=>Number.isFinite(p.value)&&p.value>0&&Number.isFinite(p.benchmark)&&p.benchmark>0);
+ return returnRisk(valid,quotes.estrHistory??[],rows.length?valid.length/rows.length:0);
 }
 function datedFx(quotes:DailyQuotes,currency:string,date:string):number|null{
  if(currency==="EUR")return 1;

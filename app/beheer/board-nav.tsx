@@ -1,0 +1,4 @@
+import styles from "./board-nav.module.css";
+export default function BoardNav({active}:{active:"import"|"feedback"|"reconstructie"|"koppelingen"}){
+ return <nav className={styles.nav} aria-label="Bestuursomgeving"><a className={styles.back} href="/mijn-fonds">← Terug naar mijn fonds</a><div className={styles.links}><a href="/beheer/import" aria-current={active==="import"?"page":undefined}>Excel importeren</a><a href="/beheer/feedback" aria-current={active==="feedback"?"page":undefined}>Feedback van leden</a></div><details className={styles.tools}><summary>Technische overzichten</summary><div className={styles.links}><a href="/beheer/reconstructie" aria-current={active==="reconstructie"?"page":undefined}>Broncontrole</a><a href="/beheer/koppelingen" aria-current={active==="koppelingen"?"page":undefined}>Koersverbruik</a></div></details></nav>;
+}

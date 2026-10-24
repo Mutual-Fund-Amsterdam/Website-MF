@@ -1,0 +1,9 @@
+.nav { margin: 26px 0 34px; padding: 22px; border: 1px solid var(--line); background: var(--bg-elevated); max-width: 850px; }
+.back { display: inline-block; color: var(--accent); margin-bottom: 18px; font-weight: 600; }
+.links { display: flex; flex-wrap: wrap; gap: 10px; }
+.links a { display: block; padding: 11px 15px; border: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+.links a[aria-current="page"] { border-color: var(--board-gold); color: var(--board-gold); }
+.links a:hover, .links a:focus-visible { border-color: var(--accent); color: var(--accent); }
+.tools { margin-top: 20px; color: var(--ink-muted); font-size: .85rem; }
+.tools summary { cursor: pointer; padding: 6px 0; }
+.tools .links { margin-top: 12px; }
