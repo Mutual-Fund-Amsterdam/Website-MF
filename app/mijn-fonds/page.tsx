@@ -49,7 +49,7 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
   const personalValue = personalPoint?.value ?? (ownFund ? member.sourceValue : null);
   const personalResult = personalPoint ? personalPoint.value - personalPoint.netInleg : null;
   const savedRisk=await integrationGet<RiskReport>(`risk:${snapshot.digest}`);
-  const riskReport=savedRisk?.method==="risk-2"&&savedRisk.quotesAt===quotes?.fetchedAt?savedRisk:calculateRiskReport(snapshot,quotes,dailyFundValues);
+  const riskReport=savedRisk?.method==="risk-3"&&savedRisk.quotesAt===quotes?.fetchedAt?savedRisk:calculateRiskReport(snapshot,quotes,dailyFundValues);
   const risk=riskReport.funds[fund];
   const stockShare = view.fundValue && view.stockValue !== null ? view.stockValue / view.fundValue : null;
   const cashShare = view.fundValue && view.cashValue !== null ? view.cashValue / view.fundValue : null;

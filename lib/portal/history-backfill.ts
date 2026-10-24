@@ -41,7 +41,7 @@ export function historyPlan(snapshot:Snapshot,quotes:DailyQuotes|null){
 export async function fetchHistoryInstrument(p:Position,key:string,from:string,to:string,legacy=false):Promise<{instrument:Position;points:PricePoint[]}>{
  const isIndex=p.exchange==="INDX";
  const useLegacy=legacy&&(p.currency==="USD"||isIndex);
- const mic=isIndex?"INDX":!useLegacy&&venueOverride[p.ticker]||exchanges[p.exchange];
+ const mic=isIndex?"INDX":venueOverride[p.ticker]||exchanges[p.exchange];
  const symbol=mic&&!isIndex&&!['XNAS','XNYS','XASE'].includes(mic)?p.marketSymbol||`${p.ticker}.${mic}`:p.ticker;
  const url=new URL(`https://api.marketstack.com/${isIndex||useLegacy?"v1":"v2"}/eod`);url.searchParams.set("access_key",key);url.searchParams.set("symbols",symbol);url.searchParams.set("date_from",from);url.searchParams.set("date_to",to);url.searchParams.set("limit","1000");
  if(mic&&['XNAS','XNYS','XASE'].includes(mic))url.searchParams.set("exchange",mic);
