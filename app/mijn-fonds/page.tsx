@@ -73,7 +73,7 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
       <article><span>Jouw positie</span><strong>{personalValue !== null ? eur(personalValue) : "—"}</strong><p>{personalPoint ? `Per ${date(personalPoint.date)} · netto inleg ${eur(personalPoint.netInleg)} · resultaat ${eur(personalResult!)}${participationReconciled ? "" : " · voorlopig"}` : personalValue !== null ? "Waarde uit de ledenadministratie" : "Nog geen waarde beschikbaar"}</p></article>
     </div>
 
-    {bookIssues.length>0&&<p className={styles.notice}>De actuele portefeuille is nog niet volledig afgestemd: {bookIssues.join("; ").toLowerCase()}. Fondsrendement en ledenwaarden volgen daarom de beschikbare administratie. De aandelen en cash hieronder tonen alleen de ingevoerde stand.</p>}
+    {bookIssues.length>0&&<p className={styles.notice}>Bedragen kunnen nog niet kloppen en dit zal in de komende dagen verwerkt worden.</p>}
 
     {ownFund && <MemberChart points={history}/>}
 
