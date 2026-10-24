@@ -20,6 +20,16 @@ try{
  assert.equal(q.history['Nasdaq:AAA'].length,2,'Existing history is retained');
  assert.equal(q.benchmark.points[0].date,'2026-10-06');
  assert.equal(q.prices['Nasdaq:AAA'].date,'2026-10-22');
+ urls.length=0;charges.length=0;
+ const successful=globalThis.fetch;
+ globalThis.fetch=async input=>new URL(input).searchParams.get('symbols')==='BBB.XAMS'?new Response('',{status:422}):successful(input);
+ const partial=await fetchDailyQuotes(positions,'fixture-key',q,async n=>{charges.push(n);return charges.reduce((a,b)=>a+b,0);},new Date('2026-10-23T05:20:00Z'));
+ assert.equal(partial.prices['Nasdaq:AAA'].date,'2026-10-22','Successful quotes survive another venue failure');
+ assert.equal(partial.prices['Euronext Amsterdam:BBB'].close,q.prices['Euronext Amsterdam:BBB'].close,'Failed venue keeps its previous actual quote');
+ assert.ok(partial.refreshIssues.some(s=>s.includes('XAMS')&&s.includes('422')));assert.equal(charges.reduce((a,b)=>a+b,0),3,'No paid retry after a venue failure');
+ globalThis.fetch=async()=>new Response('',{status:503});
+ const failed=await fetchDailyQuotes(positions,'fixture-key',q,async()=>0,new Date('2026-10-24T05:20:00Z'));
+ assert.deepEqual(failed.prices,q.prices);assert.equal(failed.fetchedAt,q.fetchedAt,'Total failure does not claim a new successful fetch time');assert.equal(failed.lastAttemptAt,'2026-10-24T05:20:00.000Z');
 }finally{globalThis.fetch=originalFetch;}
 for(const [time,ok] of [['05:14:59',false],['05:15:00',true],['06:14:59',true],['06:15:00',false],['17:15:00',false]])assert.equal(refreshWindow(new Date('2026-10-23T'+time+'Z')),ok);
 const p=(date,nav,bm)=>({date,nav,value:nav*10,fundReturn:0,benchmarkReturn:bm});

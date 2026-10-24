@@ -45,7 +45,7 @@ export async function GET(request: Request) {
     await recordFundDailyValues(snapshot, quotes);
     await refreshRiskReport(snapshot,quotes);
     await writeOneDriveResults();
-    await recordOperation({kind:"daily-result",cause:"daily",runId,result:"voltooid",detail:`${credits} credits gereserveerd`});
+    await recordOperation({kind:"daily-result",cause:"daily",runId,result:quotes.refreshIssues?.length?"gedeeltelijk voltooid":"voltooid",detail:`${credits} credits gereserveerd${quotes.refreshIssues?.length?`; ${quotes.refreshIssues.join("; ")}`:""}`});
     return NextResponse.json({ updated: Object.keys(quotes.prices).length, fetchedAt: quotes.fetchedAt }, { headers });
   } catch {
     await recordOperation({kind:"daily-result",cause:"daily",runId,result:"afgebroken; geen automatische herhaling",detail:`${credits} credits gereserveerd`});
