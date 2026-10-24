@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {currentFundHistory} from '../lib/portal/current-fund-history.ts';
+import {currentFundHistory,currentBookIssues} from '../lib/portal/current-fund-history.ts';
 import {estimatedFundHistory} from '../lib/portal/estimated-history.ts';
 import {comparisonModes} from '../lib/portal/comparison.ts';
 const dates=['2026-09-14','2026-09-15','2026-09-16','2026-09-17','2026-09-18'];
@@ -21,5 +21,16 @@ try{
  const daily=structuredClone(quotes);daily.history['Euronext Amsterdam:AAA'].push({date:'2026-09-21',close:59});daily.prices['Euronext Amsterdam:AAA']={...daily.prices['Euronext Amsterdam:AAA'],date:'2026-09-21',close:59};daily.benchmark=tomorrow.benchmark;daily.eurUsdHistory.push({date:'2026-09-21',close:1});
  const next=currentFundHistory(snapshot,daily,1);assert.equal(next.at(-1).date,'2026-09-21');assert.equal(next.at(-1).nav,109);assert.deepEqual(next.slice(0,live.length),live,'New daily data preserves prior book valuations');
  assert.deepEqual(currentFundHistory(snapshot,quotes,2),[],'Fund isolation');
+ for(const kind of ['Saxo ontbreekt','Tussen fondsen']){
+  const incomplete=structuredClone(snapshot);
+  incomplete.cash[0].ingEur=0;
+  incomplete.ledger={bank:[{fund:1,date:'2026-09-15',kind,status:'Te beoordelen',amountCents:-50000}],broker:[],members:[]};
+  assert.equal(currentBookIssues(incomplete,1).length,1);
+  assert.deepEqual(currentFundHistory(incomplete,quotes,1),[],'Missing receiving assets must not turn an internal transfer into a NAV loss');
+  assert.equal(estimatedFundHistory(incomplete,quotes,1).at(-1).nav,100,'Preserve the last administrative NAV');
+  assert.deepEqual(currentBookIssues(incomplete,2),[],'Problems stay isolated to their fund');
+  incomplete.ledger.bank[0].date='2026-09-14';
+  assert.deepEqual(currentBookIssues(incomplete,1),[],'An administrative anchor already includes earlier events');
+ }
  console.log('Stored-book extension: daily market moves, fixed baseline, deposit neutrality, reversal of dated trades, missing prices, no future closes, stable prior daily values and no network calls.');
 }finally{globalThis.fetch=oldFetch;}

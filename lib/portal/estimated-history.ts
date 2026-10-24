@@ -26,7 +26,7 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
  const anchors=[...(snapshot.fundHistory??[]),...extension].filter(p=>p.fund===fund&&p.nav>0&&p.totalUnits>0).sort((a,b)=>a.date.localeCompare(b.date));
  if(!anchors.length)return [];
  const reported=anchors.map(p=>({date:p.date,nav:p.nav,lowNav:p.nav,highNav:p.nav,estimated:modelDates.has(p.date),priceCoverage:1}));
- if(!snapshot.ledger||!quotes)return reported;
+ if(!snapshot.ledger||!quotes||anchors.length===1)return reported;
  const bank=bankControl(snapshot.ledger,fund);
  const end=anchors.at(-1)!.date;
  const brokerStart=snapshot.ledger.broker.filter(e=>e.fund===fund&&["Brokeropening","Buy","Sell"].includes(e.kind)).map(e=>e.date).sort()[0];
