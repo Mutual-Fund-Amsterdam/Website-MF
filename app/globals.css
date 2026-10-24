@@ -752,6 +752,11 @@ img {
   object-fit: cover;
 }
 
+.video-frame video {
+  /* Crop the source video's embedded 38–40px letterbox bars without distortion. */
+  transform: scale(1.125);
+}
+
 .intro-copy {
   display: flex;
   flex-direction: column;
