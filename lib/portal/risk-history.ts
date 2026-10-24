@@ -17,7 +17,7 @@ export async function fillRiskHistory(snapshot:Snapshot,quotes:DailyQuotes,key:s
   const recent=rows.filter(r=>r.date>=start&&r.date<=end);
   if(recent.length>=201&&Date.parse(recent.at(-1)!.date)-Date.parse(recent[0].date)>=330*86400000)continue;
   const legacy=p.currency==="USD"&&["Nasdaq","New York Stock Exchange","NYSE American"].includes(p.exchange);
-  if(!await claim(`${id}:${p.currency}:${p.marketSymbol??p.ticker}${legacy?":legacy-1":""}`))continue;
+  if(!await claim(`${id}:${p.currency}:${p.marketSymbol??p.ticker}${legacy?":legacy-venue-2":""}`))continue;
   attempts++;
   try{
    const fetched=await fetchHistoryInstrument(p,key,start,end,legacy),points=[...new Map([...rows,...fetched.points].map(r=>[r.date,r])).values()].sort((a,b)=>a.date.localeCompare(b.date));
