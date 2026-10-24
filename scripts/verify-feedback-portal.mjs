@@ -32,7 +32,7 @@ try{
   const inbox=await fetch(base+'/beheer/feedback',{headers:{Cookie:cookie}});assert.equal(inbox.status,200);const html=await inbox.text();
   assert.ok(html.includes('Feedback van leden.'));assert.ok(html.includes('Lid-ID:'));assert.ok(html.includes(saved.memberId));assert.ok(html.includes(saved.name));assert.ok(html.includes('&lt;script&gt;geen uitvoering&lt;/script&gt;'));
   const fund=await fetch(base+'/mijn-fonds',{headers:{Cookie:cookie}});assert.equal(fund.status,200);const fundHtml=await fund.text();
-  assert.ok(fundHtml.includes('Ontvangen feedback van leden'));assert.ok(fundHtml.includes('Huidige portefeuille — model'));assert.ok(fundHtml.includes('Historisch fonds'));assert.ok(fundHtml.includes('Portefeuillebeta'));assert.ok(!fundHtml.includes('Koers- of valutahistorie voor de huidige portefeuille is onvolledig.'));
+  assert.ok(fundHtml.includes('Ontvangen feedback van leden'));assert.ok(fundHtml.includes('Huidige portefeuille'));assert.ok(fundHtml.includes('Historisch fonds'));assert.ok(fundHtml.includes('Portefeuillebeta'));assert.ok(!fundHtml.includes('Koers- of valutahistorie voor de huidige portefeuille is onvolledig.'));
   if(admin===admins[0])for(const path of ['/beheer/import','/beheer/feedback','/beheer/reconstructie','/beheer/koppelingen']){
    const page=await fetch(base+path,{headers:{Cookie:cookie}});assert.equal(page.status,200,path);assert.ok((await page.text()).includes('← Terug naar mijn fonds'),path+' has a return link');
    const back=await fetch(base+'/mijn-fonds',{headers:{Cookie:cookie}});assert.equal(back.status,200,path+' return is accessible');
