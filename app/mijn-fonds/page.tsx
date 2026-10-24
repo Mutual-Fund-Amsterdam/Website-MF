@@ -12,6 +12,7 @@ import FeedbackForm from "./feedback-form";
 import {dailyChange} from "@/lib/portal/performance";
 import {comparisonModes} from "@/lib/portal/comparison";
 import {estimatedFundHistory} from "@/lib/portal/estimated-history";
+import {currentBookIssues} from "@/lib/portal/current-fund-history";
 import MemberChart from "./member-chart";
 import Composition from "./composition";
 import {calculateRiskReport,type RiskReport} from "@/lib/portal/risk-report";
@@ -43,13 +44,16 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
   const participationTotal = snapshot.members.filter((item) => item.fund === fund).reduce((sum, item) => sum + (item.participation ?? 0), 0);
   const participationReconciled = Math.abs(participationTotal - 1) <= 0.005;
   const reconstructed = estimatedFundHistory(snapshot, quotes, fund);
+  const bookIssues=currentBookIssues(snapshot,fund);
+  const lastReported=(snapshot.fundHistory??[]).filter(p=>p.fund===fund).sort((a,b)=>a.date.localeCompare(b.date)).at(-1);
+  const displayedFundValue=bookIssues.length ? (lastReported?lastReported.nav*lastReported.totalUnits:null) : view.fundValue;
   const history = ownFund ? memberHistory(member, snapshot, dailyFundValues, reconstructed) : [];
   // The summary and chart must use the same valuation and cashflow cutoff.
   const personalPoint = history.at(-1);
   const personalValue = personalPoint?.value ?? (ownFund ? member.sourceValue : null);
   const personalResult = personalPoint ? personalPoint.value - personalPoint.netInleg : null;
   const savedRisk=await integrationGet<RiskReport>(`risk:${snapshot.digest}`);
-  const riskReport=savedRisk?.method==="risk-3"&&savedRisk.quotesAt===quotes?.fetchedAt?savedRisk:calculateRiskReport(snapshot,quotes,dailyFundValues);
+  const riskReport=savedRisk?.method==="risk-4"&&savedRisk.quotesAt===quotes?.fetchedAt?savedRisk:calculateRiskReport(snapshot,quotes,dailyFundValues);
   const risk=riskReport.funds[fund];
   const stockShare = view.fundValue && view.stockValue !== null ? view.stockValue / view.fundValue : null;
   const cashShare = view.fundValue && view.cashValue !== null ? view.cashValue / view.fundValue : null;
@@ -64,10 +68,12 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
     {member.allowedFunds.length > 1 && <nav className={styles.switcher} aria-label="Kies fonds">{member.allowedFunds.map((number) => <Link key={number} href={`/mijn-fonds?fonds=${number}`} aria-current={number === fund ? "page" : undefined}>Fonds {number}</Link>)}</nav>}
 
     <div className={styles.cards}>
-      <article><span>Totale fondswaarde</span><strong>{view.fundValue !== null ? eur(view.fundValue) : "—"}</strong><p>Fonds {fund}</p></article>
+      <article><span>Totale fondswaarde</span><strong>{displayedFundValue !== null ? eur(displayedFundValue) : "—"}</strong><p>{bookIssues.length&&lastReported?`Administratie per ${date(lastReported.date)}`:`Fonds ${fund}`}</p></article>
       <article><span>Jouw participatie</span><strong>{ownFund && member.participation !== null ? pct(member.participation) : "—"}</strong><p>{ownFund ? `In fonds ${fund}` : `Jouw deelname hoort bij fonds ${member.fund}`}</p></article>
       <article><span>Jouw positie</span><strong>{personalValue !== null ? eur(personalValue) : "—"}</strong><p>{personalPoint ? `Per ${date(personalPoint.date)} · netto inleg ${eur(personalPoint.netInleg)} · resultaat ${eur(personalResult!)}${participationReconciled ? "" : " · voorlopig"}` : personalValue !== null ? "Waarde uit de ledenadministratie" : "Nog geen waarde beschikbaar"}</p></article>
     </div>
+
+    {bookIssues.length>0&&<p className={styles.notice}>De actuele portefeuille is nog niet volledig afgestemd: {bookIssues.join("; ").toLowerCase()}. Fondsrendement en ledenwaarden volgen daarom de beschikbare administratie. De aandelen en cash hieronder tonen alleen de ingevoerde stand.</p>}
 
     {ownFund && <MemberChart points={history}/>}
 
