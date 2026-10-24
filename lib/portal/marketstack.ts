@@ -29,15 +29,20 @@ export async function fetchDailyQuotes(positions:Position[],key:string,previous:
  };
  const point=(r:Record<string,unknown>):PricePoint|null=>{const date=String(r.date??"").slice(0,10),close=Number(r.close),adjustedClose=Number(r.adj_close);return /^\d{4}-\d{2}-\d{2}$/.test(date)&&date<today&&Number.isFinite(close)&&close>0?{date,close,...(adjustedClose>0&&Number.isFinite(adjustedClose)?{adjustedClose}:{})}:null;};
  const prices:Record<string,DailyQuote>={...previous?.prices},history:Record<string,PricePoint[]>={...previous?.history};
+ const refreshIssues:string[]=[];let received=0;
  for(const [mic,group] of groups){
   const lookup=new Map(group.map(p=>[symbolFor(p,mic).toUpperCase(),p]));
   const url=new URL("https://api.marketstack.com/v2/eod/latest");url.searchParams.set("access_key",key);url.searchParams.set("symbols",[...lookup.keys()].join(","));url.searchParams.set("limit","1000");if(["XNAS","XNYS","XASE"].includes(mic))url.searchParams.set("exchange",mic);
-  for(const r of await request(url,lookup.size)){
+  let data:Record<string,unknown>[];
+  try{data=await request(url,lookup.size);}catch(e){const status=e instanceof Error?/status (\d{3})/.exec(e.message)?.[1]:null;refreshIssues.push(`${mic}: koersaanvraag niet verwerkt${status?` (HTTP ${status})`:""}`);continue;}
+  const matched=new Set<string>();
+  for(const r of data){
    const p=lookup.get(String(r.symbol??"").toUpperCase()),fresh=point(r);
    if(!p||!fresh||String(r.exchange??"").toUpperCase()!==mic||String(r.price_currency??"").toUpperCase()!==p.currency.toUpperCase())continue;
-   const id=quoteKey(p);history[id]=merge(history[id],[fresh]);
+   const id=quoteKey(p);matched.add(id);received++;history[id]=merge(history[id],[fresh]);
    const last=history[id].at(-1)!;prices[id]={symbol:p.ticker,exchange:mic,currency:p.currency,...last};
   }
+  if(matched.size<group.length)refreshIssues.push(`${mic}: voor ${group.length-matched.size} positie(s) geen passende nieuwe slotkoers`);
  }
  let benchmark=previous?.benchmark;
  try{
@@ -46,7 +51,8 @@ export async function fetchDailyQuotes(positions:Position[],key:string,previous:
   const from=hasStart?new Date(now.getTime()-10*86400000).toISOString().slice(0,10):FUND_RETURN_BASELINE;
   const url=new URL("https://api.marketstack.com/v1/eod");url.searchParams.set("access_key",key);url.searchParams.set("symbols",INDEX_SYMBOL);url.searchParams.set("limit","1000");url.searchParams.set("date_from",from);
   const fresh=(await request(url,1)).filter(r=>String(r.symbol??"").toUpperCase()===INDEX_SYMBOL&&String(r.exchange??"").toUpperCase()==="INDX").map(point).filter((p):p is PricePoint=>p!==null);
-  const points=merge(benchmark?.points,fresh);benchmark={name:"S&P 500",points,latest:points.at(-1)??null};
- }catch{/* Retain the actual last available index date. No retry or invented observation. */}
- return {...previous,fetchedAt:now.toISOString(),prices,history,benchmark};
+  received+=fresh.length;const points=merge(benchmark?.points,fresh);benchmark={name:"S&P 500",points,latest:points.at(-1)??null};
+  if(!fresh.length)refreshIssues.push("S&P 500: geen passende nieuwe slotkoers");
+ }catch{refreshIssues.push("S&P 500: koersaanvraag niet verwerkt");}
+ return {...previous,fetchedAt:received?now.toISOString():previous?.fetchedAt??now.toISOString(),lastAttemptAt:now.toISOString(),refreshIssues,prices,history,benchmark};
 }

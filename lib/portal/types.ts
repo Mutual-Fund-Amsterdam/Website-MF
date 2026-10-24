@@ -47,6 +47,8 @@ export type DailyQuote = {
 
 export type DailyQuotes = {
   fetchedAt: string;
+  lastAttemptAt?: string;
+  refreshIssues?: string[];
   prices: Record<string, DailyQuote>;
   history?: Record<string, PricePoint[]>;
   historyBackfilled?: string[];

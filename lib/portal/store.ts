@@ -85,7 +85,7 @@ async function hydrateLedger(snapshot:Snapshot):Promise<Snapshot>{
 
 export async function getDailyQuotes(): Promise<DailyQuotes | null> {
   const quotes=await redis().get<DailyQuotes>(QUOTES_KEY);if(!quotes)return null;
-  const quoteVersion=quotes.fetchedAt+":"+(quotes.historyUpdatedAt??"");
+  const quoteVersion=quotes.fetchedAt+":"+(quotes.historyUpdatedAt??"")+":"+(quotes.lastAttemptAt??"");
   if(quoteCache?.at===quoteVersion&&quoteCache.until>Date.now())return quoteCache.quotes;
   if(quotes.historyKeys){
     const pairs=await Promise.all(quotes.historyKeys.map(async key=>[key,await redis().get<NonNullable<DailyQuotes["history"]>[string]>(`${PREFIX}history:${createHash("sha256").update(key).digest("hex")}`)] as const));
