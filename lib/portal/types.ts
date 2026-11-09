@@ -1,7 +1,7 @@
 export type FundNumber = 1 | 2 | 3;
 export type MemberTransaction = { fund: FundNumber; memberId: string; date: string; amount: number; nav: number; units: number; source: string };
 export type FundHistoryPoint = { fund: FundNumber; date: string; nav: number; totalUnits: number };
-export type FundValuePoint = { fund: FundNumber; date: string; nav: number; fundValue: number; coverage?: "verified" | "indicative" };
+export type FundValuePoint = { fund: FundNumber; date: string; nav: number; fundValue: number; coverage?: "verified" | "indicative" | "book" };
 export type RiskMetrics = { asOf: string | null; sharpe: number | null; volatility: number | null; beta: number | null; maxDrawdown: number | null };
 
 export type Member = {
@@ -47,6 +47,7 @@ export type DailyQuote = {
 
 export type DailyQuotes = {
   fetchedAt: string;
+  manualUpdatedAt?: string;
   lastAttemptAt?: string;
   refreshIssues?: string[];
   prices: Record<string, DailyQuote>;
@@ -69,6 +70,8 @@ export type DailyQuotes = {
 };
 
 export type Cash = {
+  payablesEur?: number;
+  payablesAsOf?: string;
   extraBalances?: Record<string,{amount:number;date:string}>;
   fund: FundNumber;
   ingEur: number | null;
@@ -82,6 +85,8 @@ export type Cash = {
 };
 
 export type Snapshot = {
+  unitLedger?: { version:1; asOf:Record<FundNumber,string> };
+  manualPrices?: (DailyQuote & {source:string})[];
   input?: {version:2|3;cutoff:string;events:Record<string,string>};
   schema: 1;
   digest: string;

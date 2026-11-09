@@ -14,7 +14,7 @@ export type BrokerEvent = {
   processing?: string; newSymbol?: string; factor?: number | null;
   cashCurrency?: string; cashDelta?: number | null; settlementDate?: string;
 };
-export type MemberCheck = { id: string; fund: FundNumber; sourceValue: number | null; sourceFirstEntry: string | null; sourceId: string };
+export type MemberCheck = { id: string; fund: FundNumber; sourceValue: number | null; sourceFirstEntry: string | null; sourceId: string;sourceUnits?:number;sourceUnitTolerance?:number };
 export type ReconstructionLedger = { bank: BankEvent[]; broker: BrokerEvent[]; members: MemberCheck[] };
 export type LedgerStorage = { digest: string; bankChunks: number; brokerChunks: number; members: MemberCheck[] };
 export type ReviewIssue = { fund: FundNumber; category: string; item: string; source: number | null; master: number | null; detail: string };
@@ -189,7 +189,10 @@ export function auditLedger(snapshot:Snapshot):ReconstructionAudit|null{
     const member=snapshot.members.find(m=>m.id===c.id&&m.fund===c.fund),nav=(snapshot.fundHistory??[]).filter(p=>p.fund===c.fund).sort((a,b)=>a.date.localeCompare(b.date)).at(-1)?.nav;
     const units=(snapshot.transactions??[]).filter(e=>e.fund===c.fund&&e.memberId===c.id).reduce((s,e)=>s+e.units,0);
     const value=nav===undefined?null:units*nav;
-    if(!member||c.sourceValue===null||value===null||Math.abs(value-c.sourceValue)>.02||member.firstEntry!==c.sourceFirstEntry)issues.push({fund:c.fund,category:"Leden",item:c.id,source:c.sourceValue,master:value,detail:`Instap bron ${c.sourceFirstEntry??"onbekend"}; master ${member?.firstEntry??"onbekend"}.`});
+    const unitCheck=snapshot.unitLedger&&c.sourceUnits!==undefined;
+    const later=snapshot.unitLedger?(snapshot.transactions??[]).filter(e=>e.fund===c.fund&&e.memberId===c.id&&e.date>snapshot.unitLedger!.asOf[c.fund]&&e.source.startsWith('Invoer:')).reduce((n,e)=>n+e.units,0):0;
+    const differs=unitCheck?(!Number.isFinite(c.sourceUnits)||!Number.isFinite(c.sourceUnitTolerance)||Math.abs(units-later-c.sourceUnits!)>(c.sourceUnitTolerance??0)):(c.sourceValue===null||value===null||Math.abs(value-c.sourceValue)>.02);
+    if(!member||differs||member.firstEntry!==c.sourceFirstEntry)issues.push({fund:c.fund,category:"Leden",item:c.id,source:unitCheck?c.sourceUnits!:c.sourceValue,master:unitCheck?units:value,detail:`${unitCheck?'Controle deelbewijzen. ':''}Instap bron ${c.sourceFirstEntry??"onbekend"}; master ${member?.firstEntry??"onbekend"}.`});
   }
   for(const m of snapshot.members)if(ledger.members.filter(c=>c.id===m.id&&c.fund===m.fund).length!==1)issues.push({fund:m.fund,category:"Leden",item:m.id,source:null,master:null,detail:"Een unieke controle tegen de ledenbron ontbreekt."});
   return {bank,issues,bankRows:ledger.bank.filter(isBankMovement).length,brokerRows:ledger.broker.length,membersChecked:ledger.members.length,matchedTransfers:ledger.bank.filter(b=>b.kind==="Brokertransfer"&&b.matchId).length,anchorDates:[...new Set(ledger.broker.filter(e=>e.kind==="Ankertotaal").map(e=>e.date))]};

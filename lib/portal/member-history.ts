@@ -1,9 +1,9 @@
-import type { FundValuePoint, Member, Snapshot } from "./types";
+import type { FundValuePoint, FundHistoryPoint, Member, Snapshot } from "./types";
 import type {EstimatedFundPoint} from "./estimated-history";
 
 export type MemberHistoryPoint = { date: string; value: number; netInleg: number; indicative?:boolean };
 
-export function memberHistory(member: Member, snapshot: Snapshot, daily: FundValuePoint[], reconstructed:EstimatedFundPoint[]=[]): MemberHistoryPoint[] {
+export function memberHistory(member: Member, snapshot: Snapshot, daily: FundValuePoint[], reconstructed:EstimatedFundPoint[]=[],current?:FundHistoryPoint|null): MemberHistoryPoint[] {
   const events = (snapshot.transactions ?? []).filter((item) => item.fund === member.fund && item.memberId === member.id)
     .sort((a, b) => a.date.localeCompare(b.date));
   const first = events.find((event) => event.amount > 0)?.date;
@@ -15,10 +15,11 @@ export function memberHistory(member: Member, snapshot: Snapshot, daily: FundVal
   for (const event of events) if (event.date >= first && !dates.has(event.date)) {
     dates.set(event.date, { nav: event.nav, priority: 2 });
   }
-  for (const point of daily) if (point.fund === member.fund && point.date >= first && (!snapshot.ledger || point.coverage === "verified")) {
+  for (const point of daily) if (point.fund === member.fund && point.date >= first && (!snapshot.ledger || point.coverage === "verified"||snapshot.unitLedger&&point.coverage==='book'&&point.date>=snapshot.unitLedger.asOf[member.fund])) {
     dates.set(point.date, { nav: point.nav, priority: 3 });
   }
   for(const point of reconstructed)if(point.date>=first&&!dates.has(point.date))dates.set(point.date,{nav:point.nav,priority:0,indicative:point.estimated});
+  if(current&&current.fund===member.fund&&current.date>=first)dates.set(current.date,{nav:current.nav,priority:4});
   let eventIndex = 0;
   let units = 0;
   let netInleg = 0;

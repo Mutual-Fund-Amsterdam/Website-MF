@@ -44,13 +44,15 @@ export function portfolioView(positions: Position[], cash: Cash | undefined, quo
   const cashComplete = ing !== null && ing !== undefined && brokerEur !== null && brokerEur !== undefined && usdEur !== null && cadEur !== null&&extras.every(v=>v!==null);
   const cashValue = cashComplete ? ing! + brokerEur! + usdEur! + cadEur!+extras.reduce<number>((s,v)=>s+(v??0),0) : null;
   const otherValue = cash?.otherEur ?? 0;
-  const fundValue = stockValue !== null && cashValue !== null ? stockValue + cashValue + otherValue : null;
+  const payablesValue=cash?.payablesEur??0;
+  const assetValue = stockValue !== null && cashValue !== null ? stockValue + cashValue + otherValue : null;
+  const fundValue=assetValue===null?null:assetValue-payablesValue;
   const sectors = new Map<string, number>();
   for (const item of valued) {
     if (item.valueEur !== null) sectors.set(item.sector, (sectors.get(item.sector) ?? 0) + item.valueEur);
   }
   return {
-    valued, stockValue, cashValue, otherValue, fundValue,
+    valued, stockValue, cashValue, otherValue, payablesValue,assetValue,fundValue,
     sectors: [...sectors].map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value),
     missing: valued.filter((item) => item.valueEur === null).map((item) => item.position.name),
   };

@@ -6,8 +6,9 @@ const DAY=86400000;
  * the full administration's units; reconcile the receiving book first. */
 export function currentBookIssues(snapshot:Snapshot,fund:FundNumber):string[]{
  const last=(snapshot.fundHistory??[]).filter(p=>p.fund===fund).sort((a,b)=>a.date.localeCompare(b.date)).at(-1);
- if(!last)return [];
- const rows=(snapshot.ledger?.bank??[]).filter(e=>e.fund===fund&&e.date>last.date);
+ const cutoff=[last?.date,snapshot.unitLedger?.asOf[fund]].filter((d):d is string=>!!d).sort().at(-1);
+ if(!cutoff)return [];
+ const rows=(snapshot.ledger?.bank??[]).filter(e=>e.fund===fund&&e.date>cutoff);
  const issues:string[]=[];
  if(rows.some(e=>e.kind==="Saxo ontbreekt"))issues.push("Saxo-stand ontbreekt");
  if(rows.some(e=>e.kind==="Tussen fondsen"&&e.status.trim().toLowerCase()!=="goedgekeurd"))issues.push("Overboeking tussen fondsen nog niet afgestemd");
@@ -18,11 +19,14 @@ export function currentFundHistory(snapshot:Snapshot,quotes:DailyQuotes,fund:Fun
  if(currentBookIssues(snapshot,fund).length)return [];
  const reported=(snapshot.fundHistory??[]).filter(p=>p.fund===fund).sort((a,b)=>a.date.localeCompare(b.date));
  const sourceDates=[snapshot.requestedDate,...(snapshot.cash??[]).filter(c=>c.fund===fund).flatMap(c=>[c.ingAsOf,c.brokerAsOf]),...(snapshot.ledger?.bank??[]).filter(e=>e.fund===fund&&e.kind==="Banksluiting").map(e=>e.date)].filter((d):d is string=>!!d);
- const cutoff=snapshot.input?.cutoff??sourceDates.sort().at(-1);
- if(!cutoff)return [];
+ // A later administration checkpoint does not change the immutable import
+ // cutoff. Start daily valuations after that checkpoint and the latest cash
+ // balance, so a later balance is never applied to an earlier valuation day.
  const last=reported.at(-1),cash=snapshot.cash?.find(c=>c.fund===fund);
- if(!last||!cash||!cutoff||cutoff<last.date)return [];
- const moves=(snapshot.ledger?.broker??[]).filter(e=>e.fund===fund&&e.source==="Invoer"&&["Buy","Sell"].includes(e.kind)&&e.date>cutoff);
+ const cutoff=[snapshot.input?.cutoff,last?.date,snapshot.unitLedger?.asOf[fund],snapshot.cash.find(c=>c.fund===fund)?.payablesAsOf,...sourceDates].filter((d):d is string=>!!d).sort().at(-1);
+ if(!cutoff)return [];
+ if(!last||!cash)return [];
+ const moves=(snapshot.ledger?.broker??[]).filter(e=>e.fund===fund&&e.source==="Invoer"&&["Buy","Sell"].includes(e.kind)&&e.date>last.date);
  const positions=new Map(snapshot.positions.filter(p=>p.fund===fund).map(p=>[`${p.ticker}:${p.currency}`,p]));
  for(const e of moves)if(!positions.has(`${e.symbol}:${e.currency}`)){
   const meta=quotes.historicalInstruments?.find(p=>p.ticker===e.symbol&&p.currency===e.currency);
@@ -62,8 +66,9 @@ export function currentFundHistory(snapshot:Snapshot,quotes:DailyQuotes,fund:Fun
    const fx=rate(currency,date);if(!fx||!Number.isFinite(amount)){valid=false;break;}value+=amount/fx;
   }
   value+=cash.otherEur??0;
+  value-=cash.payablesEur??0;
   const base=reported.filter(p=>p.date<=date).at(-1)!;
-  const units=base.totalUnits+(snapshot.transactions??[]).filter(e=>e.fund===fund&&e.date>base.date&&e.date<=date).reduce((s,e)=>s+e.units,0);
+  const units=snapshot.unitLedger?(snapshot.totalUnitsByFund?.[fund]??0)-(snapshot.transactions??[]).filter(e=>e.fund===fund&&e.date>date&&e.source.startsWith('Invoer:')).reduce((s,e)=>s+e.units,0):base.totalUnits+(snapshot.transactions??[]).filter(e=>e.fund===fund&&e.date>base.date&&e.date<=date).reduce((s,e)=>s+e.units,0);
   if(valid&&units>0&&value>0)result.push({fund,date,nav:value/units,totalUnits:units});
  }
  return result;

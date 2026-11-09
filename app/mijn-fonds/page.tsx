@@ -5,6 +5,7 @@ import { getDailyQuotes, getFundDailyValues, getMemberSession, integrationGet } 
 import { quoteKey } from "@/lib/portal/marketstack";
 import { portfolioView } from "@/lib/portal/portfolio";
 import { memberHistory } from "@/lib/portal/member-history";
+import {currentBookPoint} from '@/lib/portal/book-valuation';
 import type { FundNumber } from "@/lib/portal/types";
 import { StockCharts } from "./market-chart";
 import FundChart from "./fund-chart";
@@ -46,11 +47,15 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
   const reconstructed = estimatedFundHistory(snapshot, quotes, fund);
   const bookIssues=currentBookIssues(snapshot,fund);
   const lastReported=(snapshot.fundHistory??[]).filter(p=>p.fund===fund).sort((a,b)=>a.date.localeCompare(b.date)).at(-1);
-  const displayedFundValue=bookIssues.length ? (lastReported?lastReported.nav*lastReported.totalUnits:null) : view.fundValue;
-  const history = ownFund ? memberHistory(member, snapshot, dailyFundValues, reconstructed) : [];
+  const bookPoint=currentBookPoint(snapshot,quotes,fund);
+  const priceDates=positions.map(p=>quotes?.prices[quoteKey(p)]?.date);
+  const commonPriceDate=priceDates.filter((d):d is string=>!!d).sort()[0];
+  const useReported=bookIssues.length>0||!!lastReported&&(priceDates.some(d=>!d)||!commonPriceDate||commonPriceDate<=lastReported.date);
+  const displayedFundValue=snapshot.unitLedger?(bookPoint?.fundValue??null):useReported ? (lastReported?lastReported.nav*lastReported.totalUnits:null) : view.fundValue;
+  const history = ownFund ? memberHistory(member, snapshot, dailyFundValues, reconstructed,bookPoint) : [];
   // The summary and chart must use the same valuation and cashflow cutoff.
   const personalPoint = history.at(-1);
-  const personalValue = personalPoint?.value ?? (ownFund ? member.sourceValue : null);
+  const personalValue = snapshot.unitLedger&&!bookPoint?null:personalPoint?.value ?? (ownFund ? member.sourceValue : null);
   const personalResult = personalPoint ? personalPoint.value - personalPoint.netInleg : null;
   const savedRisk=await integrationGet<RiskReport>(`risk:${snapshot.digest}`);
   const riskReport=savedRisk?.method==="risk-4"&&savedRisk.quotesAt===quotes?.fetchedAt?savedRisk:calculateRiskReport(snapshot,quotes,dailyFundValues);
@@ -68,12 +73,12 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
     {member.allowedFunds.length > 1 && <nav className={styles.switcher} aria-label="Kies fonds">{member.allowedFunds.map((number) => <Link key={number} href={`/mijn-fonds?fonds=${number}`} aria-current={number === fund ? "page" : undefined}>Fonds {number}</Link>)}</nav>}
 
     <div className={styles.cards}>
-      <article><span>Totale fondswaarde</span><strong>{displayedFundValue !== null ? eur(displayedFundValue) : "—"}</strong><p>{bookIssues.length&&lastReported?`Administratie per ${date(lastReported.date)}`:`Fonds ${fund}`}</p></article>
+      <article><span>Totale fondswaarde</span><strong>{displayedFundValue !== null ? eur(displayedFundValue) : "—"}</strong><p>{bookPoint?`Berekend per ${date(bookPoint.date)} · slotkoersen ${date(bookPoint.quoteDate)}`:useReported&&lastReported?`Administratie per ${date(lastReported.date)}`:`Fonds ${fund}`}</p></article>
       <article><span>Jouw participatie</span><strong>{ownFund && member.participation !== null ? pct(member.participation) : "—"}</strong><p>{ownFund ? `In fonds ${fund}` : `Jouw deelname hoort bij fonds ${member.fund}`}</p></article>
       <article><span>Jouw positie</span><strong>{personalValue !== null ? eur(personalValue) : "—"}</strong><p>{personalPoint ? `Per ${date(personalPoint.date)} · netto inleg ${eur(personalPoint.netInleg)} · resultaat ${eur(personalResult!)}${participationReconciled ? "" : " · voorlopig"}` : personalValue !== null ? "Waarde uit de ledenadministratie" : "Nog geen waarde beschikbaar"}</p></article>
     </div>
 
-    {bookIssues.length>0&&<p className={styles.notice}>Bedragen kunnen nog niet kloppen en dit zal in de komende dagen verwerkt worden.</p>}
+    {!snapshot.unitLedger&&bookIssues.length>0&&<p className={styles.notice}>De historische bronadministratie is nog niet volledig aangesloten.</p>}
 
     {ownFund && <MemberChart points={history}/>}
 
@@ -89,8 +94,8 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
     </section>
 
     <div className={styles.grid}>
-      <section className={styles.panel}><p className="eyebrow">Liquiditeit</p><h2>Cash.</h2><strong className={styles.bigNumber}>{view.cashValue !== null ? eur(view.cashValue) : "—"}</strong></section>
-      <section className={styles.panel}><p className="eyebrow">Verdeling</p><h2>Cash &amp; aandelen.</h2>{view.fundValue !== null && view.fundValue > 0 && stockShare !== null && cashShare !== null ? <Composition stocks={view.stockValue!} cash={view.cashValue!} other={view.otherValue??0} total={view.fundValue}/> : <div className={styles.compEmpty}>Verdeling verschijnt zodra alle koersen en wisselkoersen beschikbaar zijn.</div>}</section>
+      <section className={styles.panel}><p className="eyebrow">Liquiditeit</p><h2>Cash.</h2><strong className={styles.bigNumber}>{view.cashValue !== null ? eur(view.cashValue) : "—"}</strong>{view.payablesValue>0&&<p>Nog uit te betalen: {eur(view.payablesValue)}. Dit is afgetrokken van de fondswaarde.</p>}</section>
+      <section className={styles.panel}><p className="eyebrow">Verdeling bezittingen</p><h2>Cash &amp; aandelen.</h2>{view.assetValue !== null && view.assetValue > 0 && stockShare !== null && cashShare !== null ? <Composition stocks={view.stockValue!} cash={view.cashValue!} other={view.otherValue??0} total={view.assetValue}/> : <div className={styles.compEmpty}>Verdeling verschijnt zodra alle koersen en wisselkoersen beschikbaar zijn.</div>}</section>
     </div>
 
     <div className={styles.grid}>

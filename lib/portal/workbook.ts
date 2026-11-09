@@ -1,6 +1,7 @@
 import { createHash, createHmac } from "node:crypto";
 import readExcelFile from "read-excel-file/node";
 import {applyInputWorkbook} from "./input-workbook.ts";
+import {applyUnitLedger} from './unit-ledger.ts';
 import { auditLedger, validateLedger } from "./ledger.ts";
 import type { BankEvent, BrokerEvent, MemberCheck, ReconstructionLedger } from "./ledger";
 import type { Cash, FundHistoryPoint, FundNumber, ImportSummary, Member, MemberTransaction, Position, RiskMetrics, Snapshot } from "./types";
@@ -250,6 +251,7 @@ export async function parseWorkbook(bytes: Buffer, pepper: string, previous?:Sna
   const snapshot: Snapshot = { schema: 1, digest: createHash("sha256").update(bytes).digest("hex"), importedAt: new Date().toISOString(), requestedDate: cellDate(overview?.data[4]?.[1]), members, positions, cash, transactions, fundHistory, totalUnitsByFund, risk, warnings };
   snapshot.ledger=parseLedger(sheets);
   applyInputWorkbook(snapshot,sheets,(id,code)=>codeDigest(id,code,pepper),previous);
+  applyUnitLedger(snapshot,sheets);
   const ledgerAudit=auditLedger(snapshot);
   if(ledgerAudit){
     if(ledgerAudit.bank.some(c=>c.differenceCents!==0))throw new Error("ING-beginsaldo en mutaties sluiten niet aan op het eindsaldo.");

@@ -9,6 +9,9 @@ import { portfolioView } from "./portfolio";
 import { createLocalStore } from "./local-store";
 import { auditLedger, reconstructDays, verifiedValues } from "./ledger";
 import {fetchEurUsdHistory,fetchEstrHistory} from "./ecb";
+import {currentBookPoint} from './book-valuation';
+import {currentFundHistory} from './current-fund-history';
+import {mergeManualPrices} from './unit-ledger';
 import {validateInputContinuity} from "./input-workbook";
 import type { BankEvent, BrokerEvent, LedgerStorage, ReconstructionDay } from "./ledger";
 
@@ -85,7 +88,7 @@ async function hydrateLedger(snapshot:Snapshot):Promise<Snapshot>{
 
 export async function getDailyQuotes(): Promise<DailyQuotes | null> {
   const quotes=await redis().get<DailyQuotes>(QUOTES_KEY);if(!quotes)return null;
-  const quoteVersion=quotes.fetchedAt+":"+(quotes.historyUpdatedAt??"")+":"+(quotes.lastAttemptAt??"");
+  const quoteVersion=quotes.fetchedAt+":"+(quotes.historyUpdatedAt??"")+":"+(quotes.lastAttemptAt??"")+":"+(quotes.manualUpdatedAt??'');
   if(quoteCache?.at===quoteVersion&&quoteCache.until>Date.now())return quoteCache.quotes;
   if(quotes.historyKeys){
     const pairs=await Promise.all(quotes.historyKeys.map(async key=>[key,await redis().get<NonNullable<DailyQuotes["history"]>[string]>(`${PREFIX}history:${createHash("sha256").update(key).digest("hex")}`)] as const));
@@ -133,7 +136,7 @@ export async function getFundDailyValues(): Promise<FundValuePoint[]> {
   const snapshot=await redis().get<Snapshot>(CURRENT_KEY);
   if(!snapshot?.ledgerStorage&&!snapshot?.ledger)return legacy;
   const reconstructed=await redis().get<FundValuePoint[]>(`${PREFIX}reconstruction:${snapshot.digest}:verified`)??[];
-  return [...legacy.filter(p=>p.coverage==="verified"),...reconstructed];
+  return [...legacy.filter(p=>p.coverage==="verified"||snapshot.unitLedger&&p.coverage==='book'),...reconstructed];
 }
 
 export async function getReconstructionDays(snapshot:Snapshot,fund:FundNumber):Promise<ReconstructionDay[]>{
@@ -154,6 +157,15 @@ export async function recordReconstruction(snapshot:Snapshot,quotes:DailyQuotes|
 }
 
 export async function recordFundDailyValues(snapshot: Snapshot, quotes: DailyQuotes): Promise<void> {
+  if(snapshot.unitLedger){
+    const values=await redis().get<FundValuePoint[]>(FUND_DAILY_KEY)??[];
+    const points=new Map(values.map(p=>[`${p.fund}:${p.date}`,p]));
+    for(const fund of [1,2,3] as const){
+      const latest=currentBookPoint(snapshot,quotes,fund);
+      for(const p of [...currentFundHistory(snapshot,quotes,fund),...(latest?[latest]:[])])points.set(`${fund}:${p.date}`,{fund,date:p.date,nav:p.nav,fundValue:p.nav*p.totalUnits,coverage:'book'});
+    }
+    await redis().set(FUND_DAILY_KEY,[...points.values()].sort((a,b)=>a.date.localeCompare(b.date)||a.fund-b.fund).slice(-3*3653));return;
+  }
   if(snapshot.ledger){await recordReconstruction(snapshot,quotes);return;}
   const dates=snapshot.positions.map(p=>quotes.prices[`${p.exchange}:${p.ticker.toUpperCase()}`]?.date).filter((d):d is string=>Boolean(d));
   if(dates.length!==snapshot.positions.length||!dates.length)return;
@@ -205,7 +217,9 @@ async function publishPendingLocked(id: string): Promise<Snapshot | null> {
     await client.set(`${PREFIX}archive:${previous.digest}`, previousHeader);
   }
   const header=await storeLedger(snapshot,snapshot.digest);
-  const quotes = await getDailyQuotes();
+  const oldQuotes=await getDailyQuotes();
+  const quotes=mergeManualPrices(snapshot,oldQuotes);
+  if(quotes&&quotes!==oldQuotes){await saveDailyQuotes(quotes);await recordOperation({kind:'quote-input',cause:'import',result:'geverifieerde Excelkoers verwerkt',detail:'Geen Marketstack-aanvraag; dagelijkse vergrendeling behouden.'});}
   // Initialise missing free reference series on administrator import, never on a member visit.
   // This does not request stock/index data or spend Marketstack credits.
   if(quotes&&(!quotes.eurUsdHistory?.length||!quotes.estrHistory?.length)){
@@ -228,7 +242,7 @@ async function publishPendingLocked(id: string): Promise<Snapshot | null> {
 /** Both imports and the single daily quote job publish exactly the same risk results. */
 export async function refreshRiskReport(snapshot:Snapshot,quotes:DailyQuotes|null){
  const {calculateRiskReport}=await import("./risk-report");
- const daily=snapshot.ledger?await redis().get<FundValuePoint[]>(`${PREFIX}reconstruction:${snapshot.digest}:verified`)??[]:await getFundDailyValues();
+ const daily=snapshot.unitLedger?await redis().get<FundValuePoint[]>(FUND_DAILY_KEY)??[]:snapshot.ledger?await redis().get<FundValuePoint[]>(`${PREFIX}reconstruction:${snapshot.digest}:verified`)??[]:await getFundDailyValues();
  const report=calculateRiskReport(snapshot,quotes,daily);
  await integrationSet(`risk:${snapshot.digest}`,report);
  await integrationSet("onedrive-results-pending",true);

@@ -20,6 +20,11 @@ try{
  const missing=structuredClone(quotes);missing.history={};missing.prices={};assert.deepEqual(currentFundHistory(snapshot,missing,1),[],'Missing prices do not become zero');
  const daily=structuredClone(quotes);daily.history['Euronext Amsterdam:AAA'].push({date:'2026-09-21',close:59});daily.prices['Euronext Amsterdam:AAA']={...daily.prices['Euronext Amsterdam:AAA'],date:'2026-09-21',close:59};daily.benchmark=tomorrow.benchmark;daily.eurUsdHistory.push({date:'2026-09-21',close:1});
  const next=currentFundHistory(snapshot,daily,1);assert.equal(next.at(-1).date,'2026-09-21');assert.equal(next.at(-1).nav,109);assert.deepEqual(next.slice(0,live.length),live,'New daily data preserves prior book valuations');
+ const checkpoint=structuredClone(snapshot);checkpoint.fundHistory.push({fund:1,date:'2026-09-18',nav:110,totalUnits:10});
+ assert.equal(currentFundHistory(checkpoint,daily,1).at(-1).date,'2026-09-21','A source checkpoint newer than the import cutoff must continue daily');
+ assert.equal(currentFundHistory(checkpoint,daily,1).at(-1).nav,109);
+ checkpoint.cash[0].ingAsOf='2026-09-21';
+ assert.ok(currentFundHistory(checkpoint,daily,1).every(p=>p.date>='2026-09-21'),'Never apply future cash balances to earlier daily points');
  assert.deepEqual(currentFundHistory(snapshot,quotes,2),[],'Fund isolation');
  for(const kind of ['Saxo ontbreekt','Tussen fondsen']){
   const incomplete=structuredClone(snapshot);
