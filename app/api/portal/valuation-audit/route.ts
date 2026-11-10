@@ -6,7 +6,7 @@ export const runtime='nodejs';
 export const dynamic='force-dynamic';
 /** Read-only reconciliation of the same valuation displayed to each member.
  * No codes, bank account numbers or API credentials are returned. */
-export async function GET(){
+export async function GET(request:Request){
  const headers={'Cache-Control':'private, no-store'};
  const session=await getMemberSession();
  if(!session)return NextResponse.json({error:'Log eerst in.'},{status:401,headers});
@@ -21,5 +21,8 @@ export async function GET(){
   const units=events.length?Math.max(0,events.reduce((n,e)=>n+e.units,0)):null;
   return {id:m.id,name:m.name,fund:m.fund,active:m.active,units,participation:m.participation,date:point?.date??null,value:units!==null&&point?.nav!==undefined?units*point.nav:null};
  });
- return NextResponse.json({digest:snapshot.digest,unitLedger:snapshot.unitLedger,quotesAt:quotes?.fetchedAt,manualQuotesAt:quotes?.manualUpdatedAt,funds,members},{headers});
+ const includeHistory=new URL(request.url).searchParams.get('marketHistory')==='1';
+ // Only cached public observations; no provider access or per-member requests.
+ const marketHistory=includeHistory&&quotes?{fetchedAt:quotes.fetchedAt,history:quotes.history,historicalInstruments:quotes.historicalInstruments,eurUsdHistory:quotes.eurUsdHistory,fxHistory:quotes.fxHistory,benchmark:quotes.benchmark,fx:quotes.fx,prices:quotes.prices}:undefined;
+ return NextResponse.json({digest:snapshot.digest,unitLedger:snapshot.unitLedger,quotesAt:quotes?.fetchedAt,manualQuotesAt:quotes?.manualUpdatedAt,funds,members,...(marketHistory?{marketHistory}:{})},{headers});
 }
