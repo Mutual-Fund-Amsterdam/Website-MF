@@ -29,4 +29,10 @@ const b={'Invoer-ID':'L2','Lid-ID':'B',Naam:'Nieuw lid',Fonds:1,Status:'Actief'}
 s=run({Leden:[member,b],Toegang:[access,ba],Ledenmutaties:[flow({'Lid-ID':'B',Handeling:'Storting','Bedrag EUR':500})]});assert.equal(s.members.length,2);assert.equal(s.members.find(m=>m.id==='B').participation,1/3);
 s=run({Aandelen:[cat(),cat('GBPTEST','GBP')],Cash:[{'Invoer-ID':'GBP',Fonds:1,Rekening:'Broker',Valuta:'GBP',Datum:'2026-10-21',Saldo:500}],'Aan- en verkopen':[stock({Ticker:'GBPTEST'})]});assert.equal(s.cash[0].extraBalances.GBP.amount,299);assert.equal(s.positions.at(-1).currency,'GBP');
 assert.throws(()=>run({Aandelen:[cat(),cat('GBPTEST','GBP')],'Aan- en verkopen':[stock({Ticker:'GBPTEST'})]}),/brokersaldo/);
+headers['Aan- en verkopen'].push('Cashvaluta','Cashbedrag');
+const eurBook=stock({Ticker:'USDTEST',Cashvaluta:'EUR',Cashbedrag:-180});
+s=run({Aandelen:[cat(),cat('USDTEST','USD')],'Aan- en verkopen':[eurBook]});
+assert.equal(s.cash[0].brokerEur,820);assert.equal(s.cash[0].brokerUsd,500,'EUR reporting book must not also deduct native cash');
+s=run({Aandelen:[cat(),cat('USDTEST','USD')],Cash:[{'Invoer-ID':'EUR',Fonds:1,Rekening:'Broker',Valuta:'EUR',Datum:'2026-10-22',Saldo:820}],'Aan- en verkopen':[eurBook]});assert.equal(s.cash[0].brokerEur,820,'Absolute closing snapshot supersedes a same-day converted order exactly once');
+assert.throws(()=>run({Aandelen:[cat(),cat('USDTEST','USD')],'Aan- en verkopen':[stock({Ticker:'USDTEST',Cashvaluta:'EUR',Cashbedrag:180})]}),/cashomrekening/);
 console.log('Separate inputs: validation, metadata, trades, new stock/member, withdrawals, cash checkpoints, 30 currencies, direct financial corrections, removed withdrawal recovery and duplicate replay passed. No requests made.');

@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {mergeManualPrices} from '../lib/portal/unit-ledger.ts';
+import {holdingsAt} from '../lib/portal/ledger.ts';
+import {fundUnitsAt} from '../lib/portal/fund-units.ts';
+const q={fetchedAt:'2026-11-10T05:46:00Z',prices:{'Euronext Paris:AIR':{date:'2026-11-09',close:200}},history:{'Euronext Paris:AIR':[{date:'2026-11-09',close:200,adjustedClose:199}]}};
+const s={manualPrices:[{symbol:'AIR',exchange:'Euronext Paris',currency:'EUR',date:'2026-09-16',close:180,source:'Fixture'},{symbol:'AIR',exchange:'Euronext Paris',currency:'EUR',date:'2026-11-09',close:200,source:'Fixture'}]};
+const old=JSON.stringify(q);const m=mergeManualPrices(s,q);assert.equal(JSON.stringify(q),old);assert.equal(m.prices['Euronext Paris:AIR'].close,200);assert.equal(m.history['Euronext Paris:AIR'].length,2);assert.equal(m.history['Euronext Paris:AIR'][1].adjustedClose,199);assert.equal(m.fetchedAt,q.fetchedAt);assert.strictEqual(mergeManualPrices(s,m),m);
+assert.throws(()=>mergeManualPrices({...s,manualPrices:[{...s.manualPrices[0],close:181}]},m),/Tegenstrijdige/);
+const pool={unitLedger:{asOf:{1:'2026-11-09'}},totalUnitsByFund:{1:4},fundHistory:[{fund:1,date:'2026-09-16',totalUnits:999}],transactions:[{fund:1,date:'2026-09-01',units:5},{fund:1,date:'2026-09-01',units:2},{fund:1,date:'2026-10-01',units:-5},{fund:1,date:'2026-11-09',units:2}]};
+assert.equal(fundUnitsAt(pool,1,'2026-09-16'),7,'Former members remain in the old pool until actual retirement');assert.equal(fundUnitsAt(pool,1,'2026-10-02'),2);assert.equal(fundUnitsAt(pool,1,'2026-11-10'),4);assert.equal(fundUnitsAt(pool,2,'2026-11-10'),null);
+const rights={broker:[{fund:1,broker:'IBKR',kind:'Ankerpositie',date:'2026-10-05',symbol:'CTPNX.RTS',currency:'EUR',quantity:52,assetClass:'stock',exchange:''},{fund:1,broker:'IBKR',kind:'Dividend',date:'2026-10-08',symbol:'CTPNX.RTS',currency:'',quantity:null,description:'CTPNX.RTS Expire Dividend Right',sourceRow:1},{fund:1,broker:'Saxo',kind:'Buy',date:'2026-10-12',symbol:'WKL',currency:'EUR',quantity:15,sourceRow:1}]};
+assert.equal(holdingsAt(rights,1,'2026-10-07').holdings.get('CTPNX.RTS').quantity,52);assert.ok(!holdingsAt(rights,1,'2026-10-08').holdings.has('CTPNX.RTS'));assert.equal(holdingsAt(rights,1,'2026-11-10').holdings.get('WKL').quantity,15);
+console.log('Passed: older genuine observations retained without overwriting current/adjusted prices, conflicts rejected, idempotent merge, source-only dated units including retired members, no new provider timestamp or requests.');

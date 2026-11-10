@@ -70,6 +70,7 @@ export type DailyQuotes = {
 };
 
 export type Cash = {
+  basisNote?:string;
   payablesEur?: number;
   payablesAsOf?: string;
   extraBalances?: Record<string,{amount:number;date:string}>;

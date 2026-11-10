@@ -72,7 +72,7 @@ export function holdingsAt(ledger: ReconstructionLedger,fund:FundNumber,date:str
   if(!anchor)return {holdings,anchor:null,reasons:["anker_ontbreekt"]};
   if(anchors.some(e=>e.date!==anchor))return {holdings,anchor:null,reasons:["meerdere_ankerdatums"]};
   for(const e of anchors)holdings.set(e.symbol,{symbol:e.symbol,currency:e.currency,quantity:e.quantity??0,assetClass:e.assetClass,exchange:e.exchange});
-  const events=ledger.broker.filter(e=>e.fund===fund&&e.broker==="IBKR"&&e.date>=(date<anchor?date:anchor)&&e.date<=(date<anchor?anchor:date)&&e.date>(date<anchor?date:anchor)&&!["Ankerpositie","Ankercash","Ankertotaal"].includes(e.kind)).sort(chronology);
+  const events=ledger.broker.filter(e=>e.fund===fund&&["IBKR","Saxo"].includes(e.broker)&&e.date>=(date<anchor?date:anchor)&&e.date<=(date<anchor?anchor:date)&&e.date>(date<anchor?date:anchor)&&!["Ankerpositie","Ankercash","Ankertotaal"].includes(e.kind)).sort(chronology);
   const reverse=date<anchor;if(reverse)events.reverse();
   for(const e of events){
     if(e.processing==="Negeren"&&approved(e.status))continue;
@@ -81,6 +81,9 @@ export function holdingsAt(ledger: ReconstructionLedger,fund:FundNumber,date:str
       if(e.quantity===null||!e.symbol||!e.currency){reasons.push("transactie_aantal_ontbreekt");continue;}
       const h=holdings.get(e.symbol)??{symbol:e.symbol,currency:e.currency,quantity:0,assetClass:"stock",exchange:e.exchange};
       h.quantity+=(reverse?-1:1)*e.quantity;holdings.set(e.symbol,h);
+    }else if(e.kind==="Dividend"&&e.symbol.endsWith('.RTS')&&/Expire Dividend Right/i.test(e.description)){
+      if(reverse)reasons.push("historisch_aantal_vervallen_recht_onbekend");
+      else holdings.delete(e.symbol);
     }else if(e.processing==="Split"&&approved(e.status)&&e.factor){
       const h=holdings.get(e.symbol);if(h)h.quantity*=reverse?1/e.factor:e.factor;
     }else if(e.processing==="Hernoeming"&&approved(e.status)&&e.newSymbol){
@@ -167,11 +170,11 @@ export function auditLedger(snapshot:Snapshot):ReconstructionAudit|null{
   const ledger=snapshot.ledger;if(!ledger)return null;
   const bank=([1,2,3] as const).map(f=>bankControl(ledger,f));const issues:ReviewIssue[]=[];
   for(const f of [1,2,3] as const){
-    const expected=holdingsAt(ledger,f,"2026-10-21");const actual=snapshot.positions.filter(p=>p.fund===f);
+    const expected=holdingsAt(ledger,f,new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Amsterdam"}).format(new Date()));const actual=snapshot.positions.filter(p=>p.fund===f);
     for(const symbol of new Set([...expected.holdings.values()].filter(p=>p.assetClass==="stock").map(p=>p.symbol).concat(actual.map(p=>p.ticker)))){
       if(symbol==="CTPNX.RTS")continue;
       const q=expected.holdings.get(symbol)?.quantity??0,master=actual.filter(p=>p.ticker===symbol).reduce((s,p)=>s+p.quantity,0);
-      if(Math.abs(q-master)>.000001)issues.push({fund:f,category:"Aantallen",item:symbol,source:q,master,detail:"IBKR-anker + transacties t/m 21-10 versus master; Saxo kan het verschil verklaren."});
+      if(Math.abs(q-master)>.000001)issues.push({fund:f,category:"Aantallen",item:symbol,source:q,master,detail:"Bronanker plus alle bekende IBKR- en Saxo-transacties versus de huidige administratie."});
     }
     const control=bank.find(b=>b.fund===f)!;
     const masterCash=snapshot.cash.find(c=>c.fund===f);

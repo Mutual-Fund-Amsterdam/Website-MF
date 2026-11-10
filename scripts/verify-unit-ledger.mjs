@@ -35,7 +35,7 @@ try{
  air.manualPrices=[{symbol:'AIR',exchange:'Euronext Paris',currency:'EUR',date:'2026-11-06',close:196.4,source:'Euronext dated source'}];
  const fixed=mergeManualPrices(air,old);assert.equal(fixed.prices['Euronext Paris:AIR'].close,196.4);assert.ok(currentBookPoint(air,fixed,3));assert.equal(fixed.fetchedAt,old.fetchedAt,'Manual import does not claim a new provider run');
  now='2026-11-10T06:00:00Z';const next=structuredClone(q);next.prices['Euronext Amsterdam:AAA']={...next.prices['Euronext Amsterdam:AAA'],date:'2026-11-09',close:105};next.history['Euronext Amsterdam:AAA'].push({date:'2026-11-09',close:105});next.benchmark.points.push({date:'2026-11-09',close:101});next.benchmark.latest=next.benchmark.points.at(-1);
- const p=currentBookPoint(s,next,1);assert.equal(p.nav,121);assert.equal(p.date,'2026-11-09');assert.equal(memberHistory(s.members[0],s,[],[],p).at(-1).value,484);
+ const p=currentBookPoint(s,next,1);assert.equal(p.nav,121);assert.equal(p.date,'2026-11-10');assert.equal(memberHistory(s.members[0],s,[],[],p).at(-1).value,484);
  assert.equal(currentFundHistory(s,next,1).at(-1).nav,121,'Daily continuation uses current unit pool, not old fund index units');
  let calls=0,credits=0;globalThis.fetch=async input=>{calls++;const url=new URL(input),symbol=url.searchParams.get('symbols');if(symbol==='AIR.XPAR')return Response.json({data:[{symbol,exchange:'XPAR',price_currency:'EUR',date:'2026-11-09T00:00:00Z',close:197}]});return Response.json({data:[{symbol:'GSPC.INDX',exchange:'INDX',date:'2026-11-09T00:00:00Z',close:6000}]});};
  const fetched=await fetchDailyQuotes([air.positions[2]],'fixture-only',fixed,async n=>credits+=n,new Date(now));

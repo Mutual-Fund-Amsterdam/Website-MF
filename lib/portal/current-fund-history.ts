@@ -23,7 +23,7 @@ export function currentFundHistory(snapshot:Snapshot,quotes:DailyQuotes,fund:Fun
  // cutoff. Start daily valuations after that checkpoint and the latest cash
  // balance, so a later balance is never applied to an earlier valuation day.
  const last=reported.at(-1),cash=snapshot.cash?.find(c=>c.fund===fund);
- const cutoff=[snapshot.input?.cutoff,last?.date,snapshot.unitLedger?.asOf[fund],snapshot.cash.find(c=>c.fund===fund)?.payablesAsOf,...sourceDates].filter((d):d is string=>!!d).sort().at(-1);
+ const cutoff=[snapshot.input?.cutoff,last?.date,snapshot.unitLedger?.asOf[fund],cash?.payablesAsOf,...sourceDates].filter((d):d is string=>!!d).sort().at(-1);
  if(!cutoff)return [];
  if(!last||!cash)return [];
  const moves=(snapshot.ledger?.broker??[]).filter(e=>e.fund===fund&&e.source==="Invoer"&&["Buy","Sell"].includes(e.kind)&&e.date>last.date);

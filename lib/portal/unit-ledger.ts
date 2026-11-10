@@ -22,6 +22,7 @@ export function applyUnitLedger(snapshot:Snapshot,sheets:InputSheet[]){
  }
  if(Object.keys(dates).length!==3)throw Error('Peildatum van deelbewijzen ontbreekt.');
  snapshot.unitLedger={version:1,asOf:dates};
+ if(txt(ix?.data[3]?.[22])==='MF-CASH-BASIS-1')for(const cash of snapshot.cash)cash.basisNote=txt(ix!.data[cash.fund+3]?.[22]);
  const controls=sheets.find(s=>s.sheet==='Overzicht');
  const header=controls?.data.findIndex(r=>r.includes('Brondeelbewijzen'))??-1;
  if(controls&&header>=0){
@@ -33,15 +34,15 @@ export function applyUnitLedger(snapshot:Snapshot,sheets:InputSheet[]){
   }
  }
  const sheet=sheets.find(s=>s.sheet==='Koersen');
- if(!sheet)return;
  snapshot.manualPrices=[];
- for(const row of sheet.data.slice(5)){
-  if(!txt(row[1]))continue;
-  const ticker=txt(row[1]).toUpperCase(),exchange=txt(row[2]),date=day(row[3]),close=Number(row[4]),currency=txt(row[5]);
-  const position=snapshot.positions.find(p=>p.ticker===ticker&&p.exchange===exchange&&p.currency===currency);
-  if(!position)throw Error(`Koers ${ticker}: aandeel, beurs of valuta ontbreekt in de portefeuille.`);
-  if(!validDay(date)||!Number.isFinite(close)||close<=0)throw Error(`Ongeldige koers of koersdatum voor ${ticker}.`);
-  snapshot.manualPrices.push({symbol:ticker,exchange,currency,date,close,source:txt(row[7])||'Handmatige koers in Excel'});
+ const rows=(sheet?.data.slice(5)??[]).filter(r=>txt(r[1])).map(r=>({ticker:txt(r[1]).toUpperCase(),exchange:txt(r[2]),date:day(r[3]),close:Number(r[4]),currency:txt(r[5]),source:txt(r[7])||'Handmatige koers in Excel'}));
+ if(txt(ix?.data[3]?.[16])==='MF-PRICE-HISTORY-1')for(const r of ix!.data.slice(4))if(txt(r[16]))rows.push({ticker:txt(r[16]).toUpperCase(),exchange:txt(r[17]),date:day(r[18]),close:Number(r[19]),currency:txt(r[20]),source:txt(r[21])});
+ const catalog=sheets.find(s=>s.sheet==='Aandelen');
+ const known=(ticker:string,exchange:string,currency:string)=>snapshot.positions.some(p=>p.ticker===ticker&&p.exchange===exchange&&p.currency===currency)||catalog?.data.slice(5).some(r=>txt(r[1]).toUpperCase()===ticker&&txt(r[3])===currency&&txt(r[4])===exchange);
+ for(const p of rows){
+  if(!known(p.ticker,p.exchange,p.currency))throw Error(`Koers ${p.ticker}: aandeel, beurs of valuta ontbreekt in de catalogus.`);
+  if(!validDay(p.date)||!Number.isFinite(p.close)||p.close<=0)throw Error(`Ongeldige koers of koersdatum voor ${p.ticker}.`);
+  snapshot.manualPrices.push({symbol:p.ticker,exchange:p.exchange,currency:p.currency,date:p.date,close:p.close,source:p.source});
  }
 }
 
@@ -51,10 +52,11 @@ export function mergeManualPrices(snapshot:Snapshot,previous:DailyQuotes|null):D
  const result:DailyQuotes={...(previous??{fetchedAt:new Date().toISOString()}),prices:{...previous?.prices},history:{...previous?.history}};
  let changed=false;
  for(const p of snapshot.manualPrices){
-  const id=quoteKey({ticker:p.symbol,exchange:p.exchange}),old=result.prices[id];
-  if(old&&old.date>=p.date)continue;
-  result.prices[id]=p;
-  result.history![id]=[...new Map([...(result.history![id]??[]),{date:p.date,close:p.close}].map(r=>[r.date,r])).values()].sort((a,b)=>a.date.localeCompare(b.date));changed=true;
+  const id=quoteKey({ticker:p.symbol,exchange:p.exchange}),old=result.prices[id],rows=result.history![id]??[];
+  const existing=rows.find(r=>r.date===p.date);
+  if(existing&&Math.abs(existing.close-p.close)>.005)throw Error(`Tegenstrijdige historische koers voor ${p.symbol} op ${p.date}.`);
+  if(!existing){result.history![id]=[...rows,{date:p.date,close:p.close}].sort((a,b)=>a.date.localeCompare(b.date));changed=true;}
+  if(!old||old.date<p.date){result.prices[id]=p;changed=true;}
  }
  if(changed)result.manualUpdatedAt=new Date().toISOString();
  return changed?result:previous;

@@ -2,8 +2,11 @@ import type {DailyQuotes, FundNumber, PricePoint, Snapshot} from "./types";
 import {bankControl, bankValue} from "./ledger.ts";
 import {modelSplits,modelHoldingsAt,splitSafeReturn} from "./history-splits.ts";
 import {currentFundHistory} from "./current-fund-history";
+import {currentBookPoint} from "./book-valuation";
+import {fundUnitsAt} from "./fund-units";
+import {FUND_RETURN_BASELINE} from "./comparison";
 
-export type EstimatedFundPoint = {date:string; nav:number; lowNav:number; highNav:number; flatNav?:number; marketNav?:number; estimated:boolean; priceCoverage:number};
+export type EstimatedFundPoint = {date:string; nav:number; lowNav:number; highNav:number; flatNav?:number; marketNav?:number; estimated:boolean; priceCoverage:number;totalUnits?:number;fundValue?:number};
 const DAY=86400000;
 function latest(rows:PricePoint[]|undefined,date:string,maxAge=7){
  const p=rows?.filter(p=>p.date<=date).at(-1);
@@ -22,8 +25,9 @@ function price(quotes:DailyQuotes,snapshot:Snapshot,symbol:string,currency:strin
  * Intermediate days remain indicative; reported NAV anchors and ledger events are preserved. */
 export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,fund:FundNumber):EstimatedFundPoint[]{
  const extension=quotes?currentFundHistory(snapshot,quotes,fund):[];
+ const book=currentBookPoint(snapshot,quotes,fund);if(book)extension.push(book);
  const modelDates=new Set(extension.map(p=>p.date));
- const anchors=[...(snapshot.fundHistory??[]),...extension].filter(p=>p.fund===fund&&p.nav>0&&p.totalUnits>0).sort((a,b)=>a.date.localeCompare(b.date));
+ const anchors=[...new Map([...(snapshot.fundHistory??[]),...extension].filter(p=>p.fund===fund&&p.nav>0&&p.totalUnits>0).map(p=>[p.date,p])).values()].sort((a,b)=>a.date.localeCompare(b.date));
  if(!anchors.length)return [];
  const reported=anchors.map(p=>({date:p.date,nav:p.nav,lowNav:p.nav,highNav:p.nav,estimated:modelDates.has(p.date),priceCoverage:1}));
  if(!snapshot.ledger||!quotes||anchors.length===1)return reported;
@@ -41,6 +45,9 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
  for(const rows of Object.values(quotes.history??{}))for(const p of rows)if(p.date>=from&&p.date<=end)allDates.add(p.date);
  // The fixed meeting reference can be inside a reporting interval.
  if(from<="2026-09-16"&&end>="2026-09-16")allDates.add("2026-09-16");
+ const calendarFrom=[from,FUND_RETURN_BASELINE].sort().at(-1)!;
+ for(let d=Date.parse(calendarFrom);d<=Date.parse(end);d+=DAY)allDates.add(new Date(d).toISOString().slice(0,10));
+ const sessions=new Set([...(quotes.benchmark?.points??[]).map(p=>p.date),...Object.values(quotes.history??{}).flatMap(rows=>rows.map(p=>p.date)),...(snapshot.transactions??[]).filter(e=>e.fund===fund).map(e=>e.date),...(snapshot.cash??[]).filter(c=>c.fund===fund).flatMap(c=>[c.ingAsOf,c.brokerAsOf,c.otherAsOf,c.payablesAsOf]).filter((d):d is string=>!!d)]);
  const dates=[...allDates].sort();
  const output=new Map<string,EstimatedFundPoint>();
  for(let i=0;i<anchors.length-1;i++){
@@ -87,14 +94,15 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
    path.push({date,flat,market,coverage:investable>0?known/investable:1});
   }
   const target=right.nav/left.nav;
+  const activeDays=interval.slice(1).filter(d=>sessions.has(d));
   for(const p of path){
    if(p.date<from)continue;
-   const t=(Date.parse(p.date)-Date.parse(left.date))/(Date.parse(right.date)-Date.parse(left.date));
+   const t=activeDays.length?activeDays.filter(d=>d<=p.date).length/activeDays.length:p.date===right.date?1:0;
    const a=left.nav*p.flat*Math.pow(target/flat,t),b=left.nav*p.market*Math.pow(target/market,t);
    const isAnchor=p.date===left.date||p.date===right.date;
    const nav=isAnchor?(p.date===left.date?left.nav:right.nav):Math.sqrt(a*b);
    output.set(p.date,{date:p.date,nav,lowNav:isAnchor?nav:Math.min(a,b),highNav:isAnchor?nav:Math.max(a,b),flatNav:isAnchor?nav:a,marketNav:isAnchor?nav:b,estimated:!isAnchor||modelDates.has(p.date),priceCoverage:Math.max(0,Math.min(1,p.coverage))});
   }
  }
- return [...output.values()].sort((a,b)=>a.date.localeCompare(b.date));
+ return [...output.values()].sort((a,b)=>a.date.localeCompare(b.date)).map(p=>{const units=fundUnitsAt(snapshot,fund,p.date);return {...p,...(units?{totalUnits:units,fundValue:units*p.nav}:{})};});
 }
