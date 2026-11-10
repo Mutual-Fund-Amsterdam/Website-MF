@@ -1,7 +1,7 @@
 export type FundNumber = 1 | 2 | 3;
 export type MemberTransaction = { fund: FundNumber; memberId: string; date: string; amount: number; nav: number; units: number; source: string };
 export type FundHistoryPoint = { fund: FundNumber; date: string; nav: number; totalUnits: number };
-export type FundValuePoint = { fund: FundNumber; date: string; nav: number; fundValue: number; coverage?: "verified" | "indicative" | "book" };
+export type FundValuePoint = { fund: FundNumber; date: string; nav: number; fundValue: number; coverage?: "verified" | "indicative" | "book";cashConfirmed?:boolean };
 export type RiskMetrics = { asOf: string | null; sharpe: number | null; volatility: number | null; beta: number | null; maxDrawdown: number | null };
 
 export type Member = {

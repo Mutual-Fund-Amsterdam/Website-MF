@@ -136,7 +136,7 @@ export async function getFundDailyValues(): Promise<FundValuePoint[]> {
   const snapshot=await redis().get<Snapshot>(CURRENT_KEY);
   if(!snapshot?.ledgerStorage&&!snapshot?.ledger)return legacy;
   const reconstructed=await redis().get<FundValuePoint[]>(`${PREFIX}reconstruction:${snapshot.digest}:verified`)??[];
-  return [...legacy.filter(p=>p.coverage==="verified"||snapshot.unitLedger&&p.coverage==='book'),...reconstructed];
+  return [...legacy.filter(p=>p.coverage==="verified"||snapshot.unitLedger&&p.coverage==='book'&&p.cashConfirmed===true),...reconstructed];
 }
 
 export async function getReconstructionDays(snapshot:Snapshot,fund:FundNumber):Promise<ReconstructionDay[]>{
@@ -162,7 +162,7 @@ export async function recordFundDailyValues(snapshot: Snapshot, quotes: DailyQuo
     const points=new Map(values.map(p=>[`${p.fund}:${p.date}`,p]));
     for(const fund of [1,2,3] as const){
       const latest=currentBookPoint(snapshot,quotes,fund);
-      for(const p of [...currentFundHistory(snapshot,quotes,fund),...(latest?[latest]:[])])points.set(`${fund}:${p.date}`,{fund,date:p.date,nav:p.nav,fundValue:p.nav*p.totalUnits,coverage:'book'});
+      for(const p of [...currentFundHistory(snapshot,quotes,fund),...(latest?[latest]:[])])points.set(`${fund}:${p.date}`,{fund,date:p.date,nav:p.nav,fundValue:p.nav*p.totalUnits,coverage:'book',cashConfirmed:true});
     }
     await redis().set(FUND_DAILY_KEY,[...points.values()].sort((a,b)=>a.date.localeCompare(b.date)||a.fund-b.fund).slice(-3*3653));return;
   }
@@ -242,7 +242,7 @@ async function publishPendingLocked(id: string): Promise<Snapshot | null> {
 /** Both imports and the single daily quote job publish exactly the same risk results. */
 export async function refreshRiskReport(snapshot:Snapshot,quotes:DailyQuotes|null){
  const {calculateRiskReport}=await import("./risk-report");
- const daily=snapshot.unitLedger?await redis().get<FundValuePoint[]>(FUND_DAILY_KEY)??[]:snapshot.ledger?await redis().get<FundValuePoint[]>(`${PREFIX}reconstruction:${snapshot.digest}:verified`)??[]:await getFundDailyValues();
+ const daily=snapshot.unitLedger?(await redis().get<FundValuePoint[]>(FUND_DAILY_KEY)??[]).filter(p=>p.coverage==='verified'||p.coverage==='book'&&p.cashConfirmed===true):snapshot.ledger?await redis().get<FundValuePoint[]>(`${PREFIX}reconstruction:${snapshot.digest}:verified`)??[]:await getFundDailyValues();
  const report=calculateRiskReport(snapshot,quotes,daily);
  await integrationSet(`risk:${snapshot.digest}`,report);
  await integrationSet("onedrive-results-pending",true);

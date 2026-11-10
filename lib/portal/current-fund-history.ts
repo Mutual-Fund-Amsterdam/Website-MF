@@ -1,6 +1,7 @@
 import type {DailyQuotes,FundHistoryPoint,FundNumber,Position,Snapshot} from "./types";
 import {quoteKey} from "./marketstack";
 
+import {cashReviewIssues} from './cash-review';
 const DAY=86400000;
 /** Internal transfers remain assets. Never divide an incomplete broker book by
  * the full administration's units; reconcile the receiving book first. */
@@ -16,7 +17,7 @@ export function currentBookIssues(snapshot:Snapshot,fund:FundNumber):string[]{
 }
 /** Dated valuations of the supplied book. These are model anchors, never approved administration. */
 export function currentFundHistory(snapshot:Snapshot,quotes:DailyQuotes,fund:FundNumber):FundHistoryPoint[]{
- if(currentBookIssues(snapshot,fund).length)return [];
+ if(currentBookIssues(snapshot,fund).length||cashReviewIssues(snapshot,fund).length)return [];
  const reported=(snapshot.fundHistory??[]).filter(p=>p.fund===fund).sort((a,b)=>a.date.localeCompare(b.date));
  const sourceDates=[snapshot.requestedDate,...(snapshot.cash??[]).filter(c=>c.fund===fund).flatMap(c=>[c.ingAsOf,c.brokerAsOf]),...(snapshot.ledger?.bank??[]).filter(e=>e.fund===fund&&e.kind==="Banksluiting").map(e=>e.date)].filter((d):d is string=>!!d);
  // A later administration checkpoint does not change the immutable import

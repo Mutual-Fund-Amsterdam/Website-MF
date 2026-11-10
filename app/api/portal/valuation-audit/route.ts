@@ -1,6 +1,7 @@
 import {NextResponse} from 'next/server';
 import {getMemberSession,getDailyQuotes} from '@/lib/portal/store';
 import {currentBookPoint} from '@/lib/portal/book-valuation';
+import {cashReviewIssues} from '@/lib/portal/cash-review';
 import {portfolioView} from '@/lib/portal/portfolio';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -14,7 +15,7 @@ export async function GET(request:Request){
  const snapshot=session.snapshot,quotes=await getDailyQuotes();
  const funds=([1,2,3] as const).map(fund=>{
   const point=currentBookPoint(snapshot,quotes,fund),view=portfolioView(snapshot.positions.filter(p=>p.fund===fund),snapshot.cash.find(c=>c.fund===fund),quotes);
-  return {fund,...point,stocks:view.stockValue,cash:view.cashValue,other:view.otherValue,payables:view.payablesValue,missing:view.missing};
+  return {fund,...point,reconciliationIssues:cashReviewIssues(snapshot,fund),stocks:view.stockValue,cash:view.cashValue,other:view.otherValue,payables:view.payablesValue,missing:view.missing};
  });
  const members=snapshot.members.map(m=>{
   const point=funds.find(f=>f.fund===m.fund),events=(snapshot.transactions??[]).filter(e=>e.memberId===m.id&&e.fund===m.fund);

@@ -1,4 +1,5 @@
 import type { FundValuePoint, FundHistoryPoint, Member, Snapshot } from "./types";
+import {cashReviewIssues} from './cash-review';
 import type {EstimatedFundPoint} from "./estimated-history";
 
 export type MemberHistoryPoint = { date: string; value: number; netInleg: number; indicative?:boolean };
@@ -15,7 +16,7 @@ export function memberHistory(member: Member, snapshot: Snapshot, daily: FundVal
   for (const event of events) if (event.date >= first && !dates.has(event.date)) {
     dates.set(event.date, { nav: event.nav, priority: 2 });
   }
-  for (const point of daily) if (point.fund === member.fund && point.date >= first && (!snapshot.ledger || point.coverage === "verified"||snapshot.unitLedger&&point.coverage==='book'&&point.date>=snapshot.unitLedger.asOf[member.fund])) {
+  for (const point of daily) if (point.fund === member.fund && point.date >= first && (!snapshot.ledger || point.coverage === "verified"||snapshot.unitLedger&&point.coverage==='book'&&point.cashConfirmed===true&&point.date>=snapshot.unitLedger.asOf[member.fund])) {
     dates.set(point.date, { nav: point.nav, priority: 3 });
   }
   for(const point of reconstructed)if(point.date>=first&&!dates.has(point.date))dates.set(point.date,{nav:point.nav,priority:0,indicative:point.estimated});
@@ -30,8 +31,9 @@ export function memberHistory(member: Member, snapshot: Snapshot, daily: FundVal
       netInleg += events[eventIndex].amount;
       eventIndex++;
     }
+    const unresolvedCash=cashReviewIssues(snapshot,member.fund).length>0;
     const beforeCheckedBasis=!!snapshot.unitLedger&&date<snapshot.unitLedger.asOf[member.fund];
-    result.push({ date, value: Math.max(0, units * nav), netInleg,...(indicative||beforeCheckedBasis?{indicative:true}:{}) });
+    result.push({ date, value: Math.max(0, units * nav), netInleg,...(indicative||beforeCheckedBasis||unresolvedCash?{indicative:true}:{}) });
   }
   return result;
 }

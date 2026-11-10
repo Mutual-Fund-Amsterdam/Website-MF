@@ -5,6 +5,7 @@ import { getDailyQuotes, getFundDailyValues, getMemberSession, integrationGet } 
 import { quoteKey } from "@/lib/portal/marketstack";
 import { portfolioView } from "@/lib/portal/portfolio";
 import { memberHistory } from "@/lib/portal/member-history";
+import {cashReviewIssues} from '@/lib/portal/cash-review';
 import {currentBookPoint} from '@/lib/portal/book-valuation';
 import type { FundNumber } from "@/lib/portal/types";
 import { StockCharts } from "./market-chart";
@@ -40,6 +41,7 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
   const [quotes, dailyFundValues] = await Promise.all([getDailyQuotes(), getFundDailyValues()]);
   const cash = snapshot.cash.find((item) => item.fund === fund);
   const view = portfolioView(positions, cash, quotes);
+  const cashIssues=cashReviewIssues(snapshot,fund);
   const admin = member.role.toLowerCase() === "hoofdbestuurder";
   const ownFund = fund === member.fund;
   const participationTotal = snapshot.members.filter((item) => item.fund === fund).reduce((sum, item) => sum + (item.participation ?? 0), 0);
@@ -73,37 +75,37 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
     {member.allowedFunds.length > 1 && <nav className={styles.switcher} aria-label="Kies fonds">{member.allowedFunds.map((number) => <Link key={number} href={`/mijn-fonds?fonds=${number}`} aria-current={number === fund ? "page" : undefined}>Fonds {number}</Link>)}</nav>}
 
     <div className={styles.cards}>
-      <article><span>Totale fondswaarde</span><strong>{displayedFundValue !== null ? eur(displayedFundValue) : "—"}</strong><p>{bookPoint?`Berekend per ${date(bookPoint.date)} · slotkoersen ${date(bookPoint.quoteDate)}`:useReported&&lastReported?`Administratie per ${date(lastReported.date)}`:`Fonds ${fund}`}</p></article>
+      <article><span>Totale fondswaarde</span><strong>{displayedFundValue !== null ? eur(displayedFundValue) : "—"}</strong><p>{cashIssues.length?"Cashstanden nog niet volledig aangesloten":bookPoint?`Berekend per ${date(bookPoint.date)} · slotkoersen ${date(bookPoint.quoteDate)}`:useReported&&lastReported?`Administratie per ${date(lastReported.date)}`:`Fonds ${fund}`}</p></article>
       <article><span>Jouw participatie</span><strong>{ownFund && member.participation !== null ? pct(member.participation) : "—"}</strong><p>{ownFund ? `In fonds ${fund}` : `Jouw deelname hoort bij fonds ${member.fund}`}</p></article>
-      <article><span>Jouw positie</span><strong>{personalValue !== null ? eur(personalValue) : "—"}</strong><p>{personalPoint ? `Per ${date(personalPoint.date)} · netto inleg ${eur(personalPoint.netInleg)} · resultaat ${eur(personalResult!)}${participationReconciled ? "" : " · voorlopig"}` : personalValue !== null ? "Waarde uit de ledenadministratie" : "Nog geen waarde beschikbaar"}</p></article>
+      <article><span>Jouw positie</span><strong>{personalValue !== null ? eur(personalValue) : "—"}</strong><p>{cashIssues.length?"Actuele waarde nog niet vastgesteld: brokersaldo ontbreekt.":personalPoint ? `Per ${date(personalPoint.date)} · netto inleg ${eur(personalPoint.netInleg)} · resultaat ${eur(personalResult!)}${participationReconciled ? "" : " · voorlopig"}` : personalValue !== null ? "Waarde uit de ledenadministratie" : "Nog geen waarde beschikbaar"}</p></article>
     </div>
 
     {!snapshot.unitLedger&&bookIssues.length>0&&<p className={styles.notice}>De historische bronadministratie is nog niet volledig aangesloten.</p>}
 
-    {ownFund && <MemberChart points={history}/>}
+    {ownFund && <MemberChart points={history} unavailableReason={cashIssues[0]}/>}
 
     <section className={styles.panel}><div className={styles.sectionHeader}><div><p className="eyebrow">Fonds {fund}</p><h2>Actuele portefeuille.</h2></div><span className={styles.dataTag}>{positions.length} posities</span></div>
       <p className={styles.muted}>Koersen opgehaald: {dateTime(quotes?.fetchedAt) ?? "nog niet beschikbaar"}.<br/><small>Groen = koersstijging, rood = koersdaling t.o.v. vorige handelsdag.</small></p>
       <div className={styles.tableScroll}><div className={styles.table}><div className={`${styles.row} ${styles.head}`}><span>Aandeel</span><span>Aantal</span><span>Slotkoers</span><span>Waarde</span><span>Fondsgewicht</span></div>
         {view.valued.map(({ position, quote, valueEur }, index) => {
           const change=quote?dailyChange(quotes?.history?.[quoteKey(position)]??[],quote.date,quote.close):null;
-          return <div className={styles.row} key={`${quoteKey(position)}-${index}`}><span className={styles.stockName}><Link href={`/mijn-fonds?fonds=${fund}&aandeel=${encodeURIComponent(quoteKey(position))}#koersverloop`}>{position.name}</Link><small>{position.ticker} · {position.exchange}</small></span><span>{position.quantity.toLocaleString("nl-NL")}</span><span className={change!==null&&change>0?styles.positive:change!==null&&change<0?styles.negative:""}>{quote ? `${quote.currency} ${quote.close.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}{change!==null&&<small style={{color:"inherit"}}>{change>0?"+":""}{pct(change)}</small>}<small>{quote ? date(quote.date) : "Koers ontbreekt"}</small></span><span>{valueEur !== null ? eur(valueEur) : "—"}</span><span>{valueEur !== null && view.fundValue ? pct(valueEur / view.fundValue) : "—"}</span></div>;
+          return <div className={styles.row} key={`${quoteKey(position)}-${index}`}><span className={styles.stockName}><Link href={`/mijn-fonds?fonds=${fund}&aandeel=${encodeURIComponent(quoteKey(position))}#koersverloop`}>{position.name}</Link><small>{position.ticker} · {position.exchange}</small></span><span>{position.quantity.toLocaleString("nl-NL")}</span><span className={change!==null&&change>0?styles.positive:change!==null&&change<0?styles.negative:""}>{quote ? `${quote.currency} ${quote.close.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}{change!==null&&<small style={{color:"inherit"}}>{change>0?"+":""}{pct(change)}</small>}<small>{quote ? date(quote.date) : "Koers ontbreekt"}</small></span><span>{valueEur !== null ? eur(valueEur) : "—"}</span><span>{!cashIssues.length&&valueEur !== null && view.fundValue ? pct(valueEur / view.fundValue) : "—"}</span></div>;
         })}
       </div></div>
       {view.missing.length > 0 && <p className={styles.notice}>Voor {view.missing.length} {view.missing.length === 1 ? "positie" : "posities"} ontbreekt een passende koers of wisselkoers. Daarom zijn fondswegingen en de actuele fondswaarde nog niet volledig berekend.</p>}
     </section>
 
     <div className={styles.grid}>
-      <section className={styles.panel}><p className="eyebrow">Liquiditeit</p><h2>Cash.</h2><strong className={styles.bigNumber}>{view.cashValue !== null ? eur(view.cashValue) : "—"}</strong><p className={styles.chartCaption}>ING-stand: {date(cash?.ingAsOf??null)}. Brokerstand: {date(cash?.brokerAsOf??null)}.{cash?.basisNote?` ${cash.basisNote}`:""}</p>{view.payablesValue>0&&<p>Nog uit te betalen: {eur(view.payablesValue)}. Dit is afgetrokken van de fondswaarde.</p>}</section>
-      <section className={styles.panel}><p className="eyebrow">Verdeling bezittingen</p><h2>Cash &amp; aandelen.</h2>{view.assetValue !== null && view.assetValue > 0 && stockShare !== null && cashShare !== null ? <Composition stocks={view.stockValue!} cash={view.cashValue!} other={view.otherValue??0} total={view.assetValue}/> : <div className={styles.compEmpty}>Verdeling verschijnt zodra alle koersen en wisselkoersen beschikbaar zijn.</div>}</section>
+      <section className={styles.panel}><p className="eyebrow">Liquiditeit</p><h2>Cash.</h2><strong className={styles.bigNumber}>{!cashIssues.length&&view.cashValue !== null ? eur(view.cashValue) : "Nog niet vastgesteld"}</strong>{cashIssues.length>0&&<p className={styles.notice}>{cashIssues.join(" ")}</p>}<p className={styles.chartCaption}>ING-stand: {date(cash?.ingAsOf??null)}. Brokerstand: {date(cash?.brokerAsOf??null)}.{cash?.basisNote?` ${cash.basisNote}`:""}</p>{view.payablesValue>0&&<p>Nog uit te betalen: {eur(view.payablesValue)}. Dit is afgetrokken van de fondswaarde.</p>}</section>
+      <section className={styles.panel}><p className="eyebrow">Verdeling bezittingen</p><h2>Cash &amp; aandelen.</h2>{!cashIssues.length&&view.assetValue !== null && view.assetValue > 0 && stockShare !== null && cashShare !== null ? <Composition stocks={view.stockValue!} cash={view.cashValue!} other={view.otherValue??0} total={view.assetValue}/> : <div className={styles.compEmpty}>Verdeling verschijnt zodra cashstanden, koersen en wisselkoersen zijn aangesloten.</div>}</section>
     </div>
 
     <div className={styles.grid}>
       <section className={styles.panel}><p className="eyebrow">Spreiding</p><h2>Sectoren.</h2>{view.sectors.length ? <><div className={styles.sectorList}>{view.sectors.map((sector) => <div key={sector.name}><div><span>{sector.name}</span><b>{view.stockValue ? pct(sector.value / view.stockValue) : "—"}</b></div><progress max={view.stockValue ?? 1} value={sector.value}/></div>)}</div></> : <div className={styles.compEmpty}>Sectorverdeling verschijnt zodra koersen beschikbaar zijn.</div>}</section>
-      <section className={styles.panel}><p className="eyebrow">Risico</p><h2>Indicatoren.</h2><RiskIndicators risk={risk}/><div className={styles.riskSignals}>{cashShare !== null && <p>Cashgewicht: <b>{pct(cashShare)}</b>{cashShare > 0.2 ? " · boven signaleringsgrens 20%" : ""}</p>}{largestSector && view.stockValue !== null && <p>Grootste sector: <b>{largestSector.name} ({pct(largestSector.value / view.stockValue)})</b>{largestSector.value / view.stockValue > 0.35 ? " · boven signaleringsgrens 35%" : ""}</p>}{largestPosition && view.fundValue !== null && <p>Grootste positie: <b>{largestPosition.position.name} ({pct(largestPosition.valueEur! / view.fundValue)})</b></p>}</div></section>
+      <section className={styles.panel}><p className="eyebrow">Risico</p><h2>Indicatoren.</h2>{cashIssues.length?<p className={styles.muted}>Risicocijfers volgen na aansluiting van de cashstanden.</p>:<RiskIndicators risk={risk}/>}<div className={styles.riskSignals}>{!cashIssues.length&&cashShare !== null && <p>Cashgewicht: <b>{pct(cashShare)}</b>{cashShare > 0.2 ? " · boven signaleringsgrens 20%" : ""}</p>}{largestSector && view.stockValue !== null && <p>Grootste sector: <b>{largestSector.name} ({pct(largestSector.value / view.stockValue)})</b>{largestSector.value / view.stockValue > 0.35 ? " · boven signaleringsgrens 35%" : ""}</p>}{!cashIssues.length&&largestPosition && view.fundValue !== null && <p>Grootste positie: <b>{largestPosition.position.name} ({pct(largestPosition.valueEur! / view.fundValue)})</b></p>}</div></section>
     </div>
 
-    <FundChart comparisons={comparisonModes(reconstructed,quotes,fund===2?"2022-09-21":"2022-10-21")} fund={fund}/>
+    {cashIssues.length===0&&<FundChart comparisons={comparisonModes(reconstructed,quotes,fund===2?"2022-09-21":"2022-10-21")} fund={fund}/>}
     <StockCharts key={query.aandeel ?? "eerste"} stocks={stockSeries} initialSelected={query.aandeel}/>
     <FeedbackForm fund={fund}/>
   </div></main>;
