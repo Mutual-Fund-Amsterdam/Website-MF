@@ -24,6 +24,9 @@ try{
   const values=s.members.filter(m=>m.fund===f).map(m=>memberHistory(m,s,[],[],p).at(-1).value);
   assert.ok(Math.abs(values.reduce((a,b)=>a+b,0)-p.fundValue)<1e-9);
  }
+ const historical=memberHistory(s.members[0],s,[],[{date:'2026-10-06',nav:999,estimated:false},{date:'2026-11-07',nav:140,estimated:true}],currentBookPoint(s,q,1));
+ assert.ok(historical.filter(p=>p.date<'2026-11-09').every(p=>p.indicative),'Old administration/model points must not be drawn as checked investment performance after a source correction');
+ assert.equal(historical.at(-1).indicative,undefined,'The current registered book value remains available');
  const changed=structuredClone(s);changed.fundHistory.forEach(p=>{p.nav=123456;p.totalUnits=987654;});
  assert.equal(currentBookPoint(changed,q,2).fundValue,1160,'Legacy administration EUR totals never determine current values');
  const paid=structuredClone(s);paid.cash[2].ingEur-=20;paid.cash[2].payablesEur=0;

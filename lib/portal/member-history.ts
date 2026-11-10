@@ -30,7 +30,8 @@ export function memberHistory(member: Member, snapshot: Snapshot, daily: FundVal
       netInleg += events[eventIndex].amount;
       eventIndex++;
     }
-    result.push({ date, value: Math.max(0, units * nav), netInleg,...(indicative?{indicative:true}:{}) });
+    const beforeCheckedBasis=!!snapshot.unitLedger&&date<snapshot.unitLedger.asOf[member.fund];
+    result.push({ date, value: Math.max(0, units * nav), netInleg,...(indicative||beforeCheckedBasis?{indicative:true}:{}) });
   }
   return result;
 }

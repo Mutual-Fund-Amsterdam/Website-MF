@@ -15,9 +15,6 @@ import {comparisonModes} from "@/lib/portal/comparison";
 import {estimatedFundHistory} from "@/lib/portal/estimated-history";
 import {currentBookIssues} from "@/lib/portal/current-fund-history";
 import MemberChart from "./member-chart";
-import DayValues from "./day-values";
-import {FUND_RETURN_BASELINE} from "@/lib/portal/comparison";
-import {fundUnitsAt} from "@/lib/portal/fund-units";
 import Composition from "./composition";
 import {calculateRiskReport,type RiskReport} from "@/lib/portal/risk-report";
 import RiskIndicators from "./risk-indicators";
@@ -51,12 +48,6 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
   const bookIssues=currentBookIssues(snapshot,fund);
   const lastReported=(snapshot.fundHistory??[]).filter(p=>p.fund===fund).sort((a,b)=>a.date.localeCompare(b.date)).at(-1);
   const bookPoint=currentBookPoint(snapshot,quotes,fund);
-  const ownEvents=(snapshot.transactions??[]).filter(e=>e.fund===fund&&e.memberId===member.id);
-  const dayValues=reconstructed.filter(p=>p.date>=FUND_RETURN_BASELINE).flatMap(p=>{
-    const totalUnits=p.totalUnits??fundUnitsAt(snapshot,fund,p.date);if(!totalUnits)return [];
-    const events=ownEvents.filter(e=>e.date<=p.date),units=Math.max(0,events.reduce((n,e)=>n+e.units,0));
-    return [{date:p.date,fundValue:p.nav*totalUnits,nav:p.nav,totalUnits,indicative:!snapshot.unitLedger||p.date<snapshot.unitLedger.asOf[fund],...(ownFund&&ownEvents.length?{value:units*p.nav,units,netInleg:events.reduce((n,e)=>n+e.amount,0)}:{})}];
-  });
   const priceDates=positions.map(p=>quotes?.prices[quoteKey(p)]?.date);
   const commonPriceDate=priceDates.filter((d):d is string=>!!d).sort()[0];
   const useReported=bookIssues.length>0||!!lastReported&&(priceDates.some(d=>!d)||!commonPriceDate||commonPriceDate<=lastReported.date);
@@ -89,7 +80,6 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
 
     {!snapshot.unitLedger&&bookIssues.length>0&&<p className={styles.notice}>De historische bronadministratie is nog niet volledig aangesloten.</p>}
 
-    <DayValues days={dayValues} fund={fund}/>
     {ownFund && <MemberChart points={history}/>}
 
     <section className={styles.panel}><div className={styles.sectionHeader}><div><p className="eyebrow">Fonds {fund}</p><h2>Actuele portefeuille.</h2></div><span className={styles.dataTag}>{positions.length} posities</span></div>

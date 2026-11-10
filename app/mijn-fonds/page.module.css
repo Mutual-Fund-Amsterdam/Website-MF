@@ -116,17 +116,3 @@
 .legend button:nth-child(2) i { background:var(--board-gold); }
 .legend button:nth-child(3) i { background:var(--ink-muted); }
 .compositionTooltip { z-index:80; max-width:calc(100vw - 24px); font-size:.8rem; color:var(--ink); background:var(--paper, #252522); border:1px solid var(--line); padding:8px 11px; border-radius:5px; box-shadow:0 5px 20px #0003; pointer-events:none; }
-
-.dayControls {display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:20px 0 12px;}
-.dayControls label {display:flex;align-items:center;gap:10px;color:var(--ink-muted);font-size:.85rem;}
-.dayControls select,.dayControls button {font:inherit;color:var(--ink);background:var(--bg-elevated);border:1px solid var(--line);padding:9px 12px;min-height:42px;}
-.dayControls button {cursor:pointer;}
-.dayControls button:disabled {opacity:.35;cursor:default;}
-.daySummary {display:flex;gap:32px;flex-wrap:wrap;margin:20px 0;}
-.daySummary span {display:block;color:var(--ink-muted);font-size:.78rem;}
-.daySummary strong {display:block;color:var(--accent);font-size:1.6rem;margin-top:5px;font-variant-numeric:tabular-nums;}
-.dayTable {margin-top:20px;}
-.dayTable summary {cursor:pointer;color:var(--accent);}
-.dayTable table {width:100%;border-collapse:collapse;margin-top:12px;font-size:.82rem;}
-.dayTable th,.dayTable td {padding:10px 12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;}
-.dayTable th:first-child,.dayTable td:first-child,.dayTable th:last-child,.dayTable td:last-child {text-align:left;}
