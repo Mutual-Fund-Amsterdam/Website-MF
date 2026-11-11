@@ -42,3 +42,8 @@ assert.equal(open.estimated,true);
 const linked=comparisonModes(navHistory,fixtureQuotes).historical;
 assert.equal(linked.points.find(p=>p.date===archiveDates[1]).fund,0);
 assert.ok(linked.benchmarkHistory.some(p=>p.date===archiveDates[1]));
+
+const oldNumber={id:'m',fund:2};
+const migratedEvents=[[153,'2014-11-30',500,5],[220,'2015-11-18',-543.20,-5],[655,'2026-11-09',500,1]].map(([row,date,amount,units])=>({fund:2,memberId:'m',date,units,amount,source:`Admin Fonds 2 9 Nov 2026.xlsm / Transacties ${row}`}));
+const reused=memberValuesAtNav(oldNumber,{transactions:migratedEvents,cash:[]},[{date:'2026-09-16',nav:500},{date:'2026-11-09',nav:501}]);
+assert.deepEqual(reused.map(p=>[p.date,p.value,p.netInleg]),[['2026-11-09',501,500]]);

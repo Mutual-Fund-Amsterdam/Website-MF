@@ -24,9 +24,21 @@ export function memberHistory(member: Member, snapshot: Snapshot, daily: FundVal
   return memberValuesAtNav(member,snapshot,[...dates].map(([date,p])=>({date,nav:p.nav,estimated:p.indicative})));
 }
 
+// The archive recycled four participant numbers. Pair the original rows
+// with the later subscription so corrected imports with separate owner IDs
+// keep showing the former participant's own cash flows.
+const reassignedRows=[
+  [655,153,220], [656,154,274], [657,160,221], [658,161,269]
+];
+const archiveRow=(row:number)=>`Admin Fonds 2 9 Nov 2026.xlsm / Transacties ${row}`;
+
 export function memberValuesAtNav(member:Member,snapshot:Snapshot,points:{date:string;nav:number;estimated?:boolean}[]):MemberHistoryPoint[]{
   const events=(snapshot.transactions??[]).filter(e=>e.fund===member.fund&&e.memberId===member.id).sort((a,b)=>a.date.localeCompare(b.date));
-  const first=events.find(e=>e.amount>0)?.date;
+  const previousOwner=new Set<string>();
+ if(member.fund===2)for(const [subscription,...oldRows] of reassignedRows){
+  if(events.some(e=>e.source===archiveRow(subscription)))for(const r of oldRows)previousOwner.add(archiveRow(r));
+ }
+ const first=events.find(e=>e.amount>0&&!previousOwner.has(e.source))?.date;
   if(!first)return [];
   let eventIndex = 0;
   let units = 0;
@@ -36,7 +48,9 @@ export function memberValuesAtNav(member:Member,snapshot:Snapshot,points:{date:s
     if(date<first)continue;
     while (eventIndex < events.length && events[eventIndex].date <= date) {
       units += events[eventIndex].units;
-      netInleg += events[eventIndex].amount;
+      // The checked closing units include any sub-cent rounding carry. Only
+      // this owner's deposits and withdrawals contribute to their net payment.
+      if(!previousOwner.has(events[eventIndex].source))netInleg += events[eventIndex].amount;
       eventIndex++;
     }
     const unresolvedCash=cashReviewIssues(snapshot,member.fund).length>0;
