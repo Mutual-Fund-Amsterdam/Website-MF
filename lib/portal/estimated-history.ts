@@ -35,6 +35,7 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
  const reported=anchors.map(p=>({date:p.date,nav:p.nav,lowNav:p.nav,highNav:p.nav,estimated:modelDates.has(p.date),priceCoverage:1}));
  if(!snapshot.ledger||!quotes||anchors.length===1)return reported;
  const bank=bankControl(snapshot.ledger,fund);
+ const cutoff=snapshot.unitLedger?.asOf[fund];
  const end=anchors.at(-1)!.date;
  const brokerStart=snapshot.ledger.broker.filter(e=>e.fund===fund&&["Brokeropening","Buy","Sell"].includes(e.kind)).map(e=>e.date).sort()[0];
  const from=[bank.from??end,brokerStart??anchors[0].date,anchors[0].date].sort().at(-1)!;
@@ -126,13 +127,17 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
    // silently invested in the index (which would turn incoming deposits into returns).
    const unknown=Math.min(Math.max(0,investable-known),unknownValue*scale);
    const bm0=eurIndex(old),bm1=eurIndex(date),bmReturn=bm0&&bm1?bm1/bm0-1:0;
-   const units=fundUnitsAt(snapshot,fund,old);
+   // Before migration the current member register omits former investors.
+   // The dated administration index includes the outstanding units of that period.
+   const units=cutoff && old<cutoff ? left.totalUnits : fundUnitsAt(snapshot,fund,old);
    if(!units){incompleteInterval=true;break;}
    const assetsBefore=left.nav*flat*units;
    if(assetsBefore<=0){incompleteInterval=true;break;}
    const r=(pnl+tradePnl)/assetsBefore;
-   flat*=Math.max(.000001,1+r);
-   market*=Math.max(.000001,1+r+(approximateAssets>0?unknown/approximateAssets*bmReturn:0));
+   const scenarioReturn=r+(approximateAssets>0?unknown/approximateAssets*bmReturn:0);
+   if(!Number.isFinite(r)||!Number.isFinite(scenarioReturn)||1+r<=0||1+scenarioReturn<=0){incompleteInterval=true;break;}
+   flat*=1+r;
+   market*=1+scenarioReturn;
    path.push({date,flat,market,coverage:incomplete?0:investable>0?known/investable:1});
   }
   if(incompleteInterval)continue;
@@ -147,5 +152,8 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
    output.set(p.date,{date:p.date,nav,lowNav:isAnchor?nav:Math.min(a,b),highNav:isAnchor?nav:Math.max(a,b),flatNav:isAnchor?nav:a,marketNav:isAnchor?nav:b,estimated:!isAnchor||modelDates.has(p.date),priceCoverage:Math.max(0,Math.min(1,p.coverage))});
   }
  }
- return [...output.values()].sort((a,b)=>a.date.localeCompare(b.date)).map(p=>{const units=fundUnitsAt(snapshot,fund,p.date);return {...p,...(units?{totalUnits:units,fundValue:units*p.nav}:{})};});
+ return [...output.values()].sort((a,b)=>a.date.localeCompare(b.date)).map(p=>{
+  const units=cutoff&&p.date<cutoff?anchors.filter(a=>a.date<=p.date).at(-1)?.totalUnits:fundUnitsAt(snapshot,fund,p.date);
+  return units?{...p,totalUnits:units,fundValue:units*p.nav}:p;
+ });
 }

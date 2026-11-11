@@ -9,7 +9,17 @@ export default function FundChart({comparisons,fund}: {comparisons:{year:Meeting
  const comparison=comparisons[mode];
  const [period,setPeriod]=useState<FundChartPeriod>("all");
  const rows=mode==="year"?comparison.points:chartPeriod(comparison.points,period,comparison.start);
- const chartRows=rows.map(p=>({...p,timestamp:Date.parse(p.date)}));
+ // These adjacent Index entries have a documented booking-order conflict.
+ // Match the observed change too, so a corrected workbook clears the warning.
+ const conflict=({1:{from:"2022-12-31",to:"2023-01-01",change:0.09042213},2:{from:"2023-02-28",to:"2023-03-01",change:-0.24232274}} as Record<number,{from:string;to:string;change:number}>)[fund];
+ const gap=mode==="historical"&&conflict&&rows.some((p,i)=>{
+  const previous=rows[i-1];
+  return previous?.date===conflict.from&&p.date===conflict.to&&Math.abs((1+p.fund)/(1+previous.fund)-1-conflict.change)<1e-7;
+ });
+ const chartRows=rows.flatMap(p=>{
+  const row={...p,timestamp:Date.parse(p.date),lineFund:p.fund as number|null};
+  return gap&&p.date===conflict.from?[row,{...row,lineFund:null}]:[row];
+ });
  const pct=(v:number)=>`${(v*100).toLocaleString("nl-NL",{maximumFractionDigits:2})}%`;
  const date=(v:string)=>new Intl.DateTimeFormat("nl-NL",{dateStyle:"medium"}).format(new Date(v+"T12:00:00"));
  return <section className={styles.panel}><p className="eyebrow">Historische ontwikkeling</p><h2>Fondsrendement.</h2>
@@ -24,9 +34,9 @@ export default function FundChart({comparisons,fund}: {comparisons:{year:Meeting
    <ReferenceLine y={0} stroke="#c7c4bc" strokeDasharray="5 5" label={{value:"0%",fill:"#c7c4bc",position:"insideTopLeft"}}/>
    <ReferenceLine x={Date.parse(comparison.start)} stroke="#c7c4bc" strokeDasharray="3 5"/>
    <Tooltip content={({active,payload})=>{if(!active||!payload?.length)return null;const p=payload[0].payload as MeetingComparison['points'][number];return <div className={styles.historyTooltip}><b>{date(p.date)}</b><p>Fonds {fund}: {pct(p.fund)}</p><p>S&amp;P 500: {p.benchmark===null?"—":pct(p.benchmark)}</p></div>;}}/>
-   <Line type="linear" dataKey="fund" name={`Fonds ${fund}`} stroke="#5893b1" dot={false} isAnimationActive={false} connectNulls/>
-   <Line type="linear" dataKey="benchmark" name="S&P 500 (EUR)" stroke="#c6a15b" dot={false} isAnimationActive={false} connectNulls/>
+   <Line type="linear" dataKey="lineFund" name={`Fonds ${fund}`} stroke="#5893b1" dot={false} isAnimationActive={false} connectNulls={false}/>
+   <Line type="linear" dataKey="benchmark" name="S&P 500 (EUR)" stroke="#c6a15b" dot={false} isAnimationActive={false} connectNulls={false}/>
   </ComposedChart></ResponsiveContainer></div>:<p className={styles.muted}>Voor deze periode zijn nog geen fondswaarden beschikbaar.</p>}
-  <p className={styles.chartCaption}>{comparison.dailyFrom?"Tussen administratiestanden is de deelwaarde geschat met historische posities, transacties en koersen. ":""}{rows.length>0?`Peildatum: ${date(rows.at(-1)!.date)}.`:""}</p>
+  <p className={styles.chartCaption}>{mode==="historical"?"Vóór dit fondsjaar toont de lijn de beschikbare gedateerde fondsstanden. ":""}{comparison.dailyFrom?"Binnen dit fondsjaar zijn tussenliggende deelwaarden geschat. ":""}{mode==="year"&&rows[0]?.estimated?"De deelwaarde op de eerste meeting is nog niet bevestigd. ":""}{gap?`De fondslijn is onderbroken tussen ${date(conflict.from)} en ${date(conflict.to)}. De boekingsvolgorde in de administratie maakt het dagrendement onzeker. `:""}{rows.length>0?`Peildatum: ${date(rows.at(-1)!.date)}.`:""}</p>
  </section>;
 }

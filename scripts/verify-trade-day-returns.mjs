@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { estimatedFundHistory } from '../lib/portal/estimated-history.ts';
+import { comparisonModes } from '../lib/portal/comparison.ts';
 import { memberValuesAtNav } from '../lib/portal/member-history.ts';
 const dates=['2026-09-16','2026-09-17','2026-09-18'];
 const rows=values=>dates.map((date,i)=>({date,close:values[i]}));
@@ -11,3 +12,16 @@ const series=estimatedFundHistory(snapshot,quotes,1);
 assert.ok(Math.abs(series[1].nav-101.8)<1e-10,'Sale receipts, buy cost and both commissions must reconcile to closing assets');
 assert.equal(memberValuesAtNav({id:'m',fund:1},snapshot,series)[1].value,2*series[1].nav);
 console.log('Passed sale to zero, newly purchased stock, both execution prices and fees, and member valuation.');
+
+// The archive includes redeemed investors. Today's partial register must not
+// change how a historical execution gain is distributed over historical units.
+const migrated={...snapshot,cash:[],unitLedger:{asOf:{1:'2026-11-09'}}};
+const historical=estimatedFundHistory(migrated,quotes,1);
+assert.ok(Math.abs(historical[1].nav-101.8)<1e-10);
+assert.equal(historical[1].totalUnits,10);
+
+const prior=[{...historical[0],date:'2026-09-14',estimated:false},{...historical[0],date:'2026-09-15',estimated:true}];
+const historyQuotes={...quotes,benchmark:{points:[...prior.map(p=>({date:p.date,close:100})),...quotes.benchmark.points]},eurUsdHistory:[...prior.map(p=>({date:p.date,close:1})),...quotes.eurUsdHistory]};
+const modes=comparisonModes([...prior,...historical],historyQuotes);
+assert.deepEqual(modes.historical.points.map(p=>p.date),[prior[0].date,...dates]);
+assert.deepEqual(modes.year.points.map(p=>p.date),dates);
