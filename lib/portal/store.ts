@@ -12,6 +12,7 @@ import {fetchEurUsdHistory,fetchEstrHistory} from "./ecb";
 import {currentBookPoint} from './book-valuation';
 import {currentFundHistory} from './current-fund-history';
 import {mergeManualPrices} from './unit-ledger';
+import {withCurrentFx} from './quote-fx';
 import {validateInputContinuity} from "./input-workbook";
 import type { BankEvent, BrokerEvent, LedgerStorage, ReconstructionDay } from "./ledger";
 
@@ -98,7 +99,8 @@ export async function getDailyQuotes(): Promise<DailyQuotes | null> {
     const fx=await Promise.all(quotes.fxHistoryKeys.map(async c=>[c,await redis().get<NonNullable<DailyQuotes["fxHistory"]>[string]>(`${PREFIX}fx-history:${c}`)] as const));
     quotes.fxHistory=Object.fromEntries(fx.map(([c,p])=>[c,p??[]]));
   }
-  quoteCache={at:quoteVersion,until:Date.now()+300000,quotes};return quotes;
+  const current=withCurrentFx(quotes);
+  quoteCache={at:quoteVersion,until:Date.now()+300000,quotes:current};return current;
 }
 
 export async function saveDailyQuotes(quotes: DailyQuotes): Promise<void> {

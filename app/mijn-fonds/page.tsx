@@ -14,7 +14,7 @@ import FeedbackForm from "./feedback-form";
 import {dailyChange} from "@/lib/portal/performance";
 import {comparisonModes} from "@/lib/portal/comparison";
 import {estimatedFundHistory} from "@/lib/portal/estimated-history";
-import {currentBookIssues} from "@/lib/portal/current-fund-history";
+import {currentBookIssues,currentFundHistory} from "@/lib/portal/current-fund-history";
 import MemberChart from "./member-chart";
 import Composition from "./composition";
 import {calculateRiskReport,type RiskReport} from "@/lib/portal/risk-report";
@@ -54,7 +54,8 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
   const commonPriceDate=priceDates.filter((d):d is string=>!!d).sort()[0];
   const useReported=bookIssues.length>0||!!lastReported&&(priceDates.some(d=>!d)||!commonPriceDate||commonPriceDate<=lastReported.date);
   const displayedFundValue=snapshot.unitLedger?(bookPoint?.fundValue??null):useReported ? (lastReported?lastReported.nav*lastReported.totalUnits:null) : view.fundValue;
-  const history = ownFund ? memberHistory(member, snapshot, dailyFundValues, reconstructed,bookPoint) : [];
+  const bookDays=quotes?currentFundHistory(snapshot,quotes,fund).map(p=>({fund,date:p.date,nav:p.nav,fundValue:p.nav*p.totalUnits,coverage:'book' as const,cashConfirmed:true})):[];
+  const history = ownFund ? memberHistory(member, snapshot, [...dailyFundValues,...bookDays], reconstructed,bookPoint) : [];
   // The summary and chart must use the same valuation and cashflow cutoff.
   const personalPoint = history.at(-1);
   const personalValue = snapshot.unitLedger&&!bookPoint?null:personalPoint?.value ?? (ownFund ? member.sourceValue : null);

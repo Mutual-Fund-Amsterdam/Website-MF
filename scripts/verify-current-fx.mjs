@@ -1,0 +1,3 @@
+import assert from 'node:assert/strict';import {withCurrentFx} from '../lib/portal/quote-fx.ts';
+const q={fx:{USD:{date:'2026-11-09',perEuro:1.1193}},fxHistory:{USD:[{date:'2026-11-10',close:1.1214},{date:'2026-11-12',close:99}],CAD:[{date:'2026-11-10',close:1.5852}]}};
+const out=withCurrentFx(q,'2026-11-11');assert.equal(out.fx.USD.perEuro,1.1214);assert.equal(out.fx.CAD.perEuro,1.5852);assert.equal(q.fx.USD.perEuro,1.1193);assert.equal(withCurrentFx(out,'2026-11-11'),out);assert.equal(withCurrentFx({fx:{}},'2026-11-11').fx.USD,undefined);console.log('PASS: latest real FX promoted, future ignored, original untouched, missing not fabricated.');

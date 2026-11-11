@@ -15,9 +15,13 @@ export default function MemberChart({points}: { points: MemberHistoryPoint[]; un
       <CartesianGrid stroke="rgba(233,229,218,.1)" vertical={false}/>
       <XAxis dataKey="timestamp" type="number" domain={[Date.parse('2026-09-16'),Date.parse(end)]} interval={0} padding={{left:20,right:12}} ticks={shown.filter((_,i)=>i%14===0||i===shown.length-1).map(p=>p.timestamp)} tickFormatter={v=>new Date(v).toLocaleDateString('nl-NL',{day:'numeric',month:'short'})} stroke="#a3a096" tickLine={false} axisLine={false} minTickGap={25} fontSize={11}/>
       <YAxis orientation="right" domain={[(v:number)=>Math.max(0,Math.floor(v*.95/10)*10),(v:number)=>Math.ceil(v*1.05/10)*10]} tickFormatter={v=>`€ ${v.toLocaleString('nl-NL',{maximumFractionDigits:0})}`} stroke="#a3a096" tickLine={false} axisLine={false} width={78} fontSize={11}/>
-      <Tooltip filterNull={false} contentStyle={{background:'#232320',border:'1px solid rgba(233,229,218,.2)',color:'#e9e5da'}} formatter={(value,name)=>[typeof value==='number'?value.toLocaleString('nl-NL',{style:'currency',currency:'EUR'}):'Geen vastgestelde waarde',name==='netInleg'?'Netto inleg':'Waarde']} labelFormatter={v=>new Date(Number(v)).toLocaleDateString('nl-NL',{dateStyle:'long'})}/>
-      <Line type="linear" dataKey="checkedValue" connectNulls={false} stroke="#5893b1" strokeWidth={2} dot={{r:2}} isAnimationActive={false}/>
-      <Line type="stepAfter" dataKey="netInleg" connectNulls={false} stroke="#c6a15b" strokeWidth={2} dot={false} isAnimationActive={false}/>
+      <Tooltip filterNull={false} content={({active,label})=>{
+        const point=shown.find(p=>p.timestamp===Number(label));if(!active||!point)return null;
+        const money=(v:number|null)=>v===null?'Niet beschikbaar':v.toLocaleString('nl-NL',{style:'currency',currency:'EUR'});
+        return <div style={{background:'#232320',border:'1px solid rgba(233,229,218,.2)',color:'#e9e5da',padding:10}}><p>{new Date(point.timestamp).toLocaleDateString('nl-NL',{dateStyle:'long'})}</p><p style={{color:'#5893b1'}}>Waarde: {money(point.checkedValue)}</p><p style={{color:'#c6a15b'}}>Netto inleg: {money(point.netInleg)}</p></div>;
+      }}/>
+      <Line name="Waarde" type="linear" dataKey="checkedValue" connectNulls={false} stroke="#5893b1" strokeWidth={2} dot={{r:3}} isAnimationActive={false}/>
+      <Line name="Netto inleg" type="stepAfter" dataKey="netInleg" connectNulls={false} stroke="#c6a15b" strokeWidth={2} dot={false} isAnimationActive={false}/>
     </ComposedChart></ResponsiveContainer></div>
   </section>;
 }
