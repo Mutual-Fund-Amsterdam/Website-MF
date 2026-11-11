@@ -1,7 +1,6 @@
 import {redirect} from 'next/navigation';
-import {getDailyQuotes,getMemberSession} from '@/lib/portal/store';
-import {estimatedFundHistory} from '@/lib/portal/estimated-history';
-import {currentBookPoint} from '@/lib/portal/book-valuation';
+import {getDailyQuotes,getMemberSession,getFundDailyValues} from '@/lib/portal/store';
+import {chartNav} from '@/lib/portal/chart-nav';
 import {canCompareFunds,comparisonCalendar,COMPARISON_FUNDS,type ComparisonNav} from '@/lib/portal/fund-comparison';
 import FundTabs from '../fund-tabs';
 import LogoutButton from '../logout-button';
@@ -16,13 +15,11 @@ export default async function FundComparisonPage(){
  if(!session)redirect('/inloggen');
  // Authorize before loading or calculating any cross-fund data.
  if(!canCompareFunds(session.member))redirect('/mijn-fonds');
- const quotes=await getDailyQuotes();
+ const [quotes,daily]=await Promise.all([getDailyQuotes(),getFundDailyValues()]);
  const asOf=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Amsterdam'}).format(new Date());
  const histories={} as Record<1|2|3,ComparisonNav[]>;
  for(const fund of COMPARISON_FUNDS){
-  const history:ComparisonNav[]=estimatedFundHistory(session.snapshot,quotes,fund);
-  const current=currentBookPoint(session.snapshot,quotes,fund,asOf);
-  histories[fund]=current?[...history.filter(p=>p.date!==asOf),{date:asOf,nav:current.nav}]:history;
+  histories[fund]=chartNav(session.snapshot,quotes,fund,daily);
  }
  const comparison=comparisonCalendar(histories,asOf);
  return <main id="main-content" className={`page-shell ${styles.main}`}><div className="container">

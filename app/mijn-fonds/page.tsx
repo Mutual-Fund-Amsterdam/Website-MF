@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getDailyQuotes, getFundDailyValues, getMemberSession, integrationGet } from "@/lib/portal/store";
 import { quoteKey } from "@/lib/portal/marketstack";
 import { portfolioView } from "@/lib/portal/portfolio";
-import { memberHistory } from "@/lib/portal/member-history";
+import { memberValuesAtNav } from "@/lib/portal/member-history";
 import {cashReviewIssues} from '@/lib/portal/cash-review';
 import {currentBookPoint} from '@/lib/portal/book-valuation';
 import type { FundNumber } from "@/lib/portal/types";
@@ -13,8 +13,8 @@ import FundChart from "./fund-chart";
 import FeedbackForm from "./feedback-form";
 import {dailyChange} from "@/lib/portal/performance";
 import {comparisonModes} from "@/lib/portal/comparison";
-import {estimatedFundHistory} from "@/lib/portal/estimated-history";
-import {currentBookIssues,currentFundHistory} from "@/lib/portal/current-fund-history";
+import {chartNav} from "@/lib/portal/chart-nav";
+import {currentBookIssues} from "@/lib/portal/current-fund-history";
 import MemberChart from "./member-chart";
 import Composition from "./composition";
 import {calculateRiskReport,type RiskReport} from "@/lib/portal/risk-report";
@@ -47,7 +47,7 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
   const ownFund = fund === member.fund;
   const participationTotal = snapshot.members.filter((item) => item.fund === fund).reduce((sum, item) => sum + (item.participation ?? 0), 0);
   const participationReconciled = Math.abs(participationTotal - 1) <= 0.005;
-  const reconstructed = estimatedFundHistory(snapshot, quotes, fund);
+  const reconstructed = chartNav(snapshot, quotes, fund, dailyFundValues);
   const bookIssues=currentBookIssues(snapshot,fund);
   const lastReported=(snapshot.fundHistory??[]).filter(p=>p.fund===fund).sort((a,b)=>a.date.localeCompare(b.date)).at(-1);
   const bookPoint=currentBookPoint(snapshot,quotes,fund);
@@ -55,8 +55,7 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
   const commonPriceDate=priceDates.filter((d):d is string=>!!d).sort()[0];
   const useReported=bookIssues.length>0||!!lastReported&&(priceDates.some(d=>!d)||!commonPriceDate||commonPriceDate<=lastReported.date);
   const displayedFundValue=snapshot.unitLedger?(bookPoint?.fundValue??null):useReported ? (lastReported?lastReported.nav*lastReported.totalUnits:null) : view.fundValue;
-  const bookDays=quotes?currentFundHistory(snapshot,quotes,fund).map(p=>({fund,date:p.date,nav:p.nav,fundValue:p.nav*p.totalUnits,coverage:'book' as const,cashConfirmed:true})):[];
-  const history = ownFund ? memberHistory(member, snapshot, [...dailyFundValues,...bookDays], reconstructed,bookPoint) : [];
+  const history = ownFund ? memberValuesAtNav(member, snapshot, reconstructed) : [];
   // The summary and chart must use the same valuation and cashflow cutoff.
   const personalPoint = history.at(-1);
   const personalValue = snapshot.unitLedger&&!bookPoint?null:personalPoint?.value ?? (ownFund ? member.sourceValue : null);

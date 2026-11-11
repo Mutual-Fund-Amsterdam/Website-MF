@@ -18,7 +18,10 @@ function fx(quotes:DailyQuotes,currency:string,date:string){
 function price(quotes:DailyQuotes,snapshot:Snapshot,symbol:string,currency:string){
  const instrument=quotes.historicalInstruments?.find(p=>p.ticker===symbol&&p.currency===currency)
   ??snapshot.positions.find(p=>p.ticker===symbol&&p.currency===currency);
- return instrument?quotes.history?.[`${instrument.exchange}:${instrument.ticker.toUpperCase()}`]:undefined;
+ const exchange=instrument?.exchange??snapshot.ledger?.broker.find(e=>e.symbol===symbol&&e.currency===currency&&e.exchange)?.exchange;
+ if(exchange && quotes.history?.[`${exchange}:${symbol.toUpperCase()}`])return quotes.history[`${exchange}:${symbol.toUpperCase()}`];
+ const matches=Object.entries(quotes.history??{}).filter(([key])=>key.endsWith(':'+symbol.toUpperCase()));
+ return !exchange && matches.length===1?matches[0][1]:undefined;
 }
 /** A model spread, not a confidence interval: unpriced exposure flat vs moving with S&P 500.
  * Both paths are reconciled to reported NAVs; only real dated prices drive daily variation.
@@ -38,9 +41,12 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
  const benchmark=quotes.benchmark?.points??[];
  const eurIndex=(date:string)=>{const p=latest(benchmark,date,4),r=fx(quotes,"USD",date);return p&&r?p.close/r:null;};
  const broker=snapshot.ledger.broker.filter(e=>e.fund===fund&&e.quantity&&["Buy","Sell","Ankerpositie"].includes(e.kind));
+ const cashEvents=snapshot.ledger.broker.filter(e=>e.fund===fund&&e.processing!=="Negeren"&&
+  ["Buy","Sell","Dividend","Foreign Tax Withholding","Credit Interest"].includes(e.kind));
  const splits=modelSplits(snapshot,quotes);
  const allDates=new Set<string>(anchors.filter(p=>p.date>=from).map(p=>p.date));
  allDates.add(from);
+ for(const e of cashEvents)if(e.date>=from&&e.date<=end)allDates.add(e.date);
  for(const p of benchmark)if(p.date>=from&&p.date<=end)allDates.add(p.date);
  for(const rows of Object.values(quotes.history??{}))for(const p of rows)if(p.date>=from&&p.date<=end)allDates.add(p.date);
  // The fixed meeting reference can be inside a reporting interval.
@@ -49,27 +55,58 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
  for(let d=Date.parse(calendarFrom);d<=Date.parse(end);d+=DAY)allDates.add(new Date(d).toISOString().slice(0,10));
  const sessions=new Set([...(quotes.benchmark?.points??[]).map(p=>p.date),...Object.values(quotes.history??{}).flatMap(rows=>rows.map(p=>p.date)),...(snapshot.transactions??[]).filter(e=>e.fund===fund).map(e=>e.date),...(snapshot.cash??[]).filter(c=>c.fund===fund).flatMap(c=>[c.ingAsOf,c.brokerAsOf,c.otherAsOf,c.payablesAsOf]).filter((d):d is string=>!!d)]);
  const dates=[...allDates].sort();
- const output=new Map<string,EstimatedFundPoint>();
+ const output=new Map<string,EstimatedFundPoint>(reported.map(p=>[p.date,p]));
  for(let i=0;i<anchors.length-1;i++){
   const left=anchors[i],right=anchors[i+1];if(right.date<from)continue;
   const interval=[left.date,...dates.filter(d=>d>left.date&&d<=right.date)];
   if(interval.at(-1)!==right.date)interval.push(right.date);
+  let incompleteInterval=false;
   let flat=1,market=1;const path=[{date:left.date,flat,market,coverage:1}];
   for(let j=1;j<interval.length;j++){
    const old=interval[j-1],date=interval[j],t=(Date.parse(old)-Date.parse(left.date))/(Date.parse(right.date)-Date.parse(left.date));
    const approximateAssets=left.nav*left.totalUnits*(1-t)+right.nav*right.totalUnits*t;
    const cash=Math.max(0,bankValue(snapshot.ledger,fund,old)??0);
    const holdings=modelHoldingsAt(snapshot,fund,old,splits);
+   const booked=cashEvents.filter(e=>e.date===date);
+   const trades=booked.filter(e=>e.kind==="Buy"||e.kind==="Sell");
+   const traded=new Set(trades.map(e=>e.symbol));
    let knownValue=0,unknownValue=0,pnl=0;
+   let tradePnl=0;
+   let incomplete=false;
+   if(trades.length){
+    const closing=modelHoldingsAt(snapshot,fund,date,splits);
+    for(const symbol of traded){
+     const fills=trades.filter(e=>e.symbol===symbol);
+     const currency=fills[0].currency;
+     const rows=price(quotes,snapshot,symbol,currency);
+     const quantityBefore=holdings.get(symbol)?.quantity??0,quantityAfter=closing.get(symbol)?.quantity??0;
+     const before=latest(rows,old),after=latest(rows,date);
+     const rateBefore=fx(quotes,currency,old),rateAfter=fx(quotes,currency,date);
+     if((quantityBefore&&(!before||!rateBefore))||(quantityAfter&&(!after||!rateAfter))){incomplete=true;continue;}
+     const opening=quantityBefore?(quantityBefore*before!.close/rateBefore!):0;
+     const ending=quantityAfter?(quantityAfter*after!.close/rateAfter!):0;
+     knownValue+=opening;
+     tradePnl+=ending-opening;
+     for(const fill of fills){
+      const rate=fx(quotes,fill.cashCurrency||currency,date);
+      const amount=fill.netEur??(fill.cashDelta!=null&&rate?fill.cashDelta/rate:null);
+      if(amount==null){incomplete=true;continue;}
+      tradePnl+=amount;
+     }
+    }
+   }
+   for(const e of booked)if(e.kind!=="Buy"&&e.kind!=="Sell"){
+    if(e.netEur==null)incomplete=true;else tradePnl+=e.netEur;
+   }
    for(const h of holdings.values()){
-    if(h.quantity<=0)continue;
+    if(h.quantity<=0||traded.has(h.symbol))continue;
     const rows=price(quotes,snapshot,h.symbol,h.currency),before=latest(rows,old),after=latest(rows,date);
     const rateBefore=fx(quotes,h.currency,old),rateAfter=fx(quotes,h.currency,date);
     const reference=broker.filter(e=>e.symbol===h.symbol&&e.grossEur!==null&&e.quantity).sort((a,b)=>Math.abs(Date.parse(a.date)-Date.parse(old))-Math.abs(Date.parse(b.date)-Date.parse(old)))[0];
     const cost=reference?Math.abs(reference.grossEur!/reference.quantity!)*h.quantity:0;
     const exposure=before&&rateBefore?h.quantity*before.close/rateBefore:cost;
-    if(h.assetClass!=="stock"||!before||!after||!rateBefore||!rateAfter||after.date<=before.date){unknownValue+=exposure;continue;}
-    // Adjusted closes supply a total-return move without a false split/dividend jump.
+    if(!["stock","STK"].includes(h.assetClass)||!before||!after||!rateBefore||!rateAfter||after.date<=before.date){unknownValue+=exposure;continue;}
+    // Cash distributions enter separately. Use raw closes on a common split basis.
     const factor=splits.filter(s=>s.symbol===h.symbol&&s.date>before.date&&s.date<=after.date).reduce((f,s)=>f*s.factor,1);
     const rawRatio=after.close/before.close;
     // A feed can alternate old/new price bases around a disclosed split. An
@@ -77,10 +114,11 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
     if(factor===1&&(rawRatio>1.8||rawRatio<1/1.8)&&splits.some(s=>s.symbol===h.symbol&&Math.abs(Date.parse(after.date)-Date.parse(s.date))<=7*DAY)){
      unknownValue+=cost||exposure;continue;
     }
-    const ratio=splitSafeReturn(before,after,factor)*rateBefore/rateAfter;
+    const ratio=splitSafeReturn({close:before.close},{close:after.close},factor)*rateBefore/rateAfter;
     if(!Number.isFinite(ratio)||ratio<=0){unknownValue+=exposure;continue;}
     knownValue+=exposure;pnl+=exposure*(ratio-1);
    }
+   incompleteInterval ||= incomplete;
    const investable=Math.max(0,approximateAssets-cash);
    const scale=knownValue+unknownValue>investable&&knownValue+unknownValue>0?investable/(knownValue+unknownValue):1;
    const known=Math.min(investable,knownValue*scale);
@@ -88,11 +126,16 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
    // silently invested in the index (which would turn incoming deposits into returns).
    const unknown=Math.min(Math.max(0,investable-known),unknownValue*scale);
    const bm0=eurIndex(old),bm1=eurIndex(date),bmReturn=bm0&&bm1?bm1/bm0-1:0;
-   const r=approximateAssets>0?pnl*scale/approximateAssets:0;
+   const units=fundUnitsAt(snapshot,fund,old);
+   if(!units){incompleteInterval=true;break;}
+   const assetsBefore=left.nav*flat*units;
+   if(assetsBefore<=0){incompleteInterval=true;break;}
+   const r=(pnl+tradePnl)/assetsBefore;
    flat*=Math.max(.000001,1+r);
    market*=Math.max(.000001,1+r+(approximateAssets>0?unknown/approximateAssets*bmReturn:0));
-   path.push({date,flat,market,coverage:investable>0?known/investable:1});
+   path.push({date,flat,market,coverage:incomplete?0:investable>0?known/investable:1});
   }
+  if(incompleteInterval)continue;
   const target=right.nav/left.nav;
   const activeDays=interval.slice(1).filter(d=>sessions.has(d));
   for(const p of path){
@@ -100,7 +143,7 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
    const t=activeDays.length?activeDays.filter(d=>d<=p.date).length/activeDays.length:p.date===right.date?1:0;
    const a=left.nav*p.flat*Math.pow(target/flat,t),b=left.nav*p.market*Math.pow(target/market,t);
    const isAnchor=p.date===left.date||p.date===right.date;
-   const nav=isAnchor?(p.date===left.date?left.nav:right.nav):Math.sqrt(a*b);
+   const nav=isAnchor?(p.date===left.date?left.nav:right.nav):a;
    output.set(p.date,{date:p.date,nav,lowNav:isAnchor?nav:Math.min(a,b),highNav:isAnchor?nav:Math.max(a,b),flatNav:isAnchor?nav:a,marketNav:isAnchor?nav:b,estimated:!isAnchor||modelDates.has(p.date),priceCoverage:Math.max(0,Math.min(1,p.coverage))});
   }
  }

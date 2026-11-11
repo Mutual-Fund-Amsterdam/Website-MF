@@ -24,7 +24,7 @@ export function comparisonModes(points:EstimatedFundPoint[],quotes:DailyQuotes|n
 
 /** A display window never resets the meeting's 0% baseline. */
 export function historicalComparison(points:EstimatedFundPoint[],quotes:DailyQuotes|null,start=FUND_RETURN_BASELINE):MeetingComparison{
- const base=points.find(p=>p.date===start)??points.filter(p=>p.date<start).at(-1);
+ const base=points.find(p=>p.date===start)??(start===FUND_RETURN_BASELINE?undefined:points.filter(p=>p.date<start).at(-1));
  if(!base)return {start,referenceDate:null,benchmarkMissing:true,points:[]};
  const eur=(date:string)=>{
   const p=quotes?.benchmark?.points.filter(p=>p.date<=date).at(-1),fx=quotes?.eurUsdHistory?.filter(p=>p.date<=date).at(-1);

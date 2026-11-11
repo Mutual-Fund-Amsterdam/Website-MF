@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import { estimatedFundHistory } from '../lib/portal/estimated-history.ts';
+import { memberValuesAtNav } from '../lib/portal/member-history.ts';
+const dates=['2026-09-16','2026-09-17','2026-09-18'];
+const rows=values=>dates.map((date,i)=>({date,close:values[i]}));
+const event=(kind,symbol,quantity,netEur,date)=>({fund:1,broker:'Saxo',kind,symbol,quantity,netEur,currency:'EUR',assetClass:'stock',exchange:'X',date});
+const broker=[event('Ankerpositie','SOLD',10,0,dates[0]),event('Sell','SOLD',-10,109,dates[1]),event('Buy','NEW',5,-101,dates[1])];
+const snapshot={positions:[{fund:1,ticker:'NEW',currency:'EUR',exchange:'X'}],transactions:[{fund:1,memberId:'m',date:dates[0],units:2,amount:200}],ledger:{broker,bank:[{fund:1,kind:'Bankopening',amountCents:90000,date:dates[0]},{fund:1,kind:'Banksluiting',amountCents:90000,date:dates[2]}]},fundHistory:[{fund:1,date:dates[0],totalUnits:10,nav:100},{fund:1,date:dates[2],totalUnits:10,nav:102.8}]};
+const quotes={prices:{},benchmark:{points:rows([100,100,100])},eurUsdHistory:rows([1,1,1]),history:{'X:SOLD':rows([10,999,888]),'X:NEW':rows([500,22,24])}};
+const series=estimatedFundHistory(snapshot,quotes,1);
+assert.ok(Math.abs(series[1].nav-101.8)<1e-10,'Sale receipts, buy cost and both commissions must reconcile to closing assets');
+assert.equal(memberValuesAtNav({id:'m',fund:1},snapshot,series)[1].value,2*series[1].nav);
+console.log('Passed sale to zero, newly purchased stock, both execution prices and fees, and member valuation.');

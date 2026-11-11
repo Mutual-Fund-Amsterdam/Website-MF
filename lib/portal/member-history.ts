@@ -21,11 +21,19 @@ export function memberHistory(member: Member, snapshot: Snapshot, daily: FundVal
   }
   for(const point of reconstructed)if(point.date>=first&&!dates.has(point.date))dates.set(point.date,{nav:point.nav,priority:0,indicative:point.estimated});
   if(current&&current.fund===member.fund&&current.date>=first)dates.set(current.date,{nav:current.nav,priority:4});
+  return memberValuesAtNav(member,snapshot,[...dates].map(([date,p])=>({date,nav:p.nav,estimated:p.indicative})));
+}
+
+export function memberValuesAtNav(member:Member,snapshot:Snapshot,points:{date:string;nav:number;estimated?:boolean}[]):MemberHistoryPoint[]{
+  const events=(snapshot.transactions??[]).filter(e=>e.fund===member.fund&&e.memberId===member.id).sort((a,b)=>a.date.localeCompare(b.date));
+  const first=events.find(e=>e.amount>0)?.date;
+  if(!first)return [];
   let eventIndex = 0;
   let units = 0;
   let netInleg = 0;
   const result: MemberHistoryPoint[] = [];
-  for (const [date, { nav, indicative }] of [...dates].sort((a, b) => a[0].localeCompare(b[0]))) {
+  for (const {date,nav,estimated:indicative} of [...points].sort((a,b)=>a.date.localeCompare(b.date))) {
+    if(date<first)continue;
     while (eventIndex < events.length && events[eventIndex].date <= date) {
       units += events[eventIndex].units;
       netInleg += events[eventIndex].amount;

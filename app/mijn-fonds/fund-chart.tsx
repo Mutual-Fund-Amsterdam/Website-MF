@@ -27,6 +27,6 @@ export default function FundChart({comparisons,fund}: {comparisons:{year:Meeting
    <Line type="linear" dataKey="fund" name={`Fonds ${fund}`} stroke="#5893b1" dot={false} isAnimationActive={false} connectNulls/>
    <Line type="linear" dataKey="benchmark" name="S&P 500 (EUR)" stroke="#c6a15b" dot={false} isAnimationActive={false} connectNulls/>
   </ComposedChart></ResponsiveContainer></div>:<p className={styles.muted}>Voor deze periode zijn nog geen fondswaarden beschikbaar.</p>}
-  <p className={styles.chartCaption}>{comparison.dailyFrom?"Dagverloop indicatief. ":""}{rows.length>0?`Peildatum: ${date(rows.at(-1)!.date)}.`:""}</p>
+  <p className={styles.chartCaption}>{comparison.dailyFrom?"Tussen administratiestanden is de deelwaarde geschat met historische posities, transacties en koersen. ":""}{rows.length>0?`Peildatum: ${date(rows.at(-1)!.date)}.`:""}</p>
  </section>;
 }
