@@ -7,7 +7,8 @@ export function memberCalendar(points:MemberHistoryPoint[],end:string,start='202
   const date=new Date(t).toISOString().slice(0,10);
   while(i<rows.length&&rows[i].date<=date)last=rows[i++];
   const point=byDate.get(date);
-  out.push({date,timestamp:t,checkedValue:point&&!point.indicative?point.value:null,netInleg:last?.netInleg??null});
+  const beforeParticipation=rows.length>0&&date<rows[0].date;
+  out.push({date,timestamp:t,value:point?.value??(beforeParticipation?0:null),netInleg:last?.netInleg??(beforeParticipation?0:null),reconstructed:!!point?.indicative});
  }
  return out;
 }
