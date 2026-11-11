@@ -47,3 +47,14 @@ const oldNumber={id:'m',fund:2};
 const migratedEvents=[[153,'2014-11-30',500,5],[220,'2015-11-18',-543.20,-5],[655,'2026-11-09',500,1]].map(([row,date,amount,units])=>({fund:2,memberId:'m',date,units,amount,source:`Admin Fonds 2 9 Nov 2026.xlsm / Transacties ${row}`}));
 const reused=memberValuesAtNav(oldNumber,{transactions:migratedEvents,cash:[]},[{date:'2026-09-16',nav:500},{date:'2026-11-09',nav:501}]);
 assert.deepEqual(reused.map(p=>[p.date,p.value,p.netInleg]),[['2026-11-09',501,500]]);
+
+// A sourced meeting valuation already uses the reconciled pool. Do not apply
+// the legacy unit adjustment to it again or silently replace it with the model.
+const confirmed={...fixture,valuationReferences:[{fund:1,date:'2026-09-16',nav:95,totalUnits:10,source:'Checked statement'}]};
+const confirmedHistory=estimatedFundHistory(confirmed,fixtureQuotes,1);
+const confirmedStart=confirmedHistory.find(p=>p.date==='2026-09-16');
+assert.equal(confirmedStart.nav,95);
+assert.equal(confirmedStart.totalUnits,10);
+assert.equal(confirmedStart.estimated,false);
+assert.equal(comparisonModes(confirmedHistory,fixtureQuotes).year.points[0].fund,0);
+assert.equal(memberValuesAtNav({id:'m',fund:1},confirmed,confirmedHistory).find(p=>p.date==='2026-09-16').value,8*95);

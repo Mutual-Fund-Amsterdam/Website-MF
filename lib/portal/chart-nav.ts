@@ -13,6 +13,9 @@ export function chartNav(snapshot: Snapshot, quotes: DailyQuotes | null, fund: F
     if (p.fund !== fund) continue;
     if (p.coverage === "verified" || (p.coverage === "book" && p.cashConfirmed && snapshot.unitLedger && p.date >= snapshot.unitLedger.asOf[fund])) add(p.date, p.nav);
   }
+  for (const p of snapshot.valuationReferences ?? []) {
+    if (p.fund === fund) add(p.date, p.nav);
+  }
   const current = currentBookPoint(snapshot, quotes, fund);
   if (current) add(current.date, current.nav);
   return [...points.values()].sort((a,b) => a.date.localeCompare(b.date));

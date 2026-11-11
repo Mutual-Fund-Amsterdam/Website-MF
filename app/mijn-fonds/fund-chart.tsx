@@ -1,7 +1,7 @@
 "use client";
 import {useState} from "react";
 import {CartesianGrid,ComposedChart,Line,ReferenceLine,ResponsiveContainer,Tooltip,XAxis,YAxis} from "recharts";
-import {chartPeriod,type FundChartPeriod,type MeetingComparison} from "@/lib/portal/comparison";
+import {chartPeriod,comparisonChartRows,type FundChartPeriod,type MeetingComparison} from "@/lib/portal/comparison";
 import styles from "./page.module.css";
 
 export default function FundChart({comparisons,fund}: {comparisons:{year:MeetingComparison;historical:MeetingComparison};fund:number}){
@@ -17,14 +17,7 @@ export default function FundChart({comparisons,fund}: {comparisons:{year:Meeting
   return previous?.date===conflict.from&&p.date===conflict.to&&Math.abs((1+p.fund)/(1+previous.fund)-1-conflict.change)<1e-7;
  });
  type Row={date:string;timestamp:number;fund:number|null;lineFund:number|null;benchmark:number|null};
- const data=new Map<string,Row>();
- if(rows.length)for(const p of comparison.benchmarkHistory??[]){
-  if(p.date>=rows[0].date&&p.date<=rows[rows.length-1].date)
-   data.set(p.date,{...p,timestamp:Date.parse(p.date),fund:null,lineFund:null});
- }
- for(const p of rows)data.set(p.date,{...p,timestamp:Date.parse(p.date),
-  lineFund:gap&&(p.date===conflict.from||p.date===conflict.to)?null:p.fund});
- const chartRows=[...data.values()].sort((a,b)=>a.timestamp-b.timestamp);
+ const chartRows=comparisonChartRows({...comparison,points:rows},gap?[conflict.from,conflict.to]:[]);
  const pct=(v:number)=>`${(v*100).toLocaleString("nl-NL",{maximumFractionDigits:2})}%`;
  const date=(v:string)=>new Intl.DateTimeFormat("nl-NL",{dateStyle:"medium"}).format(new Date(v+"T12:00:00"));
  return <section className={styles.panel}><p className="eyebrow">Historische ontwikkeling</p><h2>Fondsrendement.</h2>
@@ -39,8 +32,8 @@ export default function FundChart({comparisons,fund}: {comparisons:{year:Meeting
    <ReferenceLine y={0} stroke="#c7c4bc" strokeDasharray="5 5" label={{value:"0%",fill:"#c7c4bc",position:"insideTopLeft"}}/>
    <ReferenceLine x={Date.parse(comparison.start)} stroke="#c7c4bc" strokeDasharray="3 5"/>
    <Tooltip content={({active,payload})=>{if(!active||!payload?.length)return null;const p=payload[0].payload as Row;return <div className={styles.historyTooltip}><b>{date(p.date)}</b><p>Fonds {fund}: {p.fund===null?"Geen fondsstand":pct(p.fund)}{gap&&(p.date===conflict.from||p.date===conflict.to)?" (bronstand, boekingsdatum onzeker)":""}</p><p>S&amp;P 500: {p.benchmark===null?"—":pct(p.benchmark)}</p></div>;}}/>
-   <Line type="linear" dataKey="lineFund" name={`Fonds ${fund}`} stroke="#5893b1" dot={false} isAnimationActive={false} connectNulls={mode==="historical"}/>
-   <Line type="linear" dataKey="benchmark" name="S&P 500 (EUR)" stroke="#c6a15b" dot={false} isAnimationActive={false} connectNulls={mode==="historical"}/>
+   <Line type="linear" dataKey="lineFund" name={`Fonds ${fund}`} stroke="#5893b1" dot={false} isAnimationActive={false} connectNulls/>
+   <Line type="linear" dataKey="benchmark" name="S&P 500 (EUR)" stroke="#c6a15b" dot={false} isAnimationActive={false} connectNulls/>
   </ComposedChart></ResponsiveContainer></div>:<p className={styles.muted}>Voor deze periode zijn nog geen fondswaarden beschikbaar.</p>}
   <p className={styles.chartCaption}>{mode==="historical"?"De lijnen verbinden de beschikbare meetpunten. ":""}{comparison.dailyFrom?"Binnen dit fondsjaar zijn tussenliggende deelwaarden geschat. ":""}{mode==="year"&&rows[0]?.estimated?"De deelwaarde op de eerste meeting is nog niet bevestigd. ":""}{gap?`De boekingsvolgorde is onzeker tussen ${date(conflict.from)} en ${date(conflict.to)}. De lijn overbrugt deze twee bronstanden. `:""}{rows.length>0?`Peildatum: ${date(rows.at(-1)!.date)}.`:""}</p>
  </section>;

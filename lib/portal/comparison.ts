@@ -13,6 +13,36 @@ export function compareFundReturns(points:PerformancePoint[],baseline=FUND_RETUR
 
 export type MeetingComparison={start:string;referenceDate:string|null;benchmarkMissing:boolean;dailyFrom?:string|null;benchmarkHistory?:{date:string;benchmark:number}[];points:{date:string;fund:number;benchmark:number|null;band?:[number,number];estimated?:boolean;priceCoverage?:number}[]};
 
+/** Display interpolation joins observations without changing the source NAV or index series. */
+export function comparisonChartRows(comparison:MeetingComparison,excludedFundDates:string[]=[]){
+ const rows=new Map<string,{date:string;timestamp:number;fund:number|null;lineFund:number|null;benchmark:number|null}>();
+ const points=comparison.points;
+ if(!points.length)return [];
+ for(const p of comparison.benchmarkHistory??[]){
+  if(p.date>=points[0].date&&p.date<=points.at(-1)!.date)
+   rows.set(p.date,{...p,timestamp:Date.parse(p.date),fund:null,lineFund:null});
+ }
+ for(const p of points)rows.set(p.date,{date:p.date,timestamp:Date.parse(p.date),fund:p.fund,
+  lineFund:excludedFundDates.includes(p.date)?null:p.fund,benchmark:p.benchmark});
+ const result=[...rows.values()].sort((a,b)=>a.timestamp-b.timestamp);
+ for(const key of ['lineFund','benchmark'] as const){
+  let previous=-1;
+  for(let i=0;i<result.length;i++){
+   if(result[i][key]===null)continue;
+   if(previous>=0){
+    const left=result[previous],right=result[i];
+    for(let j=previous+1;j<i;j++){
+     const t=(result[j].timestamp-left.timestamp)/(right.timestamp-left.timestamp);
+     result[j][key]=left[key]!+(right[key]!-left[key]!)*t;
+     if(key==='lineFund'&&result[j].fund===null)result[j].fund=result[j].lineFund;
+    }
+   }
+   previous=i;
+  }
+ }
+ return result;
+}
+
 export function comparisonModes(points:EstimatedFundPoint[],quotes:DailyQuotes|null,earliest="2022-09-21"){
  // Chain-link the original pre-migration NAV series at the first common
  // statement. A change in the unit register is not an investment loss.
