@@ -1,4 +1,4 @@
-import type {DailyQuotes, FundNumber, PricePoint, Snapshot} from "./types";
+import type {DailyQuotes, FundNumber, FundHistoryPoint, PricePoint, Snapshot} from "./types";
 import {bankControl, bankValue} from "./ledger.ts";
 import {modelSplits,modelHoldingsAt,splitSafeReturn} from "./history-splits.ts";
 import {currentFundHistory} from "./current-fund-history";
@@ -6,7 +6,7 @@ import {currentBookPoint} from "./book-valuation";
 import {fundUnitsAt} from "./fund-units";
 import {FUND_RETURN_BASELINE} from "./comparison";
 
-export type EstimatedFundPoint = {date:string; nav:number; lowNav:number; highNav:number; flatNav?:number; marketNav?:number; estimated:boolean; priceCoverage:number;totalUnits?:number;fundValue?:number};
+export type EstimatedFundPoint = {date:string; nav:number; lowNav:number; highNav:number; flatNav?:number; marketNav?:number; estimated:boolean; priceCoverage:number;totalUnits?:number;fundValue?:number; legacyNav?:number};
 const DAY=86400000;
 function latest(rows:PricePoint[]|undefined,date:string,maxAge=7){
  const p=rows?.filter(p=>p.date<=date).at(-1);
@@ -23,6 +23,59 @@ function price(quotes:DailyQuotes,snapshot:Snapshot,symbol:string,currency:strin
  const matches=Object.entries(quotes.history??{}).filter(([key])=>key.endsWith(':'+symbol.toUpperCase()));
  return !exchange && matches.length===1?matches[0][1]:undefined;
 }
+// The November migration retained the full roster as of the October 6 close.
+// Earlier retirees are present in the archive's changes in units, but not in
+// the migrated roster. The common October date reconciles the two registers.
+const archiveStart="2026-09-11";
+const rosterReference="2026-10-06";
+function reconciledArchive(snapshot:Snapshot,fund:FundNumber,reported:FundHistoryPoint[]){
+ const start=reported.find(p=>p.date===archiveStart);
+ const reference=reported.find(p=>p.date===rosterReference);
+ if(!start||!reference||!snapshot.unitLedger||snapshot.unitLedger.asOf[fund]<rosterReference)return reported;
+ const memberUnits=fundUnitsAt(snapshot,fund,rosterReference);
+ if(!memberUnits)return reported;
+ const difference=memberUnits-reference.totalUnits;
+ return reported.map(p=>{
+  if(p.date<archiveStart||p.date>rosterReference)return p;
+  const totalUnits=p.totalUnits+difference;
+  if(totalUnits<=0)return p;
+  return {...p,totalUnits,nav:p.nav*p.totalUnits/totalUnits};
+ });
+}
+
+// Roll the last September statement to the meeting close. Cash receivables and
+// payables are carried at book value pending reconciliation, hence indicative.
+function meetingAnchor(snapshot:Snapshot,quotes:DailyQuotes,fund:FundNumber,start:FundHistoryPoint):FundHistoryPoint|null{
+ const end=FUND_RETURN_BASELINE, splits=modelSplits(snapshot,quotes);
+ const broker=snapshot.ledger!.broker.filter(e=>e.fund===fund);
+ function equities(date:string){
+  let value=0;
+  const holdings=modelHoldingsAt(snapshot,fund,date,splits);
+  if(!holdings.size)return null;
+  for(const h of holdings.values()){
+   if(!["stock","STK"].includes(h.assetClass))continue;
+   if(h.symbol.endsWith(".RTS")&&broker.some(e=>e.kind==="Ankerpositie"&&e.symbol===h.symbol&&e.price===0))continue;
+   const closes=price(quotes,snapshot,h.symbol,h.currency);
+   let close=closes?.find(p=>p.date===date)?.close;
+   // Euronext Amsterdam daily file NL0012969182, 11 September 2026.
+   if(close==null&&date===archiveStart&&h.symbol==="ADYEN"&&h.currency==="EUR"&&h.exchange==="Euronext Amsterdam")close=928.70;
+   const rate=fx(quotes,h.currency,date);
+   if(close==null||close<=0||!rate)return null;
+   value+=h.quantity*close/rate;
+  }
+  return value;
+ }
+ const before=equities(start.date),after=equities(end);
+ if(before===null||after===null)return null;
+ const events=broker.filter(e=>e.date>start.date&&e.date<=end&&e.processing!=="Negeren"&&
+  ["Buy","Sell","Dividend","Foreign Tax Withholding","Credit Interest"].includes(e.kind));
+ if(events.some(e=>e.netEur==null))return null;
+ const flows=(snapshot.transactions??[]).filter(t=>t.fund===fund&&t.date>start.date&&t.date<=end);
+ const value=start.nav*start.totalUnits+after-before+events.reduce((sum,e)=>sum+e.netEur!,0)+flows.reduce((sum,t)=>sum+t.amount,0);
+ const totalUnits=start.totalUnits+flows.reduce((sum,t)=>sum+t.units,0);
+ return value>0&&totalUnits>0?{date:end,fund,totalUnits,nav:value/totalUnits}:null;
+}
+
 /** A model spread, not a confidence interval: unpriced exposure flat vs moving with S&P 500.
  * Both paths are reconciled to reported NAVs; only real dated prices drive daily variation.
  * Intermediate days remain indicative; reported NAV anchors and ledger events are preserved. */
@@ -30,7 +83,14 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
  const extension=quotes?currentFundHistory(snapshot,quotes,fund):[];
  const book=currentBookPoint(snapshot,quotes,fund);if(book)extension.push(book);
  const modelDates=new Set(extension.map(p=>p.date));
- const anchors=[...new Map([...(snapshot.fundHistory??[]),...extension].filter(p=>p.fund===fund&&p.nav>0&&p.totalUnits>0).map(p=>[p.date,p])).values()].sort((a,b)=>a.date.localeCompare(b.date));
+ const original=(snapshot.fundHistory??[]).filter(p=>p.fund===fund);
+ const archive=reconciledArchive(snapshot,fund,original);
+ const start=archive.find(p=>p.date===archiveStart);
+ if(archive!==original&&start&&snapshot.ledger&&quotes&&!archive.some(p=>p.date===FUND_RETURN_BASELINE)){
+  const meeting=meetingAnchor(snapshot,quotes,fund,start);
+  if(meeting){extension.push(meeting);modelDates.add(meeting.date);}
+ }
+ const anchors=[...new Map([...archive,...extension].filter(p=>p.fund===fund&&p.nav>0&&p.totalUnits>0).map(p=>[p.date,p])).values()].sort((a,b)=>a.date.localeCompare(b.date));
  if(!anchors.length)return [];
  const reported=anchors.map(p=>({date:p.date,nav:p.nav,lowNav:p.nav,highNav:p.nav,estimated:modelDates.has(p.date),priceCoverage:1}));
  if(!snapshot.ledger||!quotes||anchors.length===1)return reported;
@@ -154,6 +214,7 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
  }
  return [...output.values()].sort((a,b)=>a.date.localeCompare(b.date)).map(p=>{
   const units=cutoff&&p.date<cutoff?anchors.filter(a=>a.date<=p.date).at(-1)?.totalUnits:fundUnitsAt(snapshot,fund,p.date);
-  return units?{...p,totalUnits:units,fundValue:units*p.nav}:p;
+  const legacyNav=p.date===archiveStart&&archive!==original?original.find(a=>a.date===archiveStart)?.nav:undefined;
+  return {...p,...(legacyNav?{legacyNav}:{}),...(units?{totalUnits:units,fundValue:units*p.nav}:{})};
  });
 }

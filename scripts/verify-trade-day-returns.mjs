@@ -25,3 +25,20 @@ const historyQuotes={...quotes,benchmark:{points:[...prior.map(p=>({date:p.date,
 const modes=comparisonModes([...prior,...historical],historyQuotes);
 assert.deepEqual(modes.historical.points.map(p=>p.date),[prior[0].date,...dates]);
 assert.deepEqual(modes.year.points.map(p=>p.date),dates);
+
+// Two retirees left before the roster migration. Recover their units through
+// the change in the archive without importing its stale closing unit balance.
+const archiveDates=['2026-09-10','2026-09-11','2026-09-16','2026-10-06'];
+const fixture={...migrated,transactions:[{fund:1,memberId:'m',date:archiveDates[0],amount:800,units:8}],
+ fundHistory:[{fund:1,date:archiveDates[0],nav:100,totalUnits:9},{fund:1,date:archiveDates[1],nav:100,totalUnits:9},{fund:1,date:archiveDates[3],nav:105,totalUnits:7}],
+ ledger:{...snapshot.ledger,broker:[event('Ankerpositie','SOLD',10,0,archiveDates[1]),event('Dividend','SOLD',null,1,archiveDates[2])]}};
+const fixtureQuotes={...quotes,benchmark:{points:archiveDates.map(date=>({date,close:100}))},eurUsdHistory:archiveDates.map(date=>({date,close:1})),
+ history:{'X:SOLD':archiveDates.map((date,i)=>({date,close:[10,10,12,13][i]}))}};
+const navHistory=estimatedFundHistory(fixture,fixtureQuotes,1);
+const open=navHistory.find(p=>p.date===archiveDates[2]);
+assert.equal(open.totalUnits,10);
+assert.equal(open.nav,(900+20+1)/10);
+assert.equal(open.estimated,true);
+const linked=comparisonModes(navHistory,fixtureQuotes).historical;
+assert.equal(linked.points.find(p=>p.date===archiveDates[1]).fund,0);
+assert.ok(linked.benchmarkHistory.some(p=>p.date===archiveDates[1]));

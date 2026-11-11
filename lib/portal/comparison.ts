@@ -11,20 +11,25 @@ export function compareFundReturns(points:PerformancePoint[],baseline=FUND_RETUR
  return sorted.filter(p=>p.benchmarkReturn!==null&&p.nav>0).map(p=>({date:p.date,fund:p.nav/base.nav-1,benchmark:(1+p.benchmarkReturn!)/(1+base.benchmarkReturn!)-1}));
 }
 
-export type MeetingComparison={start:string;referenceDate:string|null;benchmarkMissing:boolean;dailyFrom?:string|null;points:{date:string;fund:number;benchmark:number|null;band?:[number,number];estimated?:boolean;priceCoverage?:number}[]};
+export type MeetingComparison={start:string;referenceDate:string|null;benchmarkMissing:boolean;dailyFrom?:string|null;benchmarkHistory?:{date:string;benchmark:number}[];points:{date:string;fund:number;benchmark:number|null;band?:[number,number];estimated?:boolean;priceCoverage?:number}[]};
 
 export function comparisonModes(points:EstimatedFundPoint[],quotes:DailyQuotes|null,earliest="2022-09-21"){
- const historicalPoints=points.filter(p=>!p.estimated||p.date>=FUND_RETURN_BASELINE);
+ // Chain-link the original pre-migration NAV series at the first common
+ // statement. A change in the unit register is not an investment loss.
+ const bridge=points.find(p=>p.legacyNav&&p.legacyNav>0);
+ const factor=bridge?.legacyNav?bridge.nav/bridge.legacyNav:1;
+ const historicalPoints=points.filter(p=>!p.estimated||p.date>=FUND_RETURN_BASELINE).map(p=>
+  bridge&&p.date<bridge.date?{...p,nav:p.nav*factor,flatNav:(p.flatNav??p.nav)*factor,marketNav:(p.marketNav??p.nav)*factor}:p);
  const first=historicalPoints.find(p=>p.date>=earliest&&p.nav>0&&quotes?.benchmark?.points.some(b=>b.date===p.date)&&quotes?.eurUsdHistory?.some(f=>f.date<=p.date&&f.close>0&&Date.parse(p.date)-Date.parse(f.date)<=7*86400000));
  const year=historicalComparison(points,quotes,FUND_RETURN_BASELINE);
  year.points=year.points.filter(p=>p.date>=FUND_RETURN_BASELINE);
- const historical=first?historicalComparison(historicalPoints,quotes,first.date):{start:points[0]?.date??FUND_RETURN_BASELINE,referenceDate:null,benchmarkMissing:true,points:[]} satisfies MeetingComparison;
+ const historical=first?historicalComparison(historicalPoints,quotes,first.date,true):{start:points[0]?.date??FUND_RETURN_BASELINE,referenceDate:null,benchmarkMissing:true,points:[]} satisfies MeetingComparison;
  historical.points=historical.points.filter(p=>p.date>=historical.start);
  return {year,historical};
 }
 
 /** A display window never resets the meeting's 0% baseline. */
-export function historicalComparison(points:EstimatedFundPoint[],quotes:DailyQuotes|null,start=FUND_RETURN_BASELINE):MeetingComparison{
+export function historicalComparison(points:EstimatedFundPoint[],quotes:DailyQuotes|null,start=FUND_RETURN_BASELINE,includeBenchmarkHistory=false):MeetingComparison{
  const base=points.find(p=>p.date===start)??(start===FUND_RETURN_BASELINE?undefined:points.filter(p=>p.date<start).at(-1));
  if(!base)return {start,referenceDate:null,benchmarkMissing:true,points:[]};
  const eur=(date:string)=>{
@@ -32,13 +37,19 @@ export function historicalComparison(points:EstimatedFundPoint[],quotes:DailyQuo
   return p&&fx&&fx.close>0&&Date.parse(date)-Date.parse(p.date)<=4*86400000&&Date.parse(date)-Date.parse(fx.date)<=7*86400000?p.close/fx.close:null;
  };
  const bmBase=eur(start);
+ const end=points.at(-1)?.date??start;
+ const benchmarkHistory=includeBenchmarkHistory&&bmBase?(quotes?.benchmark?.points??[]).flatMap(p=>{
+  if(p.date<start||p.date>end)return [];
+  const value=eur(p.date);
+  return value!==null?[{date:p.date,benchmark:value/bmBase-1}]:[];
+ }):undefined;
  const rows=points.map(p=>{
   const bm=eur(p.date),a=(p.flatNav??p.nav)/(base.flatNav??base.nav)-1,b=(p.marketNav??p.nav)/(base.marketNav??base.nav)-1;
   return {date:p.date,fund:p.date===start?0:p.nav/base.nav-1,benchmark:bm&&bmBase?bm/bmBase-1:null,band:[Math.min(a,b),Math.max(a,b)] as [number,number],estimated:p.estimated,priceCoverage:p.priceCoverage};
  });
  if(!rows.some(p=>p.date===start)&&rows.some(p=>p.date>start))rows.push({date:start,fund:0,benchmark:bmBase?0:null,band:[0,0],estimated:true,priceCoverage:0});
  rows.sort((a,b)=>a.date.localeCompare(b.date));
- return {start,referenceDate:base.date,benchmarkMissing:rows.some(p=>p.benchmark===null),dailyFrom:points.find(p=>p.estimated)?.date??null,points:rows};
+ return {start,referenceDate:base.date,benchmarkHistory,benchmarkMissing:rows.some(p=>p.benchmark===null),dailyFrom:points.find(p=>p.estimated)?.date??null,points:rows};
 }
 
 export type FundChartPeriod="fund-year"|"6m"|"1y"|"2y"|"all";
