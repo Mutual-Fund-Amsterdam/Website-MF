@@ -85,12 +85,14 @@ export function estimatedFundHistory(snapshot:Snapshot,quotes:DailyQuotes|null,f
  const modelDates=new Set(extension.map(p=>p.date));
  const original=(snapshot.fundHistory??[]).filter(p=>p.fund===fund);
  const archive=reconciledArchive(snapshot,fund,original);
+ const references=(snapshot.valuationReferences??[]).filter(p=>p.fund===fund);
  const start=archive.find(p=>p.date===archiveStart);
- if(archive!==original&&start&&snapshot.ledger&&quotes&&!archive.some(p=>p.date===FUND_RETURN_BASELINE)){
+ if(archive!==original&&start&&snapshot.ledger&&quotes&&!archive.some(p=>p.date===FUND_RETURN_BASELINE)&&!references.some(p=>p.date===FUND_RETURN_BASELINE)){
   const meeting=meetingAnchor(snapshot,quotes,fund,start);
   if(meeting){extension.push(meeting);modelDates.add(meeting.date);}
  }
- const anchors=[...new Map([...archive,...extension].filter(p=>p.fund===fund&&p.nav>0&&p.totalUnits>0).map(p=>[p.date,p])).values()].sort((a,b)=>a.date.localeCompare(b.date));
+ const anchors=[...new Map([...archive,...extension,...references].filter(p=>p.fund===fund&&p.nav>0&&p.totalUnits>0).map(p=>[p.date,p])).values()].sort((a,b)=>a.date.localeCompare(b.date));
+ for(const p of references)modelDates.delete(p.date);
  if(!anchors.length)return [];
  const reported=anchors.map(p=>({date:p.date,nav:p.nav,lowNav:p.nav,highNav:p.nav,estimated:modelDates.has(p.date),priceCoverage:1}));
  if(!snapshot.ledger||!quotes||anchors.length===1)return reported;

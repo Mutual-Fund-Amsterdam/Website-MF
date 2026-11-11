@@ -249,6 +249,25 @@ export async function parseWorkbook(bytes: Buffer, pepper: string, previous?:Sna
 
   const overview = get("Overzicht");
   const snapshot: Snapshot = { schema: 1, digest: createHash("sha256").update(bytes).digest("hex"), importedAt: new Date().toISOString(), requestedDate: cellDate(overview?.data[4]?.[1]), members, positions, cash, transactions, fundHistory, totalUnitsByFund, risk, warnings };
+  const valuationSheet = get("Fondsstanden");
+  if (valuationSheet) {
+    const { headers, firstDataRow } = table(valuationSheet, "Fondswaarde EUR");
+    const references: NonNullable<Snapshot["valuationReferences"]> = [];
+    for (const row of valuationSheet.data.slice(firstDataRow)) {
+      if (!cellText(value(row, headers, "Invoer-ID"))) continue;
+      const fund = fundNumber(value(row, headers, "Fonds"));
+      const date = cellDate(value(row, headers, "Datum"));
+      const amount = cellNumber(value(row, headers, "Fondswaarde EUR"));
+      const totalUnits = cellNumber(value(row, headers, "Deelbewijzen"));
+      const source = cellText(value(row, headers, "Bron"));
+      if (!fund || !date || !amount || amount <= 0 || !totalUnits || totalUnits <= 0 || !source)
+        throw new Error("Ongeldige gecontroleerde fondsstand: fonds, datum, waarde, deelbewijzen en bron zijn verplicht.");
+      if (references.some(p => p.fund === fund && p.date === date))
+        throw new Error("Dubbele gecontroleerde fondsstand voor hetzelfde fonds en dezelfde datum.");
+      references.push({ fund, date, totalUnits, nav: amount / totalUnits, source });
+    }
+    if (references.length) snapshot.valuationReferences = references;
+  }
   snapshot.ledger=parseLedger(sheets);
   applyInputWorkbook(snapshot,sheets,(id,code)=>codeDigest(id,code,pepper),previous);
   applyUnitLedger(snapshot,sheets);

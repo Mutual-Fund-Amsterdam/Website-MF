@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {canCompareFunds,comparisonCalendar,comparisonAxis} from '../lib/portal/fund-comparison.ts';
+import {comparisonChartRows} from '../lib/portal/comparison.ts';
 for(const role of ['Lid','Bestuurder','', 'Hoofdbestuurder-extra'])assert.equal(canCompareFunds({role,active:true}),false);
 assert.equal(canCompareFunds({role:'Hoofdbestuurder',active:true}),true);
 assert.equal(canCompareFunds({role:'Hoofdbestuurder',active:false}),false);
@@ -9,3 +10,16 @@ const result=comparisonCalendar(h,'2026-09-18');assert.equal(result.days.length,
 const flow=comparisonCalendar({1:[{date:'2026-09-16',nav:1000/10},{date:'2026-09-17',nav:2000/20}],2:[],3:[]},'2026-09-17');assert.equal(flow.days[1].fund1,0);
 const axis=comparisonAxis('2026-11-11');assert.equal(axis.ticks.length,10);assert.equal(new Date(axis.ticks.at(-1)).toISOString().slice(0,10),'2027-05-25');assert.ok(axis.end>Date.parse('2026-11-11'));assert.equal(comparisonCalendar(h,'2026-09-19').days.length,4);assert.equal(comparisonAxis('2027-07-01').end,Date.parse('2027-07-01'));
 console.log('PASS: chief-only authorization, shared baseline and calendar, NAV returns excluding capital flows, missing-source gaps, reconstruction disclosure, reference date ticks, automatic extension.');
+
+const source={start:'2026-09-16',referenceDate:'2026-09-16',benchmarkMissing:true,
+ points:[{date:'2026-09-16',fund:0,benchmark:0},{date:'2026-09-18',fund:.1,benchmark:null},{date:'2026-09-20',fund:.2,benchmark:.08}],
+ benchmarkHistory:[{date:'2026-09-17',benchmark:.02},{date:'2026-09-19',benchmark:.06}]};
+const original=JSON.stringify(source);
+const connected=comparisonChartRows(source,['2026-09-18']);
+assert.equal(connected.length,5);
+assert.ok(connected.every(p=>Number.isFinite(p.lineFund)&&Number.isFinite(p.benchmark)));
+assert.ok(Math.abs(connected[2].lineFund-.1)<1e-12);
+assert.ok(Math.abs(connected[2].benchmark-.04)<1e-12);
+assert.equal(connected[0].lineFund,0);
+assert.equal(connected.at(-1).lineFund,.2);
+assert.equal(JSON.stringify(source),original,'Display interpolation preserves original observations');

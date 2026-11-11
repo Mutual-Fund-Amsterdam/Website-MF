@@ -16,6 +16,13 @@ Overzicht controleert brondeelbewijzen in K en de expliciete tolerantie in L.
 De oorspronkelijke bronbedragen blijven beschikbaar als historische referentie.
 De migratiedatum en bestaande technische IDs veranderen niet.
 
+`Fondsstanden` bevat gecontroleerde historische referenties met datum, volledige
+netto fondswaarde, uitstaande deelbewijzen en bron. De lokale koppeling neemt de
+bevestigde standen uit de financiële bron over. Deze referenties gaan vóór een
+geschat administratief tussenpunt en gebruiken hun eigen historische noemer.
+De fondsgrafiek, de fondsvergelijking en het persoonlijke verloop lezen dezelfde
+dagreeks. Tussen de referenties blijft de bestaande dagreconstructie gelden.
+
 Een ontbrekende koers kan via Koersen worden aangevuld met een echte, gedateerde
 waarneming. Import controleert ticker, beurs, valuta, datum en prijs. Alleen een
 nieuwere waarneming komt in de gedeelde koerscache. Dit vraagt geen Marketstack

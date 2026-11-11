@@ -98,6 +98,7 @@ export type Snapshot = {
   cash: Cash[];
   transactions?: MemberTransaction[];
   fundHistory?: FundHistoryPoint[];
+  valuationReferences?: (FundHistoryPoint & { source: string })[];
   totalUnitsByFund?: Record<FundNumber, number>;
   risk?: Partial<Record<FundNumber, RiskMetrics>>;
   warnings: string[];
