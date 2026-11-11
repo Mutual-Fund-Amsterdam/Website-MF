@@ -20,6 +20,7 @@ import Composition from "./composition";
 import {calculateRiskReport,type RiskReport} from "@/lib/portal/risk-report";
 import RiskIndicators from "./risk-indicators";
 import LogoutButton from "./logout-button";
+import FundTabs from './fund-tabs';
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -73,7 +74,7 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
   return <main id="main-content" className={`page-shell ${styles.main}`}><div className="container">
     <div className={styles.top}><div><p className="eyebrow">Ledenomgeving / fonds {fund}</p><h1>Welkom, {member.name.split(" ")[0]}.</h1></div><LogoutButton /></div>
     {admin && <nav className={styles.boardNav} aria-label="Bestuur"><a href="/beheer/import">Excel importeren</a><a href="/beheer/feedback">Ontvangen feedback van leden →</a></nav>}
-    {member.allowedFunds.length > 1 && <nav className={styles.switcher} aria-label="Kies fonds">{member.allowedFunds.map((number) => <Link key={number} href={`/mijn-fonds?fonds=${number}`} aria-current={number === fund ? "page" : undefined}>Fonds {number}</Link>)}</nav>}
+    <FundTabs member={member} active={fund}/>
 
     <div className={styles.cards}>
       <article><span>Totale fondswaarde</span><strong>{displayedFundValue !== null ? eur(displayedFundValue) : "—"}</strong><p>{cashIssues.length?"Cashstanden nog niet volledig aangesloten":bookPoint?`Berekend per ${date(bookPoint.date)} · slotkoersen ${date(bookPoint.quoteDate)}`:useReported&&lastReported?`Administratie per ${date(lastReported.date)}`:`Fonds ${fund}`}</p></article>

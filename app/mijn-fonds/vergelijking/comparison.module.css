@@ -1,0 +1,12 @@
+.comparison { background:#232320; color:#e9e5da; padding:24px 0 12px; }
+.comparison h1 { text-align:center; font-family:Arial,sans-serif; font-weight:400; font-size:clamp(26px,3.1vw,40px); line-height:1.2; margin:0 0 22px; letter-spacing:-.03em; }
+.frame { position:relative; }
+.legend { position:absolute; z-index:1; top:8px; left:72px; right:20px; display:flex; flex-wrap:wrap; justify-content:center; gap:14px 30px; font:600 14px Arial,sans-serif; pointer-events:none; }
+.legend span { display:inline-flex; align-items:center; gap:7px; font-variant-numeric:tabular-nums; }
+.legend i { display:inline-block; width:43px; height:5px; border-radius:2px; }
+.legend b { font-weight:400; }
+.plot { height:clamp(440px,40vw,640px); width:100%; font-family:Arial,sans-serif; font-weight:600; }
+.tooltip { background:#232320; border:1px solid #696965; padding:12px; font-size:13px; }
+.tooltip p { margin-top:6px; }
+.caption { font-size:11px; color:#a3a096; margin:16px 12px 0; }
+@media(max-width:600px){.comparison{padding-top:16px}.legend{gap:10px 14px;font-size:12px}.legend i{width:24px}.plot{height:440px;min-width:650px}.comparison{overflow-x:auto}.caption{max-width:calc(100vw - 70px)}}
