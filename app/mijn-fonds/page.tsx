@@ -72,7 +72,7 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
 
   return <main id="main-content" className={`page-shell ${styles.main}`}><div className="container">
     <div className={styles.top}><div><p className="eyebrow">Ledenomgeving / fonds {fund}</p><h1>Welkom, {member.name.split(" ")[0]}.</h1></div><LogoutButton /></div>
-    {admin && <nav className={styles.boardNav} aria-label="Bestuur"><a href="/beheer/import">Excel importeren</a><a href="/beheer/feedback">Ontvangen feedback van leden →</a></nav>}
+    {admin && <nav className={styles.boardNav} aria-label="Bestuur">{process.env.MF_ADMIN_ENABLED === "1" && <a href="/beheer/administratie">Administratie</a>}<a href="/beheer/import">Excel importeren</a><a href="/beheer/feedback">Ontvangen feedback van leden →</a></nav>}
     <FundTabs member={member} active={fund}/>
 
     <div className={styles.cards}>

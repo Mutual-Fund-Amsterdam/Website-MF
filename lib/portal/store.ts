@@ -212,6 +212,7 @@ async function publishPendingLocked(id: string): Promise<Snapshot | null> {
   if (!stored) return null;
   const snapshot=await hydrateLedger(stored);
   const previous = await getSnapshot();
+  if (previous?.administration) throw Error("Gebruik Invoer in de gedeelde bestuursadministratie voor nieuwe imports.");
   validateInputContinuity(snapshot,previous);
   if(previous?.digest===snapshot.digest){await client.del(key);return previous;}
   if (previous) {
@@ -373,4 +374,45 @@ export async function integrationUnlock(key:string,token:string){
  const full=`${PREFIX}integration-lock:${key}`;
  if(localPreview()){if(await redis().get(full)===token)await redis().del(full);}
  else await (redis() as Redis).eval('if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end',[full],[token]);
+}
+
+/** Atomic draft revision check. Bodies are immutable, encrypted chunks written first. */
+export async function compareAdminRevision(expected: string | null, header: { revision: string; chunks: number }) {
+  const key = `${PREFIX}integration:admin-working`;
+  if (localPreview()) return (redis() as ReturnType<typeof createLocalStore>).compareRevision(key, expected, header);
+  const script = 'local old=redis.call("get",KEYS[1]); local revision=""; if old then revision=cjson.decode(old).revision end; if revision~=ARGV[1] then return 0 end; redis.call("set",KEYS[1],ARGV[2]); return 1';
+  return await (redis() as Redis).eval(script, [key], [expected ?? "", JSON.stringify(header)]) === 1;
+}
+
+export async function publishAdministration(snapshot: Snapshot, baseDigest: string, revision: string) {
+  const lock = await integrationLock("publish", 300);
+  if (!lock) throw Error("Er wordt al een publicatie verwerkt.");
+  try {
+    const previous = await getSnapshot();
+    if (previous?.administration?.revision === revision) return previous;
+    if (previous?.digest !== baseDigest) throw Error("De gepubliceerde stand is gewijzigd. Controleer de nieuwste stand.");
+    const draft = await integrationGet<{ revision: string }>("admin-working");
+    if (draft?.revision !== revision) throw Error("De werkstand is gewijzigd. Controleer opnieuw.");
+    const header = await storeLedger(snapshot, snapshot.digest);
+    const old = await storeLedger(previous, previous.digest);
+    await redis().set(`${PREFIX}archive:${previous.digest}`, old);
+    // Validate manual quote compatibility before making the reviewed snapshot visible.
+    const quotes = mergeManualPrices(snapshot, await getDailyQuotes());
+    let changed: boolean;
+    if (localPreview()) changed = await localClient!.compareRevision(CURRENT_KEY, baseDigest, header, "digest");
+    else {
+      const script = 'local old=redis.call("get",KEYS[1]); local draft=redis.call("get",KEYS[2]); if not old or not draft or cjson.decode(old).digest~=ARGV[1] or cjson.decode(draft).revision~=ARGV[2] then return 0 end; redis.call("set",KEYS[1],ARGV[3]); return 1';
+      changed = await (redis() as Redis).eval(script, [CURRENT_KEY, `${PREFIX}integration:admin-working`], [baseDigest, revision, JSON.stringify(header)]) === 1;
+    }
+    if (!changed) throw Error("De stand is gewijzigd. Controleer opnieuw.");
+    hydratedCache = null;
+    // A failure here never rolls a confirmed publication back. The daily job can refresh derived views.
+    try {
+      if (quotes) { await saveDailyQuotes(quotes); await recordFundDailyValues(snapshot, quotes); }
+      await refreshRiskReport(snapshot, quotes);
+    } catch {
+      await integrationSet("admin-derived-pending", snapshot.digest);
+    }
+    return snapshot;
+  } finally { await integrationUnlock("publish", lock); }
 }
