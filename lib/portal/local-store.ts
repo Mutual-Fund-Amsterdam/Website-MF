@@ -44,6 +44,14 @@ export function createLocalStore(pepper: string) {
   }
 
   return {
+    async compareRevision(key: string, expected: string | null, value: unknown, field = "revision"): Promise<boolean> {
+      return locked(key, async () => {
+        const existing = (await read(key))?.value as Record<string, unknown> | undefined;
+        if ((existing?.[field] ?? null) !== expected) return false;
+        await write(key, { value, expiresAt: null });
+        return true;
+      });
+    },
     async get<T>(key: string): Promise<T | null> { return (await read(key))?.value as T ?? null; },
     async set(key: string, value: unknown, options?: { ex?: number; nx?: boolean }): Promise<"OK"|null> {
       return locked(key, async()=>{

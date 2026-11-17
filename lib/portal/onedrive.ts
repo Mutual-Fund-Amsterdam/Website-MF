@@ -47,6 +47,7 @@ async function renewSubscription(c:DriveConnection){
  c.subscriptionId=s.id;c.subscriptionExpires=s.expirationDateTime;await integrationSet("onedrive",c);
 }
 export async function syncOneDrive(){
+ if ((await getSnapshot())?.administration) return {skipped:true};
  const lease=await integrationLock("onedrive-sync",300);if(!lease)return {skipped:true};
  const c=await integrationGet<DriveConnection>("onedrive");if(!c){await integrationUnlock("onedrive-sync",lease);return {skipped:true};}
  try{
@@ -69,6 +70,7 @@ export async function maintainOneDrive(){if(!oneDriveConfigured())return;const l
 export async function oneDriveStatus(){const c=await integrationGet<DriveConnection>("onedrive");return {configured:oneDriveConfigured(),connected:!!c,checkedAt:c?.checkedAt,processedAt:c?.processedAt,error:c?.error,etag:c?.etag,resultsAt:c?.resultsAt,writeError:c?.writeError,resultsPending:!!await integrationGet("onedrive-results-pending")};}
 
 async function writeResultsLocked(c:DriveConnection){
+ if ((await getSnapshot())?.administration) return {skipped:true};
  if(!await integrationGet("onedrive-results-pending"))return {unchanged:true};
  const snapshot=await getSnapshot();if(!snapshot)return {skipped:true};
  const report=await integrationGet<RiskReport>(`risk:${snapshot.digest}`);if(!report)return {skipped:true};

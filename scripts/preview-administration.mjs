@@ -1,0 +1,10 @@
+import { spawn } from 'node:child_process';
+import { fixture, fixturePepper, fixtureEncryptionKey } from './fixtures/administration.mjs';
+import { createLocalStore } from '../lib/portal/local-store.ts';
+if (process.env.VERCEL) throw Error('Fictitious preview is local only.');
+const store = createLocalStore(fixturePepper), current = await store.get('mf:portal:development:current');
+if (current && !current.warnings?.includes('Fictieve lokale controleomgeving')) throw Error('This directory has another data set. Use an isolated checkout.');
+if (!current) await store.set('mf:portal:development:current', await fixture());
+const env = { PATH: process.env.PATH, HOME: process.env.HOME, TMPDIR: process.env.TMPDIR, NODE_ENV:'production', MF_LOCAL_PREVIEW:'1', MF_ADMIN_ENABLED:'1', MF_AUTH_PEPPER:fixturePepper, MF_ADMIN_ENCRYPTION_KEY:fixtureEncryptionKey, NEXT_TELEMETRY_DISABLED:'1' };
+const child = spawn(process.execPath, ['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','49732'], { stdio:'inherit',env });
+child.on('exit', code => process.exit(code || 0));
