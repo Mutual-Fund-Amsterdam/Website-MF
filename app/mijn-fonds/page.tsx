@@ -97,7 +97,7 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
     </section>
 
     <div className={styles.grid}>
-      <section className={styles.panel}><p className="eyebrow">Liquiditeit</p><h2>Cash.</h2><strong className={styles.bigNumber}>{!cashIssues.length&&view.cashValue !== null ? eur(view.cashValue) : "Nog niet vastgesteld"}</strong>{cashIssues.length>0&&<p className={styles.notice}>{cashIssues.join(" ")}</p>}<p className={styles.chartCaption}>ING-stand: {date(cash?.ingAsOf??null)}. Brokerstand: {date(cash?.brokerAsOf??null)}.{cash?.basisNote?` ${cash.basisNote}`:""}</p>{view.payablesValue>0&&<p>Nog uit te betalen: {eur(view.payablesValue)}. Dit is afgetrokken van de fondswaarde.</p>}</section>
+      <section className={styles.panel}><p className="eyebrow">Liquiditeit</p><h2>Cash.</h2><strong className={styles.bigNumber}>{!cashIssues.length&&view.cashValue !== null ? eur(view.cashValue) : "Nog niet vastgesteld"}</strong>{cashIssues.length>0&&<p className={styles.notice}>{cashIssues.join(" ")}</p>}</section>
       <section className={styles.panel}><p className="eyebrow">Verdeling bezittingen</p><h2>Cash &amp; aandelen.</h2>{!cashIssues.length&&view.assetValue !== null && view.assetValue > 0 && stockShare !== null && cashShare !== null ? <Composition stocks={view.stockValue!} cash={view.cashValue!} other={view.otherValue??0} total={view.assetValue}/> : <div className={styles.compEmpty}>Verdeling verschijnt zodra cashstanden, koersen en wisselkoersen zijn aangesloten.</div>}</section>
     </div>
 
