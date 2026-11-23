@@ -9,6 +9,8 @@ assert.ok(Math.abs(points[2].fundReturn-.1)<1e-10);
 assert.ok(Math.abs(points[2].benchmarkReturn-.1)<1e-10);
 assert.equal(dailyChange([{date:'2025-01-01',close:100},{date:'2025-01-02',close:110}],'2025-01-02',110),.10000000000000009);
 assert.equal(dailyChange([],'2025-01-02',110),null);
+assert.equal(dailyChange([{date:'2026-10-06',close:100}],'2026-11-20',90),null);
+assert.equal(dailyChange([{date:'2026-11-20',close:100}],'2026-11-23',100),0);
 const riskPoints=Array.from({length:13},(_,i)=>{const date=new Date(Date.UTC(2025,i+1,0)).toISOString().slice(0,10);const nav=100*(1+.01*i+.002*(i%2));return {date,nav,value:nav*100,fundReturn:nav/100-1,benchmarkReturn:nav/100-1};});
 const rates=Array.from({length:400},(_,i)=>({date:new Date(Date.UTC(2025,0,1)+i*86400000).toISOString().slice(0,10),close:2.44}));
 const risk=realisedRisk(riskPoints,rates,'2026-02-01');

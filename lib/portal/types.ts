@@ -87,7 +87,7 @@ export type Cash = {
 
 export type Snapshot = {
   unitLedger?: { version:1; asOf:Record<FundNumber,string> };
-  manualPrices?: (DailyQuote & {source:string})[];
+  manualPrices?: (DailyQuote & {source:string; adjustedClose?:number})[];
   input?: {version:2|3;cutoff:string;events:Record<string,string>};
   schema: 1;
   digest: string;
