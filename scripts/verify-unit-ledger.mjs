@@ -18,6 +18,16 @@ try{
  const ix=Array.from({length:7},()=>Array(16).fill(null));ix[3][15]='MF-UNITS-1';
  for(const f of [1,2,3]){const r=ix[f+3];r[6]=f;r[11]=new Date('2026-11-09');r[12]=f===3?20:0;r[14]=new Date('2026-11-09');}
  applyUnitLedger(s,[{sheet:'Fondsindex',data:ix}]);
+ const archive=structuredClone(s), priceSheet=ix.map(row=>[...row]);
+ archive.ledger.broker.push({symbol:'OLD',description:'Old company',kind:'Sell',currency:'EUR',exchange:'Euronext Paris'});
+ priceSheet[3][16]='MF-PRICE-HISTORY-1';priceSheet[3][23]='Adjusted close';priceSheet[3][24]='Instrumentnaam broker';
+ Object.assign(priceSheet[4],{16:'OLD',17:'Euronext Paris',18:'2026-10-05',19:10,20:'EUR',21:'Fixture',23:9.5,24:'Old company'});
+ applyUnitLedger(archive,[{sheet:'Fondsindex',data:priceSheet}]);
+ const archiveQuotes=mergeManualPrices(archive,null);
+ assert.equal(archiveQuotes.history['Euronext Paris:OLD'][0].adjustedClose,9.5);
+ assert.equal(mergeManualPrices(archive,archiveQuotes),archiveQuotes);
+ priceSheet[4][17]='Wrong venue';
+ assert.throws(()=>applyUnitLedger(archive,[{sheet:'Fondsindex',data:priceSheet}]),/brokerhistorie/);
  const q={fetchedAt:'2026-11-09T05:15:00Z',prices:{'Euronext Amsterdam:AAA':{symbol:'AAA',exchange:'XAMS',currency:'EUR',date:'2026-11-06',close:100}},history:{'Euronext Amsterdam:AAA':[{date:'2026-11-06',close:100}]},benchmark:{points:[{date:'2026-11-06',close:100}],latest:{date:'2026-11-06',close:100}}};
  for(const f of [1,2,3]){
   const p=currentBookPoint(s,q,f);assert.equal(p.fundValue,f===3?1140:1160);assert.equal(p.date,'2026-11-09');assert.equal(p.quoteDate,'2026-11-06');

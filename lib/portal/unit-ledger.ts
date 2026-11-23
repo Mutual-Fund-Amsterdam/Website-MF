@@ -35,14 +35,31 @@ export function applyUnitLedger(snapshot:Snapshot,sheets:InputSheet[]){
  }
  const sheet=sheets.find(s=>s.sheet==='Koersen');
  snapshot.manualPrices=[];
- const rows=(sheet?.data.slice(5)??[]).filter(r=>txt(r[1])).map(r=>({ticker:txt(r[1]).toUpperCase(),exchange:txt(r[2]),date:day(r[3]),close:Number(r[4]),currency:txt(r[5]),source:txt(r[7])||'Handmatige koers in Excel'}));
- if(txt(ix?.data[3]?.[16])==='MF-PRICE-HISTORY-1')for(const r of ix!.data.slice(4))if(txt(r[16]))rows.push({ticker:txt(r[16]).toUpperCase(),exchange:txt(r[17]),date:day(r[18]),close:Number(r[19]),currency:txt(r[20]),source:txt(r[21])});
+ type ImportedPrice = {ticker:string;exchange:string;date:string;close:number;currency:string;source:string;adjustedClose?:number;brokerName?:string};
+ const rows:ImportedPrice[]=(sheet?.data.slice(5)??[]).filter(r=>txt(r[1])).map(r=>({ticker:txt(r[1]).toUpperCase(),exchange:txt(r[2]),date:day(r[3]),close:Number(r[4]),currency:txt(r[5]),source:txt(r[7])||'Handmatige koers in Excel'}));
+ if(txt(ix?.data[3]?.[16])==='MF-PRICE-HISTORY-1'){
+  const [adjustedHeader, nameHeader]=ix!.data[3].slice(23,25);
+  for(const r of ix!.data.slice(4)){
+   if(!txt(r[16]))continue;
+   const price:ImportedPrice={ticker:txt(r[16]).toUpperCase(),exchange:txt(r[17]),date:day(r[18]),close:Number(r[19]),currency:txt(r[20]),source:txt(r[21])};
+   if(adjustedHeader==='Adjusted close' && r[23]!=null)price.adjustedClose=Number(r[23]);
+   if(nameHeader==='Instrumentnaam broker')price.brokerName=txt(r[24]);
+   rows.push(price);
+  }
+ }
  const catalog=sheets.find(s=>s.sheet==='Aandelen');
  const known=(ticker:string,exchange:string,currency:string)=>snapshot.positions.some(p=>p.ticker===ticker&&p.exchange===exchange&&p.currency===currency)||catalog?.data.slice(5).some(r=>txt(r[1]).toUpperCase()===ticker&&txt(r[3])===currency&&txt(r[4])===exchange);
  for(const p of rows){
-  if(!known(p.ticker,p.exchange,p.currency))throw Error(`Koers ${p.ticker}: aandeel, beurs of valuta ontbreekt in de catalogus.`);
+  if(!known(p.ticker,p.exchange,p.currency)){
+   const trades=snapshot.ledger?.broker.filter(event=>event.symbol===p.ticker && event.currency===p.currency && (event.kind==='Buy'||event.kind==='Sell'))??[];
+   const listed=snapshot.positions.some(position=>position.ticker===p.ticker)||catalog?.data.slice(5).some(row=>txt(row[1]).toUpperCase()===p.ticker);
+   if(listed||!p.exchange||!p.source||!p.brokerName||!trades.some(event=>event.description===p.brokerName)||trades.some(event=>event.exchange && event.exchange!==p.exchange)){
+    throw Error(`Koers ${p.ticker}: aandeel, beurs of valuta ontbreekt in de catalogus of brokerhistorie.`);
+   }
+  }
   if(!validDay(p.date)||!Number.isFinite(p.close)||p.close<=0)throw Error(`Ongeldige koers of koersdatum voor ${p.ticker}.`);
-  snapshot.manualPrices.push({symbol:p.ticker,exchange:p.exchange,currency:p.currency,date:p.date,close:p.close,source:p.source});
+  if(p.adjustedClose!==undefined&&(!Number.isFinite(p.adjustedClose)||p.adjustedClose<=0)) throw Error(`Ongeldige aangepaste koers voor ${p.ticker}.`);
+  snapshot.manualPrices.push({...(p.adjustedClose!==undefined?{adjustedClose:p.adjustedClose}:{}),symbol:p.ticker,exchange:p.exchange,currency:p.currency,date:p.date,close:p.close,source:p.source});
  }
 }
 
@@ -55,7 +72,11 @@ export function mergeManualPrices(snapshot:Snapshot,previous:DailyQuotes|null):D
   const id=quoteKey({ticker:p.symbol,exchange:p.exchange}),old=result.prices[id],rows=result.history![id]??[];
   const existing=rows.find(r=>r.date===p.date);
   if(existing&&Math.abs(existing.close-p.close)>.005)throw Error(`Tegenstrijdige historische koers voor ${p.symbol} op ${p.date}.`);
-  if(!existing){result.history![id]=[...rows,{date:p.date,close:p.close}].sort((a,b)=>a.date.localeCompare(b.date));changed=true;}
+  if(!existing){result.history![id]=[...rows,{date:p.date,close:p.close,...(p.adjustedClose!==undefined?{adjustedClose:p.adjustedClose}:{})}].sort((a,b)=>a.date.localeCompare(b.date));changed=true;}
+  if(existing && p.adjustedClose!==undefined && existing.adjustedClose!==p.adjustedClose){
+   result.history![id]=rows.map(row=>row.date===p.date?{...row,adjustedClose:p.adjustedClose}:row);
+   changed=true;
+  }
   if(!old||old.date<p.date){result.prices[id]=p;changed=true;}
  }
  if(changed)result.manualUpdatedAt=new Date().toISOString();

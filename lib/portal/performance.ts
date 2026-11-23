@@ -24,7 +24,11 @@ export function fundPerformance(snapshot: Snapshot, fund: FundNumber, daily: Fun
 
 export function dailyChange(history: PricePoint[], date: string, close: number): number | null {
   const previous = history.filter(p => p.date < date).at(-1);
-  return previous ? close / previous.close - 1 : null;
+  if (!previous || previous.close <= 0 || close <= 0) return null;
+  const priorWeekday = new Date(date + "T00:00:00Z");
+  do { priorWeekday.setUTCDate(priorWeekday.getUTCDate() - 1); }
+  while (priorWeekday.getUTCDay() === 0 || priorWeekday.getUTCDay() === 6);
+  return previous.date === priorWeekday.toISOString().slice(0, 10) ? close / previous.close - 1 : null;
 }
 
 export function realisedRisk(points: PerformancePoint[], estr: PricePoint[] = [], today = new Date().toISOString().slice(0,10)): RiskMetrics {
