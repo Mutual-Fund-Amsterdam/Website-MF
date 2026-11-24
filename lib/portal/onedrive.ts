@@ -58,7 +58,7 @@ export async function syncOneDrive(){
   const bytes=Buffer.from(await(await graph(`${path}/content`)).arrayBuffer());if(bytes.length>2_000_000)throw Error("Masterbestand is groter dan 2 MB.");
   const after=await(await graph(`${path}?$select=eTag`)).json();if(after.eTag!==item.eTag)throw Error("Excel is tijdens het lezen gewijzigd. Volgende controle leest de nieuwste versie.");
   const previous=await getSnapshot();const snapshot=await parseWorkbook(bytes,pepper(),previous);
-  if(snapshot.digest!==previous?.digest)await publishPending(await savePending(snapshot));
+  if(snapshot.digest!==previous?.digest)await publishPending(await savePending(snapshot,previous));
   c.etag=item.eTag;c.digest=snapshot.digest;c.processedAt=new Date().toISOString();c.error=undefined;await integrationSet("onedrive",c);
   await integrationSet("onedrive-results-pending",true);await writeResultsLocked(c);
   await recordOperation({kind:"onedrive",cause:"file-change",result:"verwerkt"});return {ok:true};

@@ -1,6 +1,8 @@
+import { mergeManualPrices } from "@/lib/portal/unit-ledger";
+import { compareImports } from "@/lib/portal/import-differences";
 import { NextResponse } from "next/server";
 import { parseWorkbook, summarize } from "@/lib/portal/workbook";
-import { allowAttempt, configured, getMemberSession, pepper, sameOrigin, savePending } from "@/lib/portal/store";
+import { allowAttempt, configured, getDailyQuotes, getMemberSession, pepper, sameOrigin, savePending } from "@/lib/portal/store";
 
 export const runtime = "nodejs";
 
@@ -20,10 +22,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Kies een .xlsx-bestand van maximaal 2 MB." }, { status: 400, headers });
     }
     const snapshot = await parseWorkbook(Buffer.from(await file.arrayBuffer()), pepper(),session.snapshot);
-    const id = await savePending(snapshot);
-    return NextResponse.json({ id, digest: snapshot.digest, summary: summarize(snapshot) }, { headers });
+    if (snapshot.manualPrices?.length) mergeManualPrices(snapshot, await getDailyQuotes());
+    const id = await savePending(snapshot,session.snapshot);
+    return NextResponse.json({ id, digest: snapshot.digest, summary: summarize(snapshot), differences: compareImports(session.snapshot,snapshot) }, { headers });
   } catch (error) {
-    const message = error instanceof Error && /Kolom|tabblad|rij|cash|leden|participatie|positie|Aantal|Excelbestand|Dubbel|ontbreekt|ongeldig/i.test(error.message)
+    const message = error instanceof Error && /koers|invoer|Kolom|tabblad|rij|cash|leden|participatie|positie|Aantal|Excelbestand|Dubbel|ontbreekt|ongeldig/i.test(error.message)
       ? error.message : "Het bestand kon niet worden gelezen. Controleer het Excelbestand.";
     return NextResponse.json({ error: message }, { status: 400, headers });
   }

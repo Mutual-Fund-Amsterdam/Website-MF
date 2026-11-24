@@ -1,4 +1,6 @@
 "use client";
+import ChartPeriod from "@/components/portal/chart-period";
+import ChartFrame from "@/components/portal/chart-frame";
 import {useState} from "react";
 import {CartesianGrid,ComposedChart,Line,ReferenceLine,ResponsiveContainer,Tooltip,XAxis,YAxis} from "recharts";
 import {chartPeriod,comparisonChartRows,type FundChartPeriod,type MeetingComparison} from "@/lib/portal/comparison";
@@ -16,25 +18,35 @@ export default function FundChart({comparisons,fund}: {comparisons:{year:Meeting
   const previous=rows[i-1];
   return previous?.date===conflict.from&&p.date===conflict.to&&Math.abs((1+p.fund)/(1+previous.fund)-1-conflict.change)<1e-7;
  });
- type Row={date:string;timestamp:number;fund:number|null;lineFund:number|null;benchmark:number|null};
+ const observations = new Map(rows.map(p => [p.date,p]));
+ const benchmarkDates = new Map(comparison.benchmarkHistory?.map(p => [p.date,p.benchmark]));
  const chartRows=comparisonChartRows({...comparison,points:rows},gap?[conflict.from,conflict.to]:[]);
  const pct=(v:number)=>`${(v*100).toLocaleString("nl-NL",{maximumFractionDigits:2})}%`;
  const date=(v:string)=>new Intl.DateTimeFormat("nl-NL",{dateStyle:"medium"}).format(new Date(v+"T12:00:00"));
- return <section className={styles.panel}><p className="eyebrow">Historische ontwikkeling</p><h2>Fondsrendement.</h2>
-  <p className={styles.chartCaption}>Baseline (0%): {mode==="year"?"eerste meeting, ":"historische start, "}{new Intl.DateTimeFormat("nl-NL",{dateStyle:"long"}).format(new Date(comparison.start+"T12:00:00"))}.</p>
+ return <ChartFrame title="Fondsrendement"><section className={styles.panel}><p className="eyebrow">Historische ontwikkeling</p><h2>Fondsrendement.</h2>
+  <p className={styles.chartCaption}>Startpunt (0%) · {mode==="year"?"eerste meeting, ":"historische start, "}{new Intl.DateTimeFormat("nl-NL",{dateStyle:"long"}).format(new Date(comparison.start+"T12:00:00"))}.</p>
   <div className={styles.historyPeriods} role="group" aria-label="Vergelijking">{([["year","Dit fondsjaar"],["historical","Historisch tegenover S&P 500"]] as const).map(([id,label])=><button type="button" key={id} aria-pressed={mode===id} onClick={()=>setMode(id)}>{label}</button>)}</div>
-  {mode==="historical"&&<div className={styles.historyPeriods} role="group" aria-label="Periode fondsgrafiek">{([["6m","6 maanden"],["1y","1 jaar"],["2y","2 jaar"],["all","Alles"]] as const).map(([id,label])=><button key={id} type="button" aria-pressed={id===period} onClick={()=>setPeriod(id)}>{label}</button>)}</div>}
+  {mode==="historical"&&<ChartPeriod value={period} onChange={setPeriod} options={[["6m","6 maanden"],["1y","1 jaar"],["2y","2 jaar"],["all","Hele periode"]]} />}
   <div className={styles.memberLegend}><span><i/>Fonds {fund}</span><span><i/>S&amp;P 500 (EUR)</span></div>
-  {rows.length>0?<div className={styles.fundChart}><ResponsiveContainer width="100%" height="100%"><ComposedChart data={chartRows}>
+  {rows.length>0?<div data-plot className={styles.fundChart}><ResponsiveContainer width="100%" height="100%"><ComposedChart accessibilityLayer data={chartRows}>
    <CartesianGrid stroke="rgba(233,229,218,.1)" vertical={false}/>
-   <XAxis dataKey="timestamp" type="number" domain={["dataMin","dataMax"]} stroke="#a3a096" minTickGap={45} tickFormatter={v=>date(new Date(v).toISOString().slice(0,10))}/>
-   <YAxis orientation="right" width={90} stroke="#a3a096" tickFormatter={pct} domain={[(min:number)=>Math.min(-.01,min),(max:number)=>Math.max(.01,max)]}/>
+   <XAxis dataKey="timestamp" type="number" domain={["dataMin","dataMax"]} stroke="#abb2b9" minTickGap={45} tickFormatter={v=>date(new Date(v).toISOString().slice(0,10))}/>
+   <YAxis orientation="right" width={90} stroke="#abb2b9" tickFormatter={pct} domain={[(min:number)=>Math.min(-.01,min),(max:number)=>Math.max(.01,max)]}/>
    <ReferenceLine y={0} stroke="#c7c4bc" strokeDasharray="5 5" label={{value:"0%",fill:"#c7c4bc",position:"insideTopLeft"}}/>
    <ReferenceLine x={Date.parse(comparison.start)} stroke="#c7c4bc" strokeDasharray="3 5"/>
-   <Tooltip content={({active,payload})=>{if(!active||!payload?.length)return null;const p=payload[0].payload as Row;return <div className={styles.historyTooltip}><b>{date(p.date)}</b><p>Fonds {fund}: {p.fund===null?"Geen fondsstand":pct(p.fund)}{gap&&(p.date===conflict.from||p.date===conflict.to)?" (bronstand, boekingsdatum onzeker)":""}</p><p>S&amp;P 500: {p.benchmark===null?"—":pct(p.benchmark)}</p></div>;}}/>
+   <Tooltip filterNull={false} content={({active,label})=>{
+     if (!active || typeof label !== "number") return null;
+     const day=new Date(label).toISOString().slice(0,10);
+     const point=observations.get(day);
+     const benchmark=point?.benchmark ?? benchmarkDates.get(day);
+     return <div className={styles.historyTooltip}><b>{date(day)}</b>
+       <p>Fonds {fund}: {point ? pct(point.fund) : "Geen fondsstand"}{point?.estimated ? " (geschat)" : ""}{gap && (day===conflict.from || day===conflict.to) ? " (boekingsdatum onzeker)" : ""}</p>
+       <p>S&amp;P 500: {benchmark == null ? "Geen benchmarkstand" : pct(benchmark)}</p>
+     </div>;
+   }}/>
    <Line type="linear" dataKey="lineFund" name={`Fonds ${fund}`} stroke="#5893b1" dot={false} isAnimationActive={false} connectNulls/>
-   <Line type="linear" dataKey="benchmark" name="S&P 500 (EUR)" stroke="#c6a15b" dot={false} isAnimationActive={false} connectNulls/>
+   <Line type="linear" dataKey="benchmark" name="S&P 500 (EUR)" stroke="#c9cdd2" dot={false} isAnimationActive={false} connectNulls/>
   </ComposedChart></ResponsiveContainer></div>:<p className={styles.muted}>Voor deze periode zijn nog geen fondswaarden beschikbaar.</p>}
-  <p className={styles.chartCaption}>{mode==="historical"?"De lijnen verbinden de beschikbare meetpunten. ":""}{comparison.dailyFrom?"Binnen dit fondsjaar zijn tussenliggende deelwaarden geschat. ":""}{mode==="year"&&rows[0]?.estimated?"De deelwaarde op de eerste meeting is nog niet bevestigd. ":""}{gap?`De boekingsvolgorde is onzeker tussen ${date(conflict.from)} en ${date(conflict.to)}. De lijn overbrugt deze twee bronstanden. `:""}{rows.length>0?`Peildatum: ${date(rows.at(-1)!.date)}.`:""}</p>
- </section>;
+  <p className={styles.chartCaption}>De lijnen verbinden de beschikbare meetpunten. {comparison.dailyFrom?"Binnen dit fondsjaar zijn tussenliggende deelwaarden geschat. ":""}{mode==="year"&&rows[0]?.estimated?"De deelwaarde op de eerste meeting is nog niet bevestigd. ":""}{gap?`De boekingsvolgorde is onzeker tussen ${date(conflict.from)} en ${date(conflict.to)}. De lijn overbrugt deze twee bronstanden. `:""}{rows.length>0?`Peildatum: ${date(rows.at(-1)!.date)}.`:""}</p>
+ </section></ChartFrame>;
 }

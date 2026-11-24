@@ -7,3 +7,7 @@
 .tools { margin-top: 20px; color: var(--ink-muted); font-size: .85rem; }
 .tools summary { cursor: pointer; padding: 6px 0; }
 .tools .links { margin-top: 12px; }
+.nav{margin:24px 0 18px;padding:0 0 16px;border:0;border-bottom:1px solid var(--line);background:transparent;}
+.links a{border:0;border-radius:5px;padding:7px 11px;}
+.links a[aria-current=page]{color:var(--ink);background:var(--accent-deep);}
+.back{font-size:.9rem;} .tools{margin-top:10px;}

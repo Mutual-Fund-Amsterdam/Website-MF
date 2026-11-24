@@ -11,6 +11,7 @@ import type { FundNumber } from "@/lib/portal/types";
 import { StockCharts } from "./market-chart";
 import FundChart from "./fund-chart";
 import FeedbackForm from "./feedback-form";
+import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import {dailyChange} from "@/lib/portal/performance";
 import {comparisonModes} from "@/lib/portal/comparison";
 import {chartNav} from "@/lib/portal/chart-nav";
@@ -82,11 +83,32 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
     {ownFund && <MemberChart points={history} unavailableReason={cashIssues.length ? "De actuele waarde is nog niet beschikbaar." : undefined}/>}
 
     <section className={styles.panel}><div className={styles.sectionHeader}><div><p className="eyebrow">Fonds {fund}</p><h2>Actuele portefeuille.</h2></div><span className={styles.dataTag}>{positions.length} posities</span></div>
-      <p className={styles.muted}><small>Groen = koersstijging, rood = koersdaling t.o.v. vorige handelsdag.</small></p>
-      <div className={styles.tableScroll}><div className={styles.table}><div className={`${styles.row} ${styles.head}`}><span>Aandeel</span><span>Aantal</span><span>Slotkoers</span><span>Waarde</span><span>Fondsgewicht</span></div>
+      <div className={styles.tableScroll}><div className={styles.table}><div className={`${styles.row} ${styles.head}`}><span>Aandeel</span><span>Aantal</span><span>Slotkoers</span><span title="Verandering ten opzichte van de vorige handelsdag">Dag</span><span>Waarde</span><span>Fondsgewicht</span></div>
         {view.valued.map(({ position, quote, valueEur }, index) => {
-          const change=quote?dailyChange(quotes?.history?.[quoteKey(position)]??[],quote.date,quote.close):null;
-          return <div className={styles.row} key={`${quoteKey(position)}-${index}`}><span className={styles.stockName}><Link href={`/mijn-fonds?fonds=${fund}&aandeel=${encodeURIComponent(quoteKey(position))}#koersverloop`}>{position.name}</Link><small>{position.ticker} · {position.exchange}</small></span><span>{position.quantity.toLocaleString("nl-NL")}</span><span className={change!==null&&change>0?styles.positive:change!==null&&change<0?styles.negative:""}>{quote ? `${quote.currency} ${quote.close.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}{change!==null&&<small style={{color:"inherit"}}>{change>0?"+":""}{pct(change)}</small>}<small>{quote ? date(quote.date) : "Koers ontbreekt"}</small></span><span>{valueEur !== null ? eur(valueEur) : "—"}</span><span>{!cashIssues.length&&valueEur !== null && view.fundValue ? pct(valueEur / view.fundValue) : "—"}</span></div>;
+          const prices = quotes?.history?.[quoteKey(position)] ?? [];
+          // A calendar series can include weekend rows. Compare exchange closes on weekdays.
+          const tradingDays = prices.filter(p => {
+            const weekday = new Date(p.date).getUTCDay();
+            return weekday > 0 && weekday < 6;
+          });
+          const quoteDay = quote ? new Date(quote.date).getUTCDay() : 0;
+          const change = quote && quoteDay > 0 && quoteDay < 6 ? dailyChange(tradingDays,quote.date,quote.close) : null;
+          const direction = change === null || change === 0 ? "neutral" : change > 0 ? "up" : "down";
+          const dayLabel = change === null ? "Vorige handelsdag niet beschikbaar" : new Intl.NumberFormat("nl-NL", {
+            style:"percent",signDisplay:"exceptZero",minimumFractionDigits:2,maximumFractionDigits:2
+          }).format(change);
+          return <div className={styles.row} key={`${quoteKey(position)}-${index}`}>
+            <span className={styles.stockName}><Link href={`/mijn-fonds?fonds=${fund}&aandeel=${encodeURIComponent(quoteKey(position))}#koersverloop`}>{position.name}</Link><small>{position.ticker} · {position.exchange}</small></span>
+            <span>{position.quantity.toLocaleString("nl-NL")}</span>
+            <span>{quote ? `${quote.currency} ${quote.close.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}<small>{quote ? date(quote.date) : "Koers ontbreekt"}</small></span>
+            <span className={styles.dayChange} data-direction={direction} title={dayLabel}>
+              {direction === "up" && <ArrowUpRight size={13} aria-hidden="true"/>}
+              {direction === "down" && <ArrowDownRight size={13} aria-hidden="true"/>}
+              {change === null ? "—" : dayLabel}
+            </span>
+            <span>{valueEur !== null ? eur(valueEur) : "—"}</span>
+            <span>{!cashIssues.length&&valueEur !== null && view.fundValue ? pct(valueEur / view.fundValue) : "—"}</span>
+          </div>;
         })}
       </div></div>
       {view.missing.length > 0 && <p className={styles.notice}>Voor {view.missing.length} {view.missing.length === 1 ? "positie" : "posities"} ontbreekt een passende koers of wisselkoers. Daarom zijn fondswegingen en de actuele fondswaarde nog niet volledig berekend.</p>}

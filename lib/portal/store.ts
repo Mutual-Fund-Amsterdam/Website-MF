@@ -192,11 +192,14 @@ export async function claimDailyRefresh(date: string): Promise<boolean> {
   return (await redis().set(key, "running", { nx: true, ex: 36 * 60 * 60 })) === "OK";
 }
 
-export async function savePending(snapshot: Snapshot): Promise<string> {
-  validateInputContinuity(snapshot,await getSnapshot());
+export class StaleImport extends Error {}
+type PendingImport = { snapshot: Snapshot; baseDigest: string | null; baseImportedAt: string | null };
+
+export async function savePending(snapshot: Snapshot, previous: Snapshot | null): Promise<string> {
+  validateInputContinuity(snapshot, previous);
   const id = randomBytes(24).toString("hex");
   const header=await storeLedger(snapshot,id,10*60);
-  await redis().set(`${PREFIX}pending:${id}`, header, { ex: 10 * 60 });
+  await redis().set(`${PREFIX}pending:${id}`, { snapshot: header, baseDigest: previous?.digest ?? null, baseImportedAt: previous?.importedAt ?? null } satisfies PendingImport, { ex: 10 * 60 });
   return id;
 }
 
@@ -208,10 +211,14 @@ async function publishPendingLocked(id: string): Promise<Snapshot | null> {
   if (!/^[a-f0-9]{48}$/.test(id)) return null;
   const client = redis();
   const key = `${PREFIX}pending:${id}`;
-  const stored = await client.get<Snapshot>(key);
-  if (!stored) return null;
-  const snapshot=await hydrateLedger(stored);
+  const stored = await client.get<PendingImport>(key);
+  if (!stored?.snapshot) return null;
   const previous = await getSnapshot();
+  if (stored.baseDigest !== (previous?.digest ?? null) || stored.baseImportedAt !== (previous?.importedAt ?? null)) {
+    await client.del(key);
+    throw new StaleImport("De gepubliceerde versie is gewijzigd. Controleer je bestand opnieuw.");
+  }
+  const snapshot = await hydrateLedger(stored.snapshot);
   validateInputContinuity(snapshot,previous);
   if(previous?.digest===snapshot.digest){await client.del(key);return previous;}
   if (previous) {
@@ -224,7 +231,7 @@ async function publishPendingLocked(id: string): Promise<Snapshot | null> {
   if(quotes&&quotes!==oldQuotes){await saveDailyQuotes(quotes);await recordOperation({kind:'quote-input',cause:'import',result:'geverifieerde Excelkoers verwerkt',detail:'Geen Marketstack-aanvraag; dagelijkse vergrendeling behouden.'});}
   // Initialise missing free reference series on administrator import, never on a member visit.
   // This does not request stock/index data or spend Marketstack credits.
-  if(quotes&&(!quotes.eurUsdHistory?.length||!quotes.estrHistory?.length)){
+  if(!localPreview()&&quotes&&(!quotes.eurUsdHistory?.length||!quotes.estrHistory?.length)){
     const [usd,estr]=await Promise.all([
       quotes.eurUsdHistory?.length?Promise.resolve(quotes.eurUsdHistory):fetchEurUsdHistory().catch(()=>quotes.eurUsdHistory),
       quotes.estrHistory?.length?Promise.resolve(quotes.estrHistory):fetchEstrHistory().catch(()=>quotes.estrHistory),
