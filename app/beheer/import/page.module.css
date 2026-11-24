@@ -1,1 +1,21 @@
 .main{padding:clamp(80px,10vw,130px) 0 100px}.main h1{margin:12px 0 25px;font-size:clamp(2.5rem,6vw,5rem)}.intro{max-width:750px;color:var(--ink-muted);line-height:1.7}.panel,.notice{max-width:850px;margin-top:40px;padding:clamp(22px,4vw,40px);border:1px solid var(--line);background:var(--bg-elevated)}.panel label{display:block;margin:22px 0 8px;font-size:.78rem;color:var(--ink-muted)}.panel input[type=file],.panel input[type=password]{width:100%;padding:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}.panel button{margin-top:25px}.error{color:#ff9999}.success{color:#a9dfa9}.preview{margin-top:35px}.preview table{width:100%;margin-top:20px;border-collapse:collapse;text-align:left}.preview th,.preview td{padding:12px 8px;border-bottom:1px solid var(--line)}.warnings{margin-top:25px;color:var(--board-gold)}.warnings li{margin:8px 0}.confirm{display:flex!important;align-items:center;gap:10px}.back{margin-top:30px}.back a,.notice a{color:var(--accent)}@media(max-width:650px){.preview{overflow-x:auto}.preview table{min-width:580px}}
+.panel,.notice {border-radius:10px;margin-top:20px;}
+.muted,.drop span {color:var(--ink-muted);font-size:.88rem;}
+.panel .drop {position:relative;display:grid;place-items:center;gap:6px;text-align:center;margin:0;padding:30px 16px;border:1px dashed #73828b;border-radius:8px;background:#222529;}
+.drop strong {color:var(--ink);font-size:1.05rem;overflow-wrap:anywhere;}
+.drop input[type=file] { position:absolute;inset:0;opacity:0;cursor:pointer; }
+.drop:focus-within,.drop[data-dragging=true]{outline:2px solid var(--accent);}
+.preview details {border-top:1px solid var(--line);padding:14px 0;}
+.preview summary {font-weight:550;}
+.tableWrap {overflow:auto;max-height:55vh;}
+.preview th[scope=row]{font-weight:500;}
+.warnings,.error,.success {margin:18px 0;padding:12px 16px;border-left:3px solid currentColor;}
+.warnings{color:#e1bf83;}
+.preview h2 {margin-bottom:16px;}
+@media(max-width:650px){.panel .preview{overflow:visible}.tableWrap table {min-width:0;font-size:.84rem;overflow-wrap:anywhere}.tableWrap td,.tableWrap th{padding:8px 3px;}}
+.panel>.preview:first-child {margin-top:0;}
+.selectedFile,.pager {display:flex;align-items:center;gap:15px;flex-wrap:wrap;color:var(--ink-muted);font-size:.9rem;}
+.panel .selectedFile label {position:relative;cursor:pointer;color:var(--accent);margin:0;}
+.selectedFile input {position:absolute;inset:0;opacity:0;cursor:pointer;}
+.selectedFile label:focus-within {outline:2px solid var(--accent);}
+.pager button {background:var(--paper);border:1px solid var(--line);padding:5px 10px;margin:8px 0;color:var(--ink);}

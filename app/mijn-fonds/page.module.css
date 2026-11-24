@@ -29,7 +29,7 @@
 .dataTag { border: 1px solid var(--line); padding: 7px 11px; color: var(--ink-muted); font-size: .74rem; white-space: nowrap; }
 .tableScroll { overflow-x: auto; }
 .table { margin-top: 26px; min-width: 690px; }
-.row { display: grid; grid-template-columns: minmax(190px, 2.2fr) minmax(65px, .55fr) minmax(116px, 1fr) minmax(110px, 1fr) minmax(90px, .8fr); align-items: center; gap: 14px; padding: 15px 0; border-bottom: 1px solid var(--line); font-size: .88rem; }
+.row { display: grid; grid-template-columns:minmax(144px,2fr) minmax(52px,.55fr) minmax(100px,1fr) minmax(80px,.8fr) minmax(100px,1fr) minmax(85px,.8fr); align-items: center; gap: 14px; padding: 15px 0; border-bottom: 1px solid var(--line); font-size: .88rem; }
 .row span:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
 .row small { display: block; margin-top: 3px; color: var(--ink-muted); font-size: .7rem; line-height: 1.4; }
 .stockName { color: var(--accent); font-weight: 600; }
@@ -116,3 +116,44 @@
 .legend button:nth-child(2) i { background:var(--board-gold); }
 .legend button:nth-child(3) i { background:var(--ink-muted); }
 .compositionTooltip { z-index:80; max-width:calc(100vw - 24px); font-size:.8rem; color:var(--ink); background:var(--paper, #252522); border:1px solid var(--line); padding:8px 11px; border-radius:5px; box-shadow:0 5px 20px #0003; pointer-events:none; }
+.top { align-items:center; }
+.top h1 { margin:6px 0 0; }
+.boardNav { margin:18px 0 0; gap:20px; }
+.boardNav a { border:0; padding:3px 0; font-size:.9rem; }
+.switcher { margin:24px 0 0; gap:4px; border-bottom:1px solid var(--line); }
+.switcher a { border:0; border-bottom:2px solid transparent; margin-bottom:-1px; border-radius:5px 5px 0 0; font-size:.95rem; }
+.switcher a[aria-current=page]{ color:var(--ink); border-bottom-color:var(--accent); background:rgba(88,147,177,.1); }
+.cards { gap:clamp(10px,1.6vw,22px); grid-template-columns:repeat(3,minmax(0,1fr)); margin:24px 0; }
+.cards article {min-width:0; border:0; background:var(--bg-elevated); border-radius:10px; padding:clamp(16px,2.3vw,28px);}
+.cards span { color:var(--ink-muted); font-size:.88rem; letter-spacing:0; text-transform:none; }
+.cards strong,.bigNumber { color:var(--ink); margin:7px 0 0; font-weight:600; letter-spacing:-.035em; font-variant-numeric:tabular-nums; }
+.panel { border-radius:10px; margin-bottom:20px; }
+.panel h2 { margin:6px 0 18px; }
+.grid { gap:20px; margin:0; }
+.memberLegend { margin:6px 0 14px; font-size:.86rem; }
+.chartShell { background:transparent; border:0; padding:0; }
+.riskGrid>div { border:0; border-bottom:1px solid var(--line); min-height:0; }
+.riskGrid strong {color:var(--ink);}
+.row {border-color:#303338;}
+.dataTag {border:0;}
+.chartCaption,.betaReference,.riskGrid small,.row small { font-size:.80rem; }
+.chartControls {margin:14px 0;}
+.chartControls label {margin:0;}
+.historyTooltip {background:var(--paper); color:var(--ink); border-color:var(--line);border-radius:6px;}
+.chartTop {padding-right:6px;}
+@media(max-width:650px){
+ .cards {grid-template-columns:1fr 1fr;}
+ .cards article:first-child {grid-column:1/-1;}
+ .cards strong {font-size:1.6rem;}
+ .cards article:first-child strong {font-size:2.12rem;}
+ .table {min-width:630px;} .row {grid-template-columns:108px 65px 82px 52px 105px 82px;gap:9px;}
+ .row span:nth-child(1){order:0;} .row span:nth-child(4){order:1;} .row span:nth-child(5){order:2;}
+ .row span:nth-child(2){order:3;} .row span:nth-child(3){order:4;} .row span:nth-child(6){order:5;}
+ .memberChart,.fundChart,.chartArea {height:290px;}
+}
+@media(max-width:550px){.switcher{flex-wrap:nowrap;overflow:auto;gap:0}.switcher a{white-space:nowrap;padding:10px 11px;font-size:.9rem;}}
+
+.dayChange {justify-self:end;display:inline-flex;align-items:center;gap:4px;border-radius:5px;padding:4px 7px;font-size:.84rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink-muted);}
+.dayChange[data-direction=up] {color:#8dd7ac;background:#20352a;}
+.dayChange[data-direction=down] {color:#f2a19e;background:#3c282c;}
+.dayChange svg {flex:none;}

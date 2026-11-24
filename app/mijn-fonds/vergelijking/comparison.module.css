@@ -10,3 +10,10 @@
 .tooltip p { margin-top:6px; }
 .caption { font-size:11px; color:#a3a096; margin:16px 12px 0; }
 @media(max-width:600px){.comparison{padding-top:16px}.legend{gap:10px 14px;font-size:12px}.legend i{width:24px}.plot{height:440px;min-width:650px}.comparison{overflow-x:auto}.caption{max-width:calc(100vw - 70px)}}
+.comparison {padding:clamp(16px,3vw,32px);background:var(--bg-elevated);border:1px solid var(--line);border-radius:10px;margin-top:20px;overflow:visible;}
+.comparison h1 {font-family:inherit;text-align:left;font-weight:600;padding-right:68px;}
+.legend {position:static;justify-content:flex-start;gap:10px 18px;font:500 .88rem var(--font-text);margin:6px 0 16px;}
+.legend i {width:22px;height:3px;}
+.plot {font-family:inherit;min-width:0;height:clamp(300px,40vw,530px);}
+.tooltip {background:var(--paper);color:var(--ink);border-color:var(--line);border-radius:5px;}
+.caption {color:var(--ink-muted);font-size:.82rem;}
